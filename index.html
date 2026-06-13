@@ -153,9 +153,9 @@ function renderTeams() {
         <div style="min-width:0;">
           <div class="team-card-name">${esc(t.name)}</div>
           <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
-            <span style="font-size:0.65rem;color:var(--amber);">⚜️</span>
+            <span style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;">⚜️ TEAM CAPTAIN</span>
             ${captainAvatar}
-            <span style="font-size:0.72rem;color:var(--amber);">${esc(t.captainName||"—")}${captainClass}</span>
+            <span style="font-size:0.75rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${captainClass}</span>
           </div>
         </div>
         <span class="badge badge-${status}" style="flex-shrink:0;">

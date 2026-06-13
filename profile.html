@@ -244,14 +244,29 @@ function renderProfile() {
                 : `<div class="avatar avatar-xs" title="${esc(tm.name)}">${initials(tm.name)}</div>`;
               return `<a href="profile.html?id=${tm.id}" onclick="event.stopPropagation();" title="${esc(tm.name)}">${av}</a>`;
             }).join("");
-            return `<div class="status-card mb-sm">
-              <div class="flex-between">
+            const isCap = m.id === t.captainId;
+            const comp = t.composition ? (Array.isArray(t.composition)?t.composition:String(t.composition).split(",").filter(Boolean)) : [];
+            const compPills = comp.map(r=>`<span class="comp-pill comp-${r.toLowerCase()}">${r}</span>`).join("");
+            const capMember = allMembers.find(x=>x.id===t.captainId);
+            const capAv = capMember?.avatarUrl
+              ? `<img src="${esc(capMember.avatarUrl)}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
+              : `<div style="width:16px;height:16px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.45rem;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
+            const capClass = capMember?.class ? ` · ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}` : "";
+            return `<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1rem;margin-bottom:0.75rem;">
+              <div class="flex-between mb-sm">
                 <div>
-                  <div class="status-card-name">${esc(t.name)}</div>
-                  <div class="status-card-sub">${m.id===t.captainId?'<span class="badge badge-captain" style="margin-right:4px;">⚜️ Captain</span>':""}Captain: ${esc(t.captainName||"—")}</div>
-                  <div class="member-pips mt-sm" style="gap:5px;">${lineupIcons}</div>
+                  <div style="font-size:0.95rem;font-weight:700;margin-bottom:3px;">${esc(t.name)}
+                    ${isCap?'<span class="badge badge-captain" style="margin-left:6px;font-size:0.62rem;">⚜️ You're the Captain</span>':""}
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">
+                    <span style="font-size:0.62rem;color:var(--amber);">⚜️ Team Captain</span>
+                    ${capAv}
+                    <span style="font-size:0.7rem;color:var(--amber);">${esc(t.captainName||"—")}${capClass}</span>
+                  </div>
+                  ${compPills ? `<div class="comp-row" style="margin-bottom:6px;">${compPills}</div>` : ""}
+                  <div style="display:flex;gap:5px;align-items:center;">${lineupIcons}</div>
                 </div>
-                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Visit Team Page</a>
+                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Visit Team Page</a>
               </div>
             </div>`;
           }).join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
@@ -560,7 +575,6 @@ function openEditModal() {
   el("ep-timezone").value     = m.timezone || "";
   el("ep-pref-lang").value    = m.prefLanguage || "";
   el("ep-lfg").checked        = String(m.lookingForTeam).toUpperCase() === "TRUE";
-  el("ep-captain").checked    = m.isCaptain === "TRUE";
   epTagSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
   if (m.tier) {
     el("ep-tier").value = m.tier;

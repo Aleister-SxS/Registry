@@ -139,7 +139,11 @@ function renderPlayers() {
       </div>
       ${String(m.isCaptain).toUpperCase()==="TRUE" ? (() => {
         const captainedTeams = allTeams.filter(t=>t.captainId===m.id);
-        return captainedTeams.length ? `<div class="text-xs text-muted mb-sm">Captains: ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();" style="color:var(--blue-bright);">${esc(t.name)}</a>`).join(", ")}</div>` : "";
+        return captainedTeams.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;">
+          <span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;">⚜️ CAPTAINING</span>
+          ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();"
+            style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
+        </div>` : "";
       })() : ""}
       ${captainTeam && !isMe && !atLimit && isLFT && !alreadyInvited
         ? `<button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`

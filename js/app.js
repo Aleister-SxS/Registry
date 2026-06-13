@@ -233,14 +233,53 @@ function buildNav(activePage, opts = {}) {
       </div>`
     : "";
 
+  // Mobile hamburger menu items
+  const mobileLinks = pages.filter(p => !p.requiresAuth || session).map(p => {
+    const active = p.href === activePage ? " active" : "";
+    return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}</a>`;
+  }).join("");
+
+  const mobileUserSection = session
+    ? `<div class="mobile-nav-user">
+        ${session.avatarUrl
+          ? `<img src="${esc(session.avatarUrl)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" />`
+          : `<div class="avatar avatar-md">${esc((session.name||session.gamertag||"?")[0].toUpperCase())}</div>`
+        }
+        <div>
+          <div style="font-weight:700;font-size:0.9rem;">${esc(session.name||session.gamertag)}</div>
+          <div style="font-size:0.72rem;color:var(--text2);">Logged in</div>
+        </div>
+      </div>
+      <a href="profile.html?id=${session.id}" class="mobile-nav-link">👤 View Profile</a>
+      <div class="mobile-nav-link mobile-nav-danger" onclick="navLogout()">🚪 Log Out</div>`
+    : `<a href="register.html" class="mobile-nav-link">Log In / Register</a>`;
+
   const navHtml = `
     <nav>
       <a href="${session ? 'index.html' : 'register.html'}" class="nav-logo">
         <div class="dot"></div><span>BERSERK GUILD</span>
       </a>
-      <div class="nav-links">${links}</div>
-      <div class="nav-right">${rightHtml}</div>
+      <div class="nav-links" id="nav-links-desktop">${links}</div>
+      <div class="nav-right">
+        ${rightHtml}
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </nav>
+    <!-- Mobile drawer -->
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay" onclick="closeHamburger()"></div>
+    <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+      <div class="mobile-nav-header">
+        <div class="nav-logo" style="margin-bottom:0;">
+          <div class="dot"></div><span>BERSERK GUILD</span>
+        </div>
+        <button onclick="closeHamburger()" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      ${mobileUserSection}
+      <div class="mobile-nav-divider"></div>
+      ${mobileLinks}
+    </div>
     <div class="modal-overlay" id="confirm-modal">
       <div class="modal">
         <div class="modal-title" id="confirm-title">Confirm</div>
@@ -368,6 +407,16 @@ function onReady(fn) {
 function toggleNavDropdown() {
   const dd = document.getElementById("nav-dropdown");
   if (dd) dd.classList.toggle("open");
+}
+
+function toggleHamburger() {
+  document.getElementById("mobile-nav-drawer").classList.toggle("open");
+  document.getElementById("mobile-nav-overlay").classList.toggle("open");
+}
+
+function closeHamburger() {
+  document.getElementById("mobile-nav-drawer")?.classList.remove("open");
+  document.getElementById("mobile-nav-overlay")?.classList.remove("open");
 }
 
 function navLogout() {
