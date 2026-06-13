@@ -205,10 +205,10 @@ function closeConfirmModal() {
 function buildNav(activePage, opts = {}) {
   const session = getSession();
   const pages = [
-    { href: "index.html",       label: "Current Teams" },
-    { href: "players.html",     label: "Players" },
-    { href: "status.html",      label: "Team Status",    requiresAuth: true },
-    { href: "your-team.html",   label: "Your Team",      requiresAuth: true },
+    { href: "index.html",       label: "Current Teams",    requiresAuth: true },
+    { href: "players.html",     label: "Players",          requiresAuth: true },
+    { href: "status.html",      label: "Team Status",      requiresAuth: true },
+    { href: "your-team.html",   label: "Your Team",        requiresAuth: true },
     { href: "register.html",    label: "Register / Log In" },
   ];
 
