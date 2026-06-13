@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Player Profile — Team Registry</title>
+<title>Player Profile — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -127,7 +127,18 @@ function renderProfile() {
   el("profile-content").innerHTML = `
     <!-- Hero -->
     <div class="profile-hero">
-      <div class="avatar avatar-lg">${initials(m.name)}</div>
+    <div style="position:relative;flex-shrink:0;">
+      ${m.avatarUrl
+        ? `<img src="${esc(m.avatarUrl)}" alt="${esc(m.name)}"
+            style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
+            onerror="this.style.display='none'" />`
+        : `<div class="avatar avatar-lg">${initials(m.name)}</div>`
+      }
+      ${isOwn ? `<button onclick="openAvatarPicker(url => changeAvatar(url))"
+        style="position:absolute;bottom:-4px;right:-4px;background:var(--blue);border:none;
+          border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.7rem;
+          display:flex;align-items:center;justify-content:center;" title="Change avatar">✏️</button>` : ""}
+    </div>
       <div class="profile-info">
         <div class="profile-name">${esc(m.name)}</div>
         <div class="profile-id">${esc(m.gamertag)}</div>
@@ -318,6 +329,17 @@ async function doSaveProfile() {
     renderProfile();
     toast("Profile updated!");
   } catch(e) { showAlert("edit-error", e.message); }
+}
+
+async function changeAvatar(url) {
+  const session = getSession();
+  if (!session) return;
+  try {
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, avatarUrl:url });
+    profileMember.avatarUrl = url;
+    renderProfile();
+    toast("Avatar updated!");
+  } catch(e) { toast(e.message, "error"); }
 }
 
 function renderError(msg) {

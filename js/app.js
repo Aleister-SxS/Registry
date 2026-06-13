@@ -353,3 +353,95 @@ function onReady(fn) {
   if (document.readyState !== "loading") fn();
   else document.addEventListener("DOMContentLoaded", fn);
 }
+
+// ── Avatar presets ────────────────────────────────────────
+// Fantomon portrait images from EOG.GG
+const AVATAR_PRESETS = [
+  { id: "aegiswing",   label: "Aegiswing",   url: "https://eog.gg/assets/sxs/fantomons/aegiswing.webp" },
+  { id: "nyxarchon",   label: "Nyxarchon",   url: "https://eog.gg/assets/sxs/fantomons/nyxarchon.webp" },
+  { id: "mandragora",  label: "Mandragora",  url: "https://eog.gg/assets/sxs/fantomons/mandragora.webp" },
+  { id: "herbote",     label: "Herbote",     url: "https://eog.gg/assets/sxs/fantomons/herbote.webp" },
+  { id: "boaro",       label: "Boaro",       url: "https://eog.gg/assets/sxs/fantomons/boaro.webp" },
+  { id: "armopi",      label: "Armopi",      url: "https://eog.gg/assets/sxs/fantomons/armopi.webp" },
+  { id: "falko",       label: "Falko",       url: "https://eog.gg/assets/sxs/fantomons/falko.webp" },
+  { id: "zeioletus",   label: "Zeioletus",   url: "https://eog.gg/assets/sxs/fantomons/zeioletus.webp" },
+  { id: "kels",        label: "Kels",        url: "https://eog.gg/assets/sxs/fantomons/kels.webp" },
+];
+
+// Render an avatar — image if set, initials fallback
+function renderAvatar(member, sizeClass) {
+  if (member && member.avatarUrl) {
+    return `<img src="${esc(member.avatarUrl)}" alt="${esc(member.name||'')}"
+      style="border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
+      class="${sizeClass}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <div class="avatar ${sizeClass}" style="display:none;">${initials(member.name)}</div>`;
+  }
+  return `<div class="avatar ${sizeClass}">${initials(member ? member.name : "?")}</div>`;
+}
+
+// Build the avatar picker modal HTML — call once, append to body
+function buildAvatarPicker(onSelect) {
+  const existing = document.getElementById("avatar-picker-modal");
+  if (existing) existing.remove();
+
+  const html = `
+    <div class="modal-overlay" id="avatar-picker-modal">
+      <div class="modal" style="max-width:520px;">
+        <div class="modal-title">Choose Your Avatar</div>
+        <div class="modal-body">Select a Fantomon portrait to use as your profile picture.</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">
+          ${AVATAR_PRESETS.map(p => `
+            <div onclick="window._avatarPickerSelect('${p.id}')"
+              id="ap-opt-${p.id}"
+              style="cursor:pointer;border-radius:10px;border:2px solid var(--border);
+                background:var(--surface);padding:10px;text-align:center;transition:border-color 0.15s;">
+              <img src="${p.url}" alt="${p.label}"
+                style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;"
+                onerror="this.src='';this.style.background='var(--surface2)'" />
+              <div style="font-size:0.72rem;color:var(--text2);">${p.label}</div>
+            </div>
+          `).join("")}
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="closeAvatarPicker()">Cancel</button>
+          <button class="btn btn-primary" id="ap-confirm-btn" disabled onclick="confirmAvatarPick()">Select</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML("beforeend", html);
+  window._avatarPickerCurrent = null;
+  window._avatarPickerCallback = onSelect;
+
+  window._avatarPickerSelect = (id) => {
+    // Clear previous selection
+    AVATAR_PRESETS.forEach(p => {
+      const opt = document.getElementById("ap-opt-" + p.id);
+      if (opt) opt.style.borderColor = "var(--border)";
+    });
+    const sel = document.getElementById("ap-opt-" + id);
+    if (sel) sel.style.borderColor = "var(--blue)";
+    window._avatarPickerCurrent = id;
+    document.getElementById("ap-confirm-btn").disabled = false;
+  };
+}
+
+function openAvatarPicker(onSelect) {
+  buildAvatarPicker(onSelect);
+  document.getElementById("avatar-picker-modal").classList.add("open");
+}
+
+function closeAvatarPicker() {
+  const m = document.getElementById("avatar-picker-modal");
+  if (m) m.classList.remove("open");
+}
+
+function confirmAvatarPick() {
+  const id = window._avatarPickerCurrent;
+  if (!id) return;
+  const preset = AVATAR_PRESETS.find(p => p.id === id);
+  if (preset && window._avatarPickerCallback) {
+    window._avatarPickerCallback(preset.url);
+  }
+  closeAvatarPicker();
+}

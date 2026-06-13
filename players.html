@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Players — Team Registry</title>
+<title>Players — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -98,7 +98,10 @@ function renderPlayers() {
     const alreadyInvited = session && allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.fromId===session.id&&r.status==="pending");
     return `<div class="player-card" onclick="location.href='profile.html?id=${m.id}'">
       <div class="player-top">
-        <div class="avatar avatar-md">${initials(m.name)}</div>
+        ${m.avatarUrl
+          ? `<img src="${esc(m.avatarUrl)}" alt="${esc(m.name)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);flex-shrink:0;" onerror="this.style.display='none'" />`
+          : `<div class="avatar avatar-md">${initials(m.name)}</div>`
+        }
         <div>
           <div class="player-name">${esc(m.name)}</div>
           <div class="player-id">${esc(m.gamertag)}</div>
