@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── Config ────────────────────────────────────────────────
-const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const API_URL = "https://script.google.com/macros/s/AKfycbwK6orjm0KV2Kw9oOesh26WEI1pTUkXtwBQVFhAZ56bfZ47tf3bIa1w9d_9QOKv6_kI/exec";
 
 // ── Class data ────────────────────────────────────────────
 const CLASS_TREE = {
@@ -207,12 +207,12 @@ function buildNav(activePage, opts = {}) {
   const pages = [
     { href: "index.html",       label: "Current Teams" },
     { href: "players.html",     label: "Players" },
-    { href: "status.html",      label: "Team Status" },
-    { href: "your-team.html",   label: "Your Team" },
+    { href: "status.html",      label: "Team Status",    requiresAuth: true },
+    { href: "your-team.html",   label: "Your Team",      requiresAuth: true },
     { href: "register.html",    label: "Register / Log In" },
   ];
 
-  const links = pages.map(p => {
+  const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
     return `<a href="${p.href}" class="nav-link${active}">${p.label}</a>`;
   }).join("");

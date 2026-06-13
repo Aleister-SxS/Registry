@@ -8,7 +8,16 @@
 </head>
 <body>
 <script src="js/app.js"></script>
-<script>onReady(() => buildNav("index.html"));</script>
+<script>
+  // Redirect to register/login if not logged in
+  onReady(() => {
+    if (!getSession()) {
+      location.replace("register.html");
+    } else {
+      buildNav("index.html");
+    }
+  });
+</script>
 
 <main>
   <div class="section-header">
