@@ -209,7 +209,6 @@ function buildNav(activePage, opts = {}) {
     { href: "players.html",     label: "Players",          requiresAuth: true },
     { href: "status.html",      label: "Team Status",      requiresAuth: true },
     { href: "your-team.html",   label: "Your Team",        requiresAuth: true },
-    { href: "register.html",    label: "Register / Log In" },
   ];
 
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
@@ -221,14 +220,12 @@ function buildNav(activePage, opts = {}) {
     ? `<a href="profile.html?id=${session.id}" class="session-tag" title="View profile">
          ${esc(session.gamertag || session.name)}
        </a>`
-    : opts.hideRegisterBtn
-      ? ""
-      : `<a href="register.html" class="btn btn-primary btn-sm">Register</a>`;
+    : "";
 
   const navHtml = `
     <nav>
-      <a href="index.html" class="nav-logo">
-        <div class="dot"></div><span>TEAM REGISTRY</span>
+      <a href="${session ? 'index.html' : 'register.html'}" class="nav-logo">
+        <div class="dot"></div><span>BERSERK GUILD</span>
       </a>
       <div class="nav-links">${links}</div>
       <div class="nav-right">${rightHtml}</div>
