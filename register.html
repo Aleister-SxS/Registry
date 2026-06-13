@@ -8,10 +8,20 @@
 </head>
 <body>
 <script src="js/app.js"></script>
-<script>onReady(() => buildNav("register.html"));</script>
+<script>onReady(() => buildNav("register.html", { hideRegisterBtn: true }));</script>
 
 <main>
 <div class="form-wrap" style="max-width:640px;">
+
+  <!-- ── WELCOME HERO ──────────────────────────────────── -->
+  <div class="welcome-hero" id="hero-block">
+    <h1>Welcome to Team Registry</h1>
+    <p>Find your team, build your roster, and compete together in Sword x Staff. Log in below or create a profile to get started.</p>
+    <div class="hero-actions">
+      <a href="index.html" class="btn btn-ghost">Browse Teams</a>
+      <a href="players.html" class="btn btn-ghost">Find Players</a>
+    </div>
+  </div>
 
   <!-- ── LOGGED IN STATE ──────────────────────────────── -->
   <div id="logged-in-state" style="display:none;">
@@ -20,22 +30,45 @@
       <p class="form-subtitle">You are currently logged in.</p>
       <div class="flex gap-sm flex-wrap mt-md">
         <a id="view-profile-btn" href="#" class="btn btn-primary">View Your Profile</a>
-        <a href="your-team.html" class="btn btn-ghost">View Your Team</a>
+        <a href="your-team.html" class="btn btn-ghost">Your Team</a>
         <a href="create-team.html" class="btn btn-ghost">Create a Team</a>
         <button class="btn btn-danger" onclick="doLogout()">Log Out</button>
       </div>
     </div>
   </div>
 
-  <!-- ── TAB SWITCHER ─────────────────────────────────── -->
+  <!-- ── AUTH TABS ─────────────────────────────────────── -->
   <div id="auth-state">
-    <div class="flex gap-xs mb-lg">
-      <button id="tab-register" class="btn btn-primary" onclick="switchTab('register')">Create Profile</button>
-      <button id="tab-login"    class="btn btn-ghost"   onclick="switchTab('login')">Log In</button>
+    <div class="auth-tabs">
+      <button id="tab-login"    class="auth-tab active"  onclick="switchTab('login')">Log In</button>
+      <button id="tab-register" class="auth-tab"         onclick="switchTab('register')">Create Profile</button>
     </div>
 
-    <!-- ── REGISTER FORM ─────────────────────────────── -->
-    <div id="panel-register">
+    <!-- ── LOGIN PANEL ─────────────────────────────────── -->
+    <div id="panel-login">
+      <div class="form-card">
+        <div class="form-title">Welcome back</div>
+        <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you first registered.</div>
+        <div class="field">
+          <label>Player ID</label>
+          <input id="l-tag" placeholder="ShadowAce#1234" />
+        </div>
+        <div class="field mt-sm">
+          <label>Secret Key</label>
+          <input id="l-key" type="password" placeholder="Your secret key" />
+        </div>
+        <div id="login-error" class="alert alert-error alert-hidden mt-sm"></div>
+        <button class="btn btn-primary btn-full mt-md" onclick="doLogin()">Log In</button>
+        <hr class="divider" />
+        <p class="text-sm text-muted" style="text-align:center;">
+          Haven't made an account?
+          <button class="btn btn-ghost btn-sm" onclick="switchTab('register')" style="margin-left:6px;">Register here →</button>
+        </p>
+      </div>
+    </div>
+
+    <!-- ── REGISTER PANEL ──────────────────────────────── -->
+    <div id="panel-register" style="display:none;">
       <div class="form-card">
         <div class="form-title">Create Your Profile</div>
         <div class="form-subtitle">
@@ -43,61 +76,35 @@
           <strong>Secret Key</strong> — save it safely, it's how you log back in.
         </div>
 
-        <!-- Basic info -->
         <div class="form-section-label">Basic Info</div>
         <div class="field-row">
-          <div class="field">
-            <label>In-Game Name</label>
-            <input id="r-name" placeholder="Alex Chen" />
-          </div>
-          <div class="field">
-            <label>Player ID</label>
-            <input id="r-tag" placeholder="ShadowAce#1234" />
-          </div>
+          <div class="field"><label>In-Game Name</label><input id="r-name" placeholder="Alex Chen" /></div>
+          <div class="field"><label>Player ID</label><input id="r-tag" placeholder="ShadowAce#1234" /></div>
         </div>
 
-        <!-- Class -->
         <div class="form-section-label">Class</div>
         <div class="field-row">
-          <div class="field">
-            <label>Current Class Tier</label>
-            <select id="r-tier" required>
-              <option value="">— Select Tier —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Class</label>
-            <select id="r-class" disabled required>
-              <option value="">— Select Class —</option>
-            </select>
-          </div>
+          <div class="field"><label>Current Class Tier</label><select id="r-tier" required></select></div>
+          <div class="field"><label>Class</label><select id="r-class" disabled required></select></div>
         </div>
 
-        <!-- Stats -->
         <div class="form-section-label">Stats</div>
         <div class="field-row">
           <div class="field">
             <label>Power Rating <span class="optional">(e.g. 180k, 1.5m)</span></label>
             <input id="r-power" placeholder="e.g. 180k" />
           </div>
-          <div class="field">
-            <label>Character Level</label>
-            <input id="r-level" type="number" placeholder="e.g. 60" min="1" />
-          </div>
+          <div class="field"><label>Character Level</label><input id="r-level" type="number" placeholder="e.g. 60" min="1" /></div>
         </div>
 
-        <!-- Playstyle -->
         <div class="form-section-label">Playstyle</div>
-        <div class="field">
-          <label>Describe Your Playstyle</label>
-          <textarea id="r-bio" placeholder="Tell teams about your approach — how you play, what you're good at, your availability…"></textarea>
+        <div class="field"><label>Describe Your Playstyle</label>
+          <textarea id="r-bio" placeholder="Tell teams about your approach — how you play, what you're good at…"></textarea>
         </div>
-        <div class="field">
-          <label>Describe Yourself</label>
-          <textarea id="r-desc" placeholder="A bit about yourself as a player — your history, goals, what you're looking for in a team…"></textarea>
+        <div class="field"><label>Describe Yourself</label>
+          <textarea id="r-desc" placeholder="A bit about you — your history, goals, what you're looking for in a team…"></textarea>
         </div>
-        <div class="field">
-          <label>Playstyle Preference</label>
+        <div class="field"><label>Playstyle Preference</label>
           <select id="r-playstyle">
             <option value="">— Select —</option>
             <option value="Casual">Casual — Just Need a Team</option>
@@ -105,56 +112,54 @@
           </select>
         </div>
 
-        <!-- Communication -->
         <div class="form-section-label">Communication</div>
         <div class="field-row">
-          <div class="field">
-            <label>Discord ID <span class="optional">(optional)</span></label>
-            <input id="r-discord-id" placeholder="username#0000" />
-          </div>
-          <div class="field">
-            <label>Discord Display Name <span class="optional">(optional)</span></label>
-            <input id="r-discord-name" placeholder="YourDisplayName" />
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Languages Spoken</label>
-            <select id="r-languages" multiple style="min-height:90px;">
-            </select>
-            <div class="text-xs text-muted mt-sm">Hold Ctrl/Cmd to select multiple</div>
-          </div>
-          <div class="field">
-            <label>Preferred Language</label>
-            <select id="r-pref-lang">
-              <option value="">— Select —</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Time Zone</label>
-          <select id="r-timezone">
-            <option value="">— Select —</option>
-          </select>
+          <div class="field"><label>Discord ID <span class="optional">(optional)</span></label><input id="r-discord-id" placeholder="username#0000" /></div>
+          <div class="field"><label>Discord Display Name <span class="optional">(optional)</span></label><input id="r-discord-name" placeholder="YourDisplayName" /></div>
         </div>
 
-        <!-- Flags -->
+        <!-- Multi-select: Languages Spoken -->
+        <div class="field">
+          <label>Languages Spoken</label>
+          <div class="tag-input-wrap" id="r-languages-wrap">
+            <div class="tag-input-tags"  id="r-languages-tags"></div>
+            <div class="tag-input-dropdown-wrap">
+              <input class="tag-input-search" id="r-languages-search" placeholder="Search languages…" autocomplete="off"
+                oninput="tagInputFilter('r-languages')"
+                onfocus="tagInputOpen('r-languages')"
+              />
+              <div class="tag-dropdown" id="r-languages-dropdown"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-select: Preferred Languages -->
+        <div class="field">
+          <label>Preferred Language(s)</label>
+          <div class="tag-input-wrap" id="r-preflang-wrap">
+            <div class="tag-input-tags"  id="r-preflang-tags"></div>
+            <div class="tag-input-dropdown-wrap">
+              <input class="tag-input-search" id="r-preflang-search" placeholder="Search languages…" autocomplete="off"
+                oninput="tagInputFilter('r-preflang')"
+                onfocus="tagInputOpen('r-preflang')"
+              />
+              <div class="tag-dropdown" id="r-preflang-dropdown"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field"><label>Time Zone</label><select id="r-timezone"><option value="">— Select Time Zone —</option></select></div>
+
         <div class="form-section-label">Settings</div>
         <div class="field">
           <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Looking for a team</div>
-              <div class="toggle-sublabel">Appear in the Players tab for captains to find you</div>
-            </div>
+            <div><div class="toggle-label">Looking for a team</div><div class="toggle-sublabel">Appear in the Players tab for captains to find you</div></div>
             <label class="toggle"><input type="checkbox" id="r-lfg" checked /><span class="slider"></span></label>
           </div>
         </div>
         <div class="field">
           <div class="toggle-row">
-            <div>
-              <div class="toggle-label">Team Captain</div>
-              <div class="toggle-sublabel">Enables you to create and manage teams</div>
-            </div>
+            <div><div class="toggle-label">Team Captain</div><div class="toggle-sublabel">Enables you to create and manage teams</div></div>
             <label class="toggle"><input type="checkbox" id="r-captain" /><span class="slider"></span></label>
           </div>
         </div>
@@ -163,38 +168,18 @@
         <button class="btn btn-primary btn-full mt-md" id="reg-btn" onclick="doRegister()">Create Profile</button>
       </div>
     </div>
-
-    <!-- ── LOGIN FORM ──────────────────────────────────── -->
-    <div id="panel-login" style="display:none;">
-      <div class="form-card">
-        <div class="form-title">Log In</div>
-        <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you registered.</div>
-        <div class="field">
-          <label>Player ID</label>
-          <input id="l-tag" placeholder="#YourID" />
-        </div>
-        <div class="field mt-sm">
-          <label>Secret Key</label>
-          <input id="l-key" type="password" placeholder="••••••••••••" />
-        </div>
-        <div id="login-error" class="alert alert-error alert-hidden mt-sm"></div>
-        <button class="btn btn-primary btn-full mt-md" onclick="doLogin()">Log In</button>
-      </div>
-    </div>
   </div>
 
-  <!-- ── SUCCESS STATE ──────────────────────────────────── -->
+  <!-- ── SUCCESS STATE ────────────────────────────────── -->
   <div id="reg-success" style="display:none;">
     <div class="form-card">
-      <div class="alert alert-success">
-        Profile created successfully! Your Secret Key is shown below — save it now. You will not see it again.
-      </div>
-      <div style="font-size:0.8rem;color:var(--text2);margin-bottom:4px;margin-top:0.75rem;">Your Player ID:</div>
-      <div class="key-box" id="out-tag" style="border-color:var(--red-mid);color:var(--rose);"></div>
-      <div style="font-size:0.8rem;color:var(--text2);margin-bottom:4px;margin-top:0.75rem;">Secret Key:</div>
+      <div class="alert alert-success">Profile created! Your Secret Key is below — save it now, you will not see it again.</div>
+      <div class="text-xs text-muted mt-md mb-sm">Your Player ID:</div>
+      <div class="key-box" id="out-tag" style="border-color:var(--blue-mid);color:var(--sky);"></div>
+      <div class="text-xs text-muted mt-md mb-sm">Secret Key:</div>
       <div class="key-box" id="out-key"></div>
       <div class="alert alert-amber mt-md">
-        ⚠️ Store this key somewhere safe (password manager, notes app). It cannot be recovered without contacting an admin.
+        ⚠️ Store this key somewhere safe — a password manager or notes app. It cannot be recovered without contacting an admin.
       </div>
       <div class="flex gap-sm flex-wrap mt-md">
         <button class="btn btn-primary" onclick="copyKey()">Copy Key</button>
@@ -208,81 +193,159 @@
 </main>
 
 <script>
-onReady(() => {
-  // Populate selects
-  populateSelect("r-timezone", TIMEZONES, "— Select Time Zone —");
-  populateSelect("r-pref-lang", LANGUAGES, "— Select Language —");
-  const langSel = el("r-languages");
-  if (langSel) {
-    langSel.innerHTML = LANGUAGES.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join("");
-  }
+// ── Tag-input state ───────────────────────────────────────
+const tagInputState = {};
 
-  buildClassSelector("r-tier", "r-class");
-
-  // Check logged-in state
-  const session = getSession();
-  if (session) showLoggedIn(session);
-});
-
-function showLoggedIn(session) {
-  hide(el("auth-state"));
-  show(el("logged-in-state"));
-  el("welcome-msg").textContent = `Welcome back, ${session.gamertag || session.name}!`;
-  el("view-profile-btn").href = `profile.html?id=${session.id}`;
+function tagInputInit(id, options) {
+  tagInputState[id] = { options, selected: [] };
+  renderTagDropdown(id);
+  // Close on outside click
+  document.addEventListener("click", e => {
+    if (!document.getElementById(id + "-wrap").contains(e.target)) {
+      document.getElementById(id + "-dropdown").classList.remove("open");
+    }
+  });
 }
 
+function tagInputOpen(id) {
+  renderTagDropdown(id);
+  document.getElementById(id + "-dropdown").classList.add("open");
+}
+
+function tagInputFilter(id) {
+  renderTagDropdown(id);
+  document.getElementById(id + "-dropdown").classList.add("open");
+}
+
+function tagInputToggle(id, value) {
+  const state = tagInputState[id];
+  const idx = state.selected.indexOf(value);
+  if (idx >= 0) state.selected.splice(idx, 1);
+  else state.selected.push(value);
+  renderTagChips(id);
+  renderTagDropdown(id);
+  document.getElementById(id + "-search").value = "";
+  document.getElementById(id + "-search").focus();
+}
+
+function tagInputRemove(id, value) {
+  const state = tagInputState[id];
+  state.selected = state.selected.filter(v => v !== value);
+  renderTagChips(id);
+  renderTagDropdown(id);
+}
+
+function tagInputGet(id) {
+  return tagInputState[id]?.selected || [];
+}
+
+function renderTagChips(id) {
+  const state = tagInputState[id];
+  const el_ = document.getElementById(id + "-tags");
+  el_.innerHTML = state.selected.map(v =>
+    `<span class="tag-chip">${esc(v)}
+      <button class="tag-chip-x" onclick="tagInputRemove('${id}','${esc(v)}')" title="Remove">✕</button>
+    </span>`
+  ).join("");
+}
+
+function renderTagDropdown(id) {
+  const state = tagInputState[id];
+  const q = (document.getElementById(id + "-search").value || "").toLowerCase();
+  const filtered = state.options.filter(o => !q || o.toLowerCase().includes(q));
+  const ddEl = document.getElementById(id + "-dropdown");
+  if (!filtered.length) {
+    ddEl.innerHTML = `<div class="tag-dropdown-empty">No results</div>`;
+    return;
+  }
+  ddEl.innerHTML = filtered.map(o => {
+    const sel = state.selected.includes(o);
+    return `<div class="tag-dropdown-item ${sel ? "selected" : ""}" onclick="tagInputToggle('${id}','${esc(o)}')">${esc(o)}${sel ? " ✓" : ""}</div>`;
+  }).join("");
+}
+
+// ── Page init ─────────────────────────────────────────────
+onReady(() => {
+  populateSelect("r-timezone", TIMEZONES, "— Select Time Zone —");
+  buildClassSelector("r-tier", "r-class");
+  tagInputInit("r-languages", LANGUAGES);
+  tagInputInit("r-preflang", LANGUAGES);
+
+  const session = getSession();
+  if (session) {
+    hide(el("hero-block"));
+    hide(el("auth-state"));
+    show(el("logged-in-state"));
+    el("welcome-msg").textContent = `Welcome back, ${session.name || session.gamertag}!`;
+    el("view-profile-btn").href = `profile.html?id=${session.id}`;
+  }
+});
+
 function switchTab(tab) {
-  if (tab === "register") {
-    show(el("panel-register")); hide(el("panel-login"));
-    el("tab-register").className = "btn btn-primary";
-    el("tab-login").className    = "btn btn-ghost";
+  if (tab === "login") {
+    show(el("panel-login")); hide(el("panel-register"));
+    el("tab-login").classList.add("active");
+    el("tab-register").classList.remove("active");
   } else {
-    hide(el("panel-register")); show(el("panel-login"));
-    el("tab-register").className = "btn btn-ghost";
-    el("tab-login").className    = "btn btn-primary";
+    hide(el("panel-login")); show(el("panel-register"));
+    el("tab-register").classList.add("active");
+    el("tab-login").classList.remove("active");
+  }
+}
+
+async function doLogin() {
+  clearAlert("login-error");
+  const tag = el("l-tag").value.trim();
+  const key = el("l-key").value.trim();
+  if (!tag || !key) { showAlert("login-error", "Enter your Player ID and Secret Key."); return; }
+  try {
+    const res = await apiPost({ action: "login", gamertag: tag, captainKey: key });
+    const m = res.member;
+    const session = { id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain };
+    setSession(session);
+    toast("Welcome back, " + (m.name || m.gamertag) + "!");
+    hide(el("hero-block")); hide(el("auth-state")); show(el("logged-in-state"));
+    el("welcome-msg").textContent = `Welcome back, ${m.name || m.gamertag}!`;
+    el("view-profile-btn").href = `profile.html?id=${m.id}`;
+  } catch(e) {
+    showAlert("login-error", e.message);
   }
 }
 
 async function doRegister() {
   clearAlert("reg-error");
-  const name     = el("r-name").value.trim();
-  const tag      = el("r-tag").value.trim();
-  const tier     = el("r-tier").value;
-  const cls      = el("r-class").value;
-  const power    = parsePower(el("r-power").value);
-  const level    = el("r-level").value.trim();
-  const bio      = el("r-bio").value.trim();
-  const desc     = el("r-desc").value.trim();
-  const playstyle= el("r-playstyle").value;
-  const discId   = el("r-discord-id").value.trim();
-  const discName = el("r-discord-name").value.trim();
-  const tz       = el("r-timezone").value;
-  const prefLang = el("r-pref-lang").value;
-  const lfg      = el("r-lfg").checked;
-  const isCaptain= el("r-captain").checked;
+  const name      = el("r-name").value.trim();
+  const tag       = el("r-tag").value.trim();
+  const tier      = el("r-tier").value;
+  const cls       = el("r-class").value;
+  const power     = parsePower(el("r-power").value);
+  const level     = el("r-level").value.trim();
+  const bio       = el("r-bio").value.trim();
+  const desc      = el("r-desc").value.trim();
+  const playstyle = el("r-playstyle").value;
+  const discId    = el("r-discord-id").value.trim();
+  const discName  = el("r-discord-name").value.trim();
+  const tz        = el("r-timezone").value;
+  const lfg       = el("r-lfg").checked;
+  const isCaptain = el("r-captain").checked;
+  const languages = tagInputGet("r-languages").join(",");
+  const prefLang  = tagInputGet("r-preflang").join(",");
 
-  // Languages (multi-select)
-  const langSel  = el("r-languages");
-  const languages = langSel ? Array.from(langSel.selectedOptions).map(o=>o.value).join(",") : "";
-
-  if (!name)  { showAlert("reg-error","In-Game Name is required."); return; }
-  if (!tag)   { showAlert("reg-error","Player ID is required."); return; }
+  if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
+  if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
 
   el("reg-btn").disabled = true;
   try {
     const res = await apiPost({
-      action:"registerMember", name, gamertag:tag, tier, class:cls,
-      power, level, bio, description:desc, playstyle, discordId:discId,
-      discordName:discName, timezone:tz, languages, prefLanguage:prefLang,
-      lookingForTeam:lfg, isCaptain,
+      action: "registerMember", name, gamertag: tag, tier, class: cls,
+      power, level, bio, description: desc, playstyle,
+      discordId: discId, discordName: discName, timezone: tz,
+      languages, prefLanguage: prefLang,
+      lookingForTeam: lfg, isCaptain,
     });
-
     const m = res.member;
-    const session = { id:m.id, gamertag:m.gamertag, name:m.name, captainKey:m.captainKey, isCaptain:m.isCaptain };
-    setSession(session);
-
-    hide(el("auth-state"));
-    show(el("reg-success"));
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain });
+    hide(el("auth-state")); hide(el("hero-block")); show(el("reg-success"));
     el("out-tag").textContent = m.gamertag;
     el("out-key").textContent = m.captainKey;
     el("goto-profile").href   = `profile.html?id=${m.id}`;
@@ -293,35 +356,14 @@ async function doRegister() {
   }
 }
 
-async function doLogin() {
-  clearAlert("login-error");
-  const tag = el("l-tag").value.trim();
-  const key = el("l-key").value.trim();
-  if (!tag || !key) { showAlert("login-error","Enter your Player ID and Secret Key."); return; }
-  try {
-    const res = await apiPost({ action:"login", gamertag:tag, captainKey:key });
-    const m = res.member;
-    const session = { id:m.id, gamertag:m.gamertag, name:m.name, captainKey:m.captainKey, isCaptain:m.isCaptain };
-    setSession(session);
-    toast("Welcome back, " + (m.name || m.gamertag) + "!");
-    showLoggedIn(session);
-  } catch(e) {
-    showAlert("login-error", e.message);
-  }
-}
-
 function doLogout() {
-  confirm_("Log Out","Are you sure you want to log out?", () => {
-    clearSession();
-    location.reload();
-  }, false);
+  confirm_("Log Out", "Are you sure you want to log out?", () => { clearSession(); location.reload(); }, false);
 }
 
 function copyKey() {
-  const key = el("out-key").textContent;
-  navigator.clipboard.writeText(key)
-    .then(() => toast("Key copied to clipboard!"))
-    .catch(() => toast("Copy failed — please copy manually.", "error"));
+  navigator.clipboard.writeText(el("out-key").textContent)
+    .then(() => toast("Key copied!"))
+    .catch(() => toast("Copy failed — please copy it manually.", "error"));
 }
 </script>
 </body>

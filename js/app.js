@@ -3,7 +3,7 @@
    ============================================================ */
 
 // ── Config ────────────────────────────────────────────────
-const API_URL = "https://script.google.com/macros/s/AKfycbwK6orjm0KV2Kw9oOesh26WEI1pTUkXtwBQVFhAZ56bfZ47tf3bIa1w9d_9QOKv6_kI/exec";
+const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
 // ── Class data ────────────────────────────────────────────
 const CLASS_TREE = {
@@ -65,7 +65,8 @@ async function apiGet(params = {}) {
     throw new Error("API not configured. Please set your Apps Script URL in js/app.js");
   }
   const qs = new URLSearchParams(params).toString();
-  const r = await fetch(`${API_URL}?${qs}`);
+  const r = await fetch(`${API_URL}?${qs}`, { redirect: "follow" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const d = await r.json();
   if (!d.ok) throw new Error(d.error || "Request failed");
   return d;
@@ -77,8 +78,11 @@ async function apiPost(body) {
   }
   const r = await fetch(API_URL, {
     method: "POST",
+    redirect: "follow",
+    headers: { "Content-Type": "text/plain" }, // Apps Script requires text/plain to avoid CORS preflight
     body: JSON.stringify(body),
   });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const d = await r.json();
   if (!d.ok) throw new Error(d.error || "Request failed");
   return d;
@@ -198,7 +202,7 @@ function closeConfirmModal() {
 }
 
 // ── Nav builder ───────────────────────────────────────────
-function buildNav(activePage) {
+function buildNav(activePage, opts = {}) {
   const session = getSession();
   const pages = [
     { href: "index.html",       label: "Current Teams" },
@@ -217,7 +221,9 @@ function buildNav(activePage) {
     ? `<a href="profile.html?id=${session.id}" class="session-tag" title="View profile">
          ${esc(session.gamertag || session.name)}
        </a>`
-    : `<a href="register.html" class="btn btn-primary btn-sm">Register</a>`;
+    : opts.hideRegisterBtn
+      ? ""
+      : `<a href="register.html" class="btn btn-primary btn-sm">Register</a>`;
 
   const navHtml = `
     <nav>

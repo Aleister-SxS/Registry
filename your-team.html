@@ -15,7 +15,11 @@
   <div id="content" style="display:none;"></div>
   <div id="not-logged-in" class="empty" style="display:none;">
     <div class="empty-icon">🛡️</div>
-    <p>Please <a href="register.html">log in</a> to view your teams.</p>
+    <h3>You're not logged in.</h3>
+    <p>Log in to view your teams, manage your roster, and plan your formations.</p>
+    <div class="empty-actions">
+      <a href="register.html" class="btn btn-primary">Log In / Register</a>
+    </div>
   </div>
 </main>
 <script>
@@ -49,8 +53,15 @@ function render(){
   const maxSize = Number(settings.maxTeamSize)||4;
 
   if(!myTeams.length){
-    el("content").innerHTML=`<div class="empty"><div class="empty-icon">🛡️</div>
-      <p>You are not in any teams yet.<br><a href="index.html">Browse teams</a> or <a href="create-team.html">create one</a>.</p></div>`;
+    el("content").innerHTML=`<div class="empty">
+      <div class="empty-icon">🛡️</div>
+      <h3>You're currently not in any team.</h3>
+      <p>Join an existing team or start your own — your teammates are out there.</p>
+      <div class="empty-actions">
+        <a href="index.html" class="btn btn-primary">View Current Teams</a>
+        <a href="create-team.html" class="btn btn-ghost">Start Your Own Team</a>
+      </div>
+    </div>`;
     return;
   }
 
