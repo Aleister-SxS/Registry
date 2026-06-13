@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Player Profile — Team Registry</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<script src="js/app.js"></script>
+<script src="js/build-maker.js"></script>
+<script>onReady(() => buildNav(""));</script>
+
+<main>
+  <div id="loading" class="loading"><span class="spinner"></span></div>
+  <div id="profile-content" style="display:none;"></div>
+</main>
+
+<!-- Edit profile modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">Edit Profile</div>
+    <div class="field-row">
+      <div class="field"><label>In-Game Name</label><input id="ep-name" /></div>
+      <div class="field"><label>Player ID</label><input id="ep-tag" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Class Tier</label><select id="ep-tier"></select></div>
+      <div class="field"><label>Class</label><select id="ep-class" disabled></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Power Rating</label><input id="ep-power" placeholder="e.g. 180k" /></div>
+      <div class="field"><label>Character Level</label><input id="ep-level" type="number" /></div>
+    </div>
+    <div class="field"><label>Describe Your Playstyle</label><textarea id="ep-bio"></textarea></div>
+    <div class="field"><label>Describe Yourself</label><textarea id="ep-desc"></textarea></div>
+    <div class="field"><label>Playstyle Preference</label>
+      <select id="ep-playstyle">
+        <option value="">— Select —</option>
+        <option value="Casual">Casual — Just Need a Team</option>
+        <option value="Competitive">Competitive — Aiming for Top 10</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Discord ID</label><input id="ep-discord-id" /></div>
+      <div class="field"><label>Discord Display Name</label><input id="ep-discord-name" /></div>
+    </div>
+    <div class="field"><label>Time Zone</label><select id="ep-timezone"></select></div>
+    <div class="field-row">
+      <div class="field"><label>Languages Spoken</label>
+        <select id="ep-languages" multiple style="min-height:80px;"></select>
+      </div>
+      <div class="field"><label>Preferred Language</label><select id="ep-pref-lang"></select></div>
+    </div>
+    <div class="field">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Looking for a team</div></div>
+        <label class="toggle"><input type="checkbox" id="ep-lfg" /><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Team Captain</div></div>
+        <label class="toggle"><input type="checkbox" id="ep-captain" /><span class="slider"></span></label>
+      </div>
+    </div>
+    <div id="edit-error" class="alert alert-error alert-hidden mt-sm"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmSave()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let profileMember = null;
+let allTeams = [], allMembers = [];
+let bm = null;
+
+onReady(async () => {
+  const params = new URLSearchParams(location.search);
+  const memberId = params.get("id");
+  if (!memberId) { renderError("No profile ID specified."); return; }
+
+  try {
+    const d = await apiGet({ action:"getAll" });
+    allTeams   = d.teams   || [];
+    allMembers = d.members || [];
+    profileMember = allMembers.find(m => m.id === memberId);
+  } catch(e) {
+    // demo fallback
+    profileMember = demoMember();
+    allTeams = demoTeams();
+  }
+
+  if (!profileMember) { renderError("Member not found."); return; }
+  renderProfile();
+  populateEditModal();
+});
+
+function demoMember() {
+  return {
+    id:"m4", name:"Taylor Kim", gamertag:"TK_Radiant#777",
+    tier:"T2", class:"Duelist", power:1900000, level:55,
+    bio:"Burst-window melee striker. Short cooldowns drive most damage.", description:"Been playing since beta. Looking for a team to push ranked.",
+    playstyle:"Competitive", discordId:"tkim#4521", discordName:"TK_Radiant",
+    timezone:"UTC-05:00 (EST)", languages:"English,Korean", prefLanguage:"English",
+    lookingForTeam:"TRUE", isCaptain:"FALSE", teamIds:[],
+    captainedTeams:[],
+    pvpBuild:{ techniques:["10009","10014","10016"], charms:["10588","10543"] },
+  };
+}
+function demoTeams() {
+  return [{ id:"t1", name:"Shadow Protocol", captainId:"m1", captainName:"Alex Chen", status:"open", memberCount:2, composition:["Tank","DPS","DPS","Support"], description:"Competitive team." }];
+}
+
+function renderProfile() {
+  const m = profileMember;
+  const session = getSession();
+  const isOwn = session && session.id === m.id;
+  const teamsList = allTeams.filter(t => (m.teamIds||[]).includes(t.id));
+  const captainTeams = allTeams.filter(t => t.captainId === m.id);
+  const languages = (m.languages||"").split(",").filter(Boolean);
+
+  el("loading").style.display = "none";
+  el("profile-content").style.display = "block";
+  el("profile-content").innerHTML = `
+    <!-- Hero -->
+    <div class="profile-hero">
+      <div class="avatar avatar-lg">${initials(m.name)}</div>
+      <div class="profile-info">
+        <div class="profile-name">${esc(m.name)}</div>
+        <div class="profile-id">${esc(m.gamertag)}</div>
+        <div class="profile-badges">
+          ${m.tier && m.class ? `<span class="badge badge-captain">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)} (${esc(m.tier)})</span>` : ""}
+          ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Team Captain</span>` : ""}
+          ${m.lookingForTeam==="TRUE" ? `<span class="badge badge-lfg">🔍 Looking for Team</span>` : ""}
+          ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
+        </div>
+        <div class="tags-row mb-sm">
+          ${m.power ? `<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>` : ""}
+          ${m.level ? `<span class="tag tag-level">🎯 Level ${esc(String(m.level))}</span>` : ""}
+          ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
+          ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
+        </div>
+        ${m.bio ? `<div class="profile-bio"><strong>Playstyle:</strong> ${esc(m.bio)}</div>` : ""}
+        ${m.description ? `<div class="profile-bio mt-sm"><strong>About:</strong> ${esc(m.description)}</div>` : ""}
+      </div>
+      ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openEditModal()">Edit Profile</button>` : ""}
+    </div>
+
+    <div class="two-col" style="align-items:start;">
+      <div>
+        <!-- Communication -->
+        ${m.discordId || m.languages ? `
+        <div class="card mb-md">
+          <div class="section-title mb-sm">Communication</div>
+          ${m.discordId   ? `<div class="text-sm mb-sm">💬 <strong>Discord:</strong> ${esc(m.discordId)}${m.discordName?" ("+esc(m.discordName)+")":""}</div>` : ""}
+          ${languages.length ? `<div class="text-sm mb-sm">🗣️ <strong>Languages:</strong> ${languages.map(l=>esc(l)).join(", ")}</div>` : ""}
+        </div>` : ""}
+
+        <!-- Teams they're in -->
+        <div class="card mb-md">
+          <div class="section-title mb-sm">Current Teams</div>
+          ${teamsList.length ? teamsList.map(t => `
+            <div class="status-card mb-sm">
+              <div class="flex-between">
+                <div>
+                  <div class="status-card-name">${esc(t.name)}</div>
+                  <div class="status-card-sub">Captain: ${esc(t.captainName||"—")} · ${esc(t.status)}</div>
+                </div>
+                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team</a>
+              </div>
+            </div>
+          `).join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
+        </div>
+
+        <!-- Teams captained -->
+        ${m.isCaptain==="TRUE" ? `
+        <div class="card mb-md">
+          <div class="section-title mb-sm">Team Captain</div>
+          ${captainTeams.length ? captainTeams.map(t => `
+            <div class="status-card mb-sm">
+              <div class="flex-between">
+                <div>
+                  <div class="status-card-name">${esc(t.name)}</div>
+                  <div class="comp-row mt-sm">${renderComposition(t.composition)}</div>
+                  <div class="req-row">
+                    ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>` : ""}
+                    ${t.minLevel ? `<span class="req-pill">🎯 Lv.${t.minLevel}+</span>` : ""}
+                  </div>
+                  <span class="badge badge-${t.status==='open'?'open':t.status==='full'?'full':'closed'} mt-sm">
+                    <span class="badge-dot"></span>${esc(t.status)}
+                  </span>
+                </div>
+                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Manage</a>
+              </div>
+            </div>
+          `).join("") : `<p class="text-sm text-muted">No teams captained yet. <a href="create-team.html">Create one →</a></p>`}
+        </div>` : ""}
+      </div>
+
+      <!-- PVP Build -->
+      <div>
+        <div class="card">
+          <div class="section-title mb-sm">PVP Build</div>
+          <div id="build-maker-container"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Mount build maker
+  const existingBuild = m.pvpBuild || { techniques:[], charms:[] };
+  bm = new BuildMaker({
+    containerId: "build-maker-container",
+    currentClass: m.class || "",
+    readOnly: !isOwn,
+    onSave: isOwn ? saveBuild : null,
+    maxTechniques: 6,
+    maxCharms: 6,
+  }).mount();
+  bm.load(existingBuild.techniques || [], existingBuild.charms || []);
+}
+
+async function saveBuild(build) {
+  const session = getSession();
+  if (!session) return;
+  try {
+    confirm_("Save Build","Confirm saving your PVP build to your profile?", async () => {
+      await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey, pvpBuild: JSON.stringify(build) });
+      toast("Build saved!");
+      profileMember.pvpBuild = build;
+    }, false);
+  } catch(e) { toast(e.message,"error"); }
+}
+
+function populateEditModal() {
+  populateSelect("ep-timezone", TIMEZONES, "— Select —");
+  populateSelect("ep-pref-lang", LANGUAGES, "— Select —");
+  const ls = el("ep-languages");
+  if (ls) ls.innerHTML = LANGUAGES.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join("");
+  buildClassSelector("ep-tier","ep-class");
+}
+
+function openEditModal() {
+  const m = profileMember;
+  el("ep-name").value    = m.name || "";
+  el("ep-tag").value     = m.gamertag || "";
+  el("ep-power").value   = m.power ? formatPower(m.power) : "";
+  el("ep-level").value   = m.level || "";
+  el("ep-bio").value     = m.bio || "";
+  el("ep-desc").value    = m.description || "";
+  el("ep-playstyle").value = m.playstyle || "";
+  el("ep-discord-id").value   = m.discordId || "";
+  el("ep-discord-name").value = m.discordName || "";
+  el("ep-timezone").value     = m.timezone || "";
+  el("ep-pref-lang").value    = m.prefLanguage || "";
+  el("ep-lfg").checked     = m.lookingForTeam === "TRUE";
+  el("ep-captain").checked = m.isCaptain === "TRUE";
+  // pre-select languages
+  const spoken = (m.languages||"").split(",").filter(Boolean);
+  Array.from(el("ep-languages").options).forEach(o => o.selected = spoken.includes(o.value));
+  // set tier/class
+  if (m.tier) {
+    el("ep-tier").value = m.tier;
+    el("ep-tier").dispatchEvent(new Event("change"));
+    setTimeout(() => { if (m.class) el("ep-class").value = m.class; }, 50);
+  }
+  clearAlert("edit-error");
+  el("edit-modal").classList.add("open");
+}
+
+function closeEditModal() { el("edit-modal").classList.remove("open"); }
+
+function confirmSave() {
+  confirm_("Save Changes","Are you sure you want to update your profile?", doSaveProfile, false);
+}
+
+async function doSaveProfile() {
+  const session = getSession();
+  if (!session) return;
+  clearAlert("edit-error");
+  const name      = el("ep-name").value.trim();
+  const tag       = el("ep-tag").value.trim();
+  const tier      = el("ep-tier").value;
+  const cls       = el("ep-class").value;
+  const power     = parsePower(el("ep-power").value);
+  const level     = el("ep-level").value.trim();
+  const bio       = el("ep-bio").value.trim();
+  const desc      = el("ep-desc").value.trim();
+  const playstyle = el("ep-playstyle").value;
+  const discId    = el("ep-discord-id").value.trim();
+  const discName  = el("ep-discord-name").value.trim();
+  const tz        = el("ep-timezone").value;
+  const prefLang  = el("ep-pref-lang").value;
+  const lfg       = el("ep-lfg").checked;
+  const isCaptain = el("ep-captain").checked;
+  const languages = Array.from(el("ep-languages").selectedOptions).map(o=>o.value).join(",");
+
+  if (!name) { showAlert("edit-error","In-Game Name is required."); return; }
+  try {
+    await apiPost({
+      action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
+      name, gamertag:tag, tier, class:cls, power, level, bio, description:desc,
+      playstyle, discordId:discId, discordName:discName, timezone:tz,
+      languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain,
+    });
+    // update local
+    Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,description:desc,
+      playstyle,discordId:discId,discordName:discName,timezone:tz,languages,prefLanguage:prefLang,
+      lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
+    // update session name/tag
+    const s = getSession();
+    s.gamertag = tag; s.name = name; s.isCaptain = isCaptain;
+    setSession(s);
+    closeEditModal();
+    renderProfile();
+    toast("Profile updated!");
+  } catch(e) { showAlert("edit-error", e.message); }
+}
+
+function renderError(msg) {
+  el("loading").style.display = "none";
+  el("profile-content").style.display = "block";
+  el("profile-content").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>${esc(msg)}</p></div>`;
+}
+</script>
+</body>
+</html>

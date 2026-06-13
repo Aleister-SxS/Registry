@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Team Registry</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<script src="js/app.js"></script>
+<script>onReady(()=>buildNav("admin.html"));</script>
+<main>
+
+<div id="admin-locked">
+  <div class="form-wrap" style="max-width:440px;">
+    <div class="form-card">
+      <div class="form-title">Admin Access</div>
+      <div class="form-subtitle">Enter your admin password to manage teams, members, and settings.</div>
+      <div class="field"><label>Admin Password</label><input type="password" id="adm-pw" placeholder="••••••••" /></div>
+      <div id="adm-login-err" class="alert alert-error alert-hidden mt-sm"></div>
+      <button class="btn btn-primary btn-full mt-md" onclick="adminLogin()">Unlock Admin</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-panel" style="display:none;">
+  <div class="flex-between mb-lg flex-wrap gap-sm">
+    <span class="section-title">Admin Panel</span>
+    <button class="btn btn-danger btn-sm" onclick="adminLogout()">Lock Admin</button>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="filter-bar mb-lg">
+    <button class="filter-btn active" onclick="showAdminTab('teams',this)">Teams</button>
+    <button class="filter-btn" onclick="showAdminTab('members',this)">Members</button>
+    <button class="filter-btn" onclick="showAdminTab('settings',this)">Settings</button>
+    <button class="filter-btn" onclick="showAdminTab('keylookup',this)">Key Lookup</button>
+  </div>
+
+  <!-- Teams tab -->
+  <div id="atab-teams">
+    <div class="flex-between mb-md">
+      <span class="section-title">All Teams</span>
+      <input class="search-input" id="admin-team-search" placeholder="Search…" oninput="renderAdminTeams()" />
+    </div>
+    <div id="admin-teams-table"></div>
+  </div>
+
+  <!-- Members tab -->
+  <div id="atab-members" style="display:none;">
+    <div class="flex-between mb-md">
+      <span class="section-title">All Members</span>
+      <input class="search-input" id="admin-member-search" placeholder="Search…" oninput="renderAdminMembers()" />
+    </div>
+    <div id="admin-members-table"></div>
+  </div>
+
+  <!-- Settings tab -->
+  <div id="atab-settings" style="display:none;">
+    <div class="form-wrap">
+      <div class="form-card">
+        <div class="form-title">Registry Settings</div>
+        <div class="form-subtitle">These limits apply globally across the app.</div>
+        <div class="field-row">
+          <div class="field"><label>Max Team Size</label><input type="number" id="s-max-team-size" min="2" max="20" /></div>
+          <div class="field"><label>Max Teams per Member</label><input type="number" id="s-max-member-teams" min="1" /></div>
+        </div>
+        <div class="field"><label>Max Teams a Member Can Captain</label><input type="number" id="s-max-captain-teams" min="1" /></div>
+        <div id="settings-msg" class="alert alert-hidden mt-sm"></div>
+        <button class="btn btn-primary mt-md" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key lookup tab -->
+  <div id="atab-keylookup" style="display:none;">
+    <div class="form-wrap">
+      <div class="form-card">
+        <div class="form-title">Member Key Lookup</div>
+        <div class="form-subtitle">Look up a member's Secret Key to help them log back in.</div>
+        <div class="field"><label>Player ID</label><input id="kl-tag" placeholder="ShadowAce#1234" /></div>
+        <div id="kl-error" class="alert alert-error alert-hidden mt-sm"></div>
+        <button class="btn btn-primary mt-md" onclick="doKeyLookup()">Look Up Key</button>
+        <div id="kl-result" style="display:none;margin-top:1.25rem;">
+          <div class="text-sm text-muted mb-sm">Secret Key for <strong id="kl-result-tag"></strong>:</div>
+          <div class="key-box" id="kl-result-key"></div>
+          <button class="btn btn-ghost btn-sm mt-sm" onclick="copyAdminKey()">Copy Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit team modal -->
+<div class="modal-overlay" id="edit-team-modal">
+  <div class="modal">
+    <div class="modal-title">Edit Team</div>
+    <div class="field"><label>Team Name</label><input id="et-name" /></div>
+    <div class="field mt-sm"><label>Description</label><textarea id="et-desc"></textarea></div>
+    <div class="field mt-sm"><label>Status</label>
+      <select id="et-status">
+        <option value="open">Open — Recruiting</option>
+        <option value="closed">Closed — Not Recruiting</option>
+        <option value="full">Full</option>
+      </select>
+    </div>
+    <div id="et-error" class="alert alert-error alert-hidden mt-sm"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditTeamModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeamEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+const ADMIN_PASSWORD = "Blazer!?31!?";
+let adminAuthed = false;
+let allTeams=[], allMembers=[], settings={};
+let editingTeamId = null;
+
+onReady(async()=>{
+  try{
+    const d=await apiGet({action:"getAll"});
+    allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
+  }catch(e){loadDemo();}
+});
+
+function loadDemo(){
+  allTeams=[
+    {id:"t1",name:"Shadow Protocol",captainName:"Alex Chen",status:"open",memberCount:2,description:"Competitive scrims."},
+    {id:"t2",name:"Iron Wolves",captainName:"Jordan Park",status:"open",memberCount:3,description:"Semi-casual."},
+  ];
+  allMembers=[
+    {id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",isCaptain:"TRUE",teamIds:["t1"],class:"Duelist"},
+    {id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",isCaptain:"FALSE",teamIds:[],class:"Knight"},
+  ];
+  settings={maxTeamSize:4,maxMemberTeams:3,maxCaptainTeams:3};
+}
+
+function adminLogin(){
+  const pw=el("adm-pw").value;
+  if(pw!==ADMIN_PASSWORD){showAlert("adm-login-err","Incorrect password.");return;}
+  adminAuthed=true;
+  hide(el("admin-locked"));show(el("admin-panel"));
+  renderAdminTeams();renderAdminMembers();
+  el("s-max-team-size").value=settings.maxTeamSize||4;
+  el("s-max-member-teams").value=settings.maxMemberTeams||3;
+  el("s-max-captain-teams").value=settings.maxCaptainTeams||3;
+}
+
+function adminLogout(){
+  adminAuthed=false;
+  el("adm-pw").value="";
+  show(el("admin-locked"));hide(el("admin-panel"));
+}
+
+function showAdminTab(name,btn){
+  ["teams","members","settings","keylookup"].forEach(t=>{
+    const el_=el("atab-"+t);
+    if(el_)el_.style.display=t===name?"block":"none";
+  });
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  if(btn)btn.classList.add("active");
+}
+
+function renderAdminTeams(){
+  const search=(el("admin-team-search").value||"").toLowerCase();
+  const teams=allTeams.filter(t=>!search||t.name.toLowerCase().includes(search));
+  el("admin-teams-table").innerHTML=`
+    <div class="card" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Team Name</th><th>Captain</th><th>Members</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${teams.map(t=>`<tr>
+            <td><a href="team.html?id=${t.id}">${esc(t.name)}</a></td>
+            <td>${esc(t.captainName||"—")}</td>
+            <td>${t.memberCount||0} / ${settings.maxTeamSize||4}</td>
+            <td><span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}">${esc(t.status)}</span></td>
+            <td>
+              <div class="flex gap-xs">
+                <button class="btn btn-ghost btn-xs" onclick="openEditTeam('${t.id}')">Edit</button>
+                <button class="btn btn-danger btn-xs" onclick="confirmDeleteTeam('${t.id}','${esc(t.name)}')">Delete</button>
+              </div>
+            </td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function renderAdminMembers(){
+  const search=(el("admin-member-search").value||"").toLowerCase();
+  const members=allMembers.filter(m=>!search||m.name.toLowerCase().includes(search)||m.gamertag.toLowerCase().includes(search));
+  el("admin-members-table").innerHTML=`
+    <div class="card" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Player ID</th><th>Class</th><th>Captain</th><th>Teams</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${members.map(m=>`<tr>
+            <td><a href="profile.html?id=${m.id}">${esc(m.name)}</a></td>
+            <td class="text-mono text-xs">${esc(m.gamertag)}</td>
+            <td>${m.class?esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):"—"}</td>
+            <td>${m.isCaptain==="TRUE"?`<span class="badge badge-captain">Yes</span>`:"No"}</td>
+            <td>${(m.teamIds||[]).length}</td>
+            <td><a href="profile.html?id=${m.id}" class="btn btn-ghost btn-xs">View</a></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function openEditTeam(teamId){
+  editingTeamId=teamId;
+  const t=allTeams.find(x=>x.id===teamId);
+  if(!t)return;
+  el("et-name").value=t.name||"";
+  el("et-desc").value=t.description||"";
+  el("et-status").value=t.status||"open";
+  clearAlert("et-error");
+  el("edit-team-modal").classList.add("open");
+}
+function closeEditTeamModal(){el("edit-team-modal").classList.remove("open");}
+
+async function saveTeamEdit(){
+  if(!editingTeamId)return;
+  clearAlert("et-error");
+  try{
+    await apiPost({action:"adminEditTeam",adminPassword:ADMIN_PASSWORD,teamId:editingTeamId,
+      name:el("et-name").value.trim(),description:el("et-desc").value.trim(),status:el("et-status").value});
+    const t=allTeams.find(x=>x.id===editingTeamId);
+    if(t){t.name=el("et-name").value.trim();t.description=el("et-desc").value.trim();t.status=el("et-status").value;}
+    closeEditTeamModal();renderAdminTeams();toast("Team updated!");
+  }catch(e){showAlert("et-error",e.message);}
+}
+
+function confirmDeleteTeam(teamId,teamName){
+  confirm_(`Delete "${teamName}"`,`Permanently delete this team and remove all members from it? This cannot be undone.`,async()=>{
+    try{
+      await apiPost({action:"adminDeleteTeam",adminPassword:ADMIN_PASSWORD,teamId});
+      const idx=allTeams.findIndex(x=>x.id===teamId);if(idx>=0)allTeams.splice(idx,1);
+      allMembers.forEach(m=>{if(m.teamIds)m.teamIds=m.teamIds.filter(id=>id!==teamId);});
+      renderAdminTeams();toast("Team deleted.");
+    }catch(e){toast(e.message,"error");}
+  });
+}
+
+async function saveSettings(){
+  const maxTeamSize=Number(el("s-max-team-size").value)||4;
+  const maxMemberTeams=Number(el("s-max-member-teams").value)||3;
+  const maxCaptainTeams=Number(el("s-max-captain-teams").value)||3;
+  try{
+    await apiPost({action:"updateSettings",adminPassword:ADMIN_PASSWORD,maxTeamSize,maxMemberTeams,maxCaptainTeams});
+    settings={maxTeamSize,maxMemberTeams,maxCaptainTeams};
+    showAlert("settings-msg","Settings saved!","success");
+    setTimeout(()=>clearAlert("settings-msg"),3000);
+  }catch(e){showAlert("settings-msg",e.message);}
+}
+
+async function doKeyLookup(){
+  const tag=el("kl-tag").value.trim();
+  clearAlert("kl-error");el("kl-result").style.display="none";
+  if(!tag){showAlert("kl-error","Enter a Player ID.");return;}
+  try{
+    const res=await apiPost({action:"adminLookupKey",adminPassword:ADMIN_PASSWORD,gamertag:tag});
+    el("kl-result-tag").textContent=res.gamertag;
+    el("kl-result-key").textContent=res.captainKey;
+    el("kl-result").style.display="block";
+  }catch(e){showAlert("kl-error",e.message);}
+}
+function copyAdminKey(){
+  navigator.clipboard.writeText(el("kl-result-key").textContent).then(()=>toast("Key copied!")).catch(()=>{});
+}
+</script>
+</body>
+</html>

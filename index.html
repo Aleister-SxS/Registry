@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Current Teams — Team Registry</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<script src="js/app.js"></script>
+<script>onReady(() => buildNav("index.html"));</script>
+
+<main>
+  <div class="section-header">
+    <span class="section-title">Current Teams</span>
+    <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
+      <input class="search-input" id="team-search" placeholder="Search teams…" oninput="renderTeams()" />
+      <span class="count-badge" id="team-count">—</span>
+    </div>
+  </div>
+
+  <div id="loading" class="loading"><span class="spinner"></span></div>
+  <div class="cards-grid" id="teams-grid" style="display:none;"></div>
+  <div id="teams-empty" class="empty" style="display:none;">
+    <div class="empty-icon">🎮</div>
+    <p>No teams yet.<br>Register and create the first one!</p>
+  </div>
+</main>
+
+<!-- Join request modal -->
+<div class="modal-overlay" id="join-modal">
+  <div class="modal">
+    <div class="modal-title">Request to Join <span id="jm-team-name"></span></div>
+    <div class="modal-body">Enter your credentials to send a join request to this team.</div>
+    <div class="field"><label>Player ID</label><input id="jm-tag" placeholder="#YourID" /></div>
+    <div class="field mt-sm"><label>Secret Key</label><input id="jm-key" type="password" placeholder="••••••••••••" /></div>
+    <div id="jm-error" class="alert alert-error alert-hidden mt-sm"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeJoinModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doJoinRequest()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allTeams = [], allMembers = [], settings = {};
+let joinTargetTeamId = null;
+
+onReady(async () => {
+  try {
+    const d = await apiGet({ action: "getAll" });
+    allTeams   = d.teams   || [];
+    allMembers = d.members || [];
+    settings   = d.settings || {};
+  } catch(e) {
+    allTeams = demoTeams(); allMembers = demoMembers();
+  }
+  renderTeams();
+});
+
+function demoTeams() {
+  return [
+    { id:"t1", name:"Shadow Protocol", description:"Highly competitive. Daily scrims 8–11 PM EST.", composition:["Tank","DPS","DPS","Support"], minPower:1800000, minLevel:50, captainId:"m1", captainName:"Alex Chen", status:"open", memberCount:2 },
+    { id:"t2", name:"Iron Wolves", description:"Semi-casual, 3x/week practice. Good vibes required.", composition:["Tank","Support","DPS","DPS"], minPower:1200000, minLevel:30, captainId:"m2", captainName:"Jordan Park", status:"open", memberCount:3 },
+    { id:"t3", name:"Velocity", description:"Diamond+ pushing Conqueror rank. Mechanics-first.", composition:["DPS","DPS","Support","Tank"], minPower:2000000, minLevel:60, captainId:"m3", captainName:"Sam Rivera", status:"full", memberCount:4 },
+  ];
+}
+function demoMembers() {
+  return [
+    { id:"m1", name:"Alex Chen", gamertag:"ShadowAce#1234", teamIds:["t1"], isCaptain:"TRUE" },
+    { id:"m4", name:"Taylor Kim", gamertag:"TK_Radiant#777", teamIds:[], lookingForTeam:"TRUE" },
+  ];
+}
+
+function renderTeams() {
+  const grid    = el("teams-grid");
+  const emptyEl = el("teams-empty");
+  const loadEl  = el("loading");
+  const search  = (el("team-search").value || "").toLowerCase();
+
+  loadEl.style.display = "none";
+
+  const teams = allTeams.filter(t =>
+    !search || t.name.toLowerCase().includes(search) || (t.description||"").toLowerCase().includes(search)
+  );
+
+  el("team-count").textContent = `${teams.length} team${teams.length!==1?"s":""}`;
+
+  if (!teams.length) {
+    grid.style.display = "none"; emptyEl.style.display = "block"; return;
+  }
+  emptyEl.style.display = "none"; grid.style.display = "grid";
+
+  const session = getSession();
+  const maxSize = Number(settings.maxTeamSize) || 4;
+
+  grid.innerHTML = teams.map(t => {
+    const count   = Number(t.memberCount) || allMembers.filter(m => (m.teamIds||[]).includes(t.id)).length;
+    const isFull  = count >= maxSize || t.status === "full";
+    const status  = t.status === "closed" ? "closed" : isFull ? "full" : "open";
+    const label   = { open:"Recruiting", full:"Full", closed:"Closed" }[status];
+
+    const comp = renderComposition(t.composition);
+    const pips  = Array.from({length:maxSize},(_,i) => {
+      const m = allMembers.filter(m=>(m.teamIds||[]).includes(t.id))[i];
+      return `<div class="pip ${i<count?"pip-filled":"pip-empty"}">${i<count?(m?.name||"?")[0].toUpperCase():""}</div>`;
+    }).join("");
+
+    const alreadyReq = session && false; // would check allRequests
+    const memberTeams = session ? (allMembers.find(m=>m.id===session.id)?.teamIds||[]) : [];
+    const canReq = session && status === "open" && !memberTeams.includes(t.id);
+
+    return `<div class="team-card">
+      <div class="team-card-header">
+        <div>
+          <div class="team-card-name">${esc(t.name)}</div>
+          <div class="team-card-captain">Captain: ${esc(t.captainName||"—")}</div>
+        </div>
+        <span class="badge badge-${status}">
+          <span class="badge-dot"></span>${label}
+        </span>
+      </div>
+      ${comp ? `<div class="comp-row">${comp}</div>` : ""}
+      <div class="team-card-desc">${esc(t.description) || "<em style='color:var(--text3)'>No description.</em>"}</div>
+      <div class="req-row">
+        ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+ Power</span>` : ""}
+        ${t.minLevel ? `<span class="req-pill">🎯 Level ${t.minLevel}+</span>` : ""}
+        ${t.playstyle ? `<span class="badge badge-${t.playstyle==='Competitive'?'competitive':'casual'}">${esc(t.playstyle)}</span>` : ""}
+        ${t.requiresDiscord === "TRUE" ? `<span class="req-pill">💬 Discord req.</span>` : ""}
+        ${t.prefLanguage ? `<span class="req-pill">🌐 ${esc(t.prefLanguage)}</span>` : ""}
+      </div>
+      <div class="team-card-footer">
+        <div class="flex-center gap-xs">
+          <div class="member-pips">${pips}</div>
+          <span class="text-xs text-muted">${count}/${maxSize}</span>
+        </div>
+        <div class="flex gap-xs">
+          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View</a>
+          ${canReq
+            ? `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">Request to Join</button>`
+            : status === "open" && !session
+              ? `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">Request to Join</button>`
+              : `<button class="btn btn-ghost btn-sm" disabled>${status==="open"?"In a team":"Unavailable"}</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function openJoinModal(teamId, teamName) {
+  joinTargetTeamId = teamId;
+  el("jm-team-name").textContent = teamName;
+  el("jm-tag").value = getSession()?.gamertag || "";
+  el("jm-key").value = "";
+  clearAlert("jm-error");
+  el("join-modal").classList.add("open");
+}
+function closeJoinModal() { el("join-modal").classList.remove("open"); }
+
+async function doJoinRequest() {
+  const tag = el("jm-tag").value.trim();
+  const key = el("jm-key").value.trim();
+  if (!tag || !key) { showAlert("jm-error","Enter your Player ID and Secret Key."); return; }
+  try {
+    await apiPost({ action:"joinRequest", gamertag:tag, captainKey:key, teamId:joinTargetTeamId });
+    closeJoinModal();
+    toast("Join request sent!");
+    renderTeams();
+  } catch(e) { showAlert("jm-error", e.message); }
+}
+</script>
+</body>
+</html>

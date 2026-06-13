@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Team Status — Team Registry</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<script src="js/app.js"></script>
+<script>onReady(() => buildNav("status.html"));</script>
+<main>
+  <div class="section-title mb-lg">Team Status</div>
+
+  <div id="login-box" class="login-box">
+    <div class="text-sm text-muted mb-sm">Log in to view your teams, invites, and requests.</div>
+    <div class="login-row">
+      <div class="field"><label>Player ID</label><input id="sl-tag" placeholder="#YourID" /></div>
+      <div class="field"><label>Secret Key</label><input id="sl-key" type="password" placeholder="••••••••" /></div>
+      <button class="btn btn-primary" onclick="doLogin()">Load</button>
+    </div>
+    <div id="sl-error" class="alert alert-error alert-hidden mt-sm"></div>
+  </div>
+
+  <div id="status-content" style="display:none;">
+
+    <!-- Current Teams -->
+    <div class="status-section">
+      <div class="status-section-title">Current Teams</div>
+      <div id="sc-teams"></div>
+    </div>
+
+    <!-- Incoming invites -->
+    <div class="status-section">
+      <div class="status-section-title">
+        Team Invites
+        <span id="inv-badge" class="badge badge-pending" style="display:none;"></span>
+      </div>
+      <div id="sc-invites"></div>
+    </div>
+
+    <!-- Outgoing join requests -->
+    <div class="status-section">
+      <div class="status-section-title">
+        Your Join Requests
+        <span id="req-badge" class="badge badge-pending" style="display:none;"></span>
+      </div>
+      <div id="sc-requests"></div>
+    </div>
+
+    <!-- Captain: incoming join requests -->
+    <div id="captain-section" class="status-section" style="display:none;">
+      <div class="status-section-title">
+        Join Requests to Your Team(s)
+        <span id="jrq-badge" class="badge badge-pending" style="display:none;"></span>
+      </div>
+      <div id="sc-joinreqs"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let allTeams=[], allMembers=[], allRequests=[], settings={};
+let statusMember = null;
+
+onReady(async () => {
+  try {
+    const d = await apiGet({ action:"getAll" });
+    allTeams=d.teams||[]; allMembers=d.members||[]; allRequests=d.requests||[]; settings=d.settings||{};
+  } catch(e) { loadDemo(); }
+
+  const session = getSession();
+  if (session) {
+    el("sl-tag").value = session.gamertag || "";
+    autoLoad(session);
+  }
+});
+
+function loadDemo() {
+  allTeams=[{ id:"t1",name:"Shadow Protocol",captainId:"m1",captainName:"Alex Chen",status:"open",memberCount:2,composition:["Tank","DPS","DPS","Support"] }];
+  allMembers=[
+    { id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",captainKey:"demo-key-alex",teamIds:["t1"],isCaptain:"TRUE" },
+    { id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",captainKey:"demo-key-tk",teamIds:[],isCaptain:"FALSE" },
+  ];
+  allRequests=[
+    { id:"r1",type:"invite",teamId:"t1",teamName:"Shadow Protocol",fromId:"m1",toId:"m4",status:"pending" },
+    { id:"r2",type:"join",teamId:"t1",teamName:"Shadow Protocol",fromId:"m4",toId:"m1",status:"pending" },
+  ];
+}
+
+function autoLoad(session) {
+  const m = allMembers.find(mb=>mb.id===session.id);
+  if (m) { statusMember = m; showStatus(); }
+}
+
+function doLogin() {
+  const tag=el("sl-tag").value.trim(), key=el("sl-key").value.trim();
+  clearAlert("sl-error");
+  if (!tag||!key) { showAlert("sl-error","Enter your Player ID and key."); return; }
+  const m = allMembers.find(mb=>mb.gamertag.toLowerCase()===tag.toLowerCase()&&mb.captainKey===key);
+  if (!m) { showAlert("sl-error","Player ID or key not found."); return; }
+  statusMember = m;
+  const session = { id:m.id, gamertag:m.gamertag, name:m.name, captainKey:m.captainKey, isCaptain:m.isCaptain };
+  setSession(session);
+  showStatus();
+}
+
+function showStatus() {
+  hide(el("login-box")); show(el("status-content"));
+  renderStatus();
+}
+
+function renderStatus() {
+  const m = statusMember;
+  if (!m) return;
+  const maxSize = Number(settings.maxTeamSize)||4;
+
+  // Current teams
+  const memberTeams = allTeams.filter(t=>(m.teamIds||[]).includes(t.id));
+  const teamsEl = el("sc-teams");
+  if (memberTeams.length) {
+    teamsEl.innerHTML = memberTeams.map(t => {
+      const members = allMembers.filter(mb=>(mb.teamIds||[]).includes(t.id));
+      const miniRoster = members.map(mb=>`<div class="mini-pip"><div class="avatar avatar-xs">${initials(mb.name)}</div><span>${esc(mb.name)}${t.captainId===mb.id?" 👑":""}</span></div>`).join("");
+      return `<div class="card card-accent mb-sm">
+        <div class="flex-between mb-sm">
+          <div>
+            <div class="font-semibold">${esc(t.name)}</div>
+            <div class="text-xs text-muted">${members.length}/${maxSize} members${t.captainId===m.id?" · You are the captain":""}</div>
+          </div>
+          <div class="flex gap-xs">
+            <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View More Details</a>
+            <button class="btn btn-danger btn-sm" onclick="confirmLeave('${t.id}','${esc(t.name)}')">Leave Team</button>
+          </div>
+        </div>
+        <div class="mini-roster">${miniRoster}</div>
+      </div>`;
+    }).join("");
+  } else {
+    teamsEl.innerHTML = `<div class="empty" style="padding:1.25rem;"><p>You are not in any teams. <a href="index.html">Browse teams →</a></p></div>`;
+  }
+
+  // Incoming invites
+  const invites = allRequests.filter(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending");
+  const invEl = el("sc-invites");
+  const invBadge = el("inv-badge");
+  if (invites.length) {
+    invBadge.textContent=invites.length; show(invBadge);
+    invEl.innerHTML = invites.map(r=>`<div class="status-card">
+      <div class="status-card-row">
+        <div class="status-card-info">
+          <div class="status-card-name">${esc(r.teamName)}</div>
+          <div class="status-card-sub">Captain invited you to join their team</div>
+        </div>
+        <div class="status-card-actions">
+          <button class="btn btn-success btn-sm" onclick="respondInvite('${r.id}','accept')">Accept</button>
+          <button class="btn btn-danger btn-sm"  onclick="respondInvite('${r.id}','decline')">Decline</button>
+        </div>
+      </div>
+    </div>`).join("");
+  } else { hide(invBadge); invEl.innerHTML=`<div class="empty" style="padding:1rem;"><p>No pending invites.</p></div>`; }
+
+  // Outgoing join requests
+  const reqs = allRequests.filter(r=>r.type==="join"&&r.fromId===m.id&&r.status==="pending");
+  const reqEl = el("sc-requests");
+  const reqBadge = el("req-badge");
+  if (reqs.length) {
+    reqBadge.textContent=reqs.length; show(reqBadge);
+    reqEl.innerHTML = reqs.map(r=>`<div class="status-card">
+      <div class="status-card-row">
+        <div class="status-card-info">
+          <div class="status-card-name">${esc(r.teamName)}</div>
+          <div class="status-card-sub">Pending captain approval</div>
+        </div>
+        <div class="status-card-actions">
+          <button class="btn btn-danger btn-sm" onclick="cancelRequest('${r.id}')">Cancel</button>
+        </div>
+      </div>
+    </div>`).join("");
+  } else { hide(reqBadge); reqEl.innerHTML=`<div class="empty" style="padding:1rem;"><p>No outgoing requests.</p></div>`; }
+
+  // Captain: incoming join requests for all their teams
+  const capTeams = allTeams.filter(t=>t.captainId===m.id);
+  const capSection = el("captain-section");
+  if (capTeams.length) {
+    show(capSection);
+    const capReqs = allRequests.filter(r=>r.type==="join"&&capTeams.map(t=>t.id).includes(r.teamId)&&r.status==="pending");
+    const jrqBadge = el("jrq-badge");
+    const jrqEl = el("sc-joinreqs");
+    if (capReqs.length) {
+      jrqBadge.textContent=capReqs.length; show(jrqBadge);
+      jrqEl.innerHTML = capReqs.map(r=>{
+        const ap = allMembers.find(mb=>mb.id===r.fromId)||{name:r.fromId,gamertag:"?",class:"",power:"",level:""};
+        return `<div class="status-card">
+          <div class="status-card-row">
+            <div class="status-card-info">
+              <div class="status-card-name">${esc(ap.name)} → ${esc(r.teamName)}</div>
+              <div class="status-card-sub">${esc(ap.gamertag)} · ${esc(ap.class||"—")} · ⚡${formatPower(ap.power)} · Lv.${esc(String(ap.level||"—"))}</div>
+            </div>
+            <div class="status-card-actions">
+              <button class="btn btn-success btn-sm" onclick="respondJoin('${r.id}','accept')">Accept</button>
+              <button class="btn btn-danger btn-sm"  onclick="respondJoin('${r.id}','decline')">Decline</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+    } else { hide(jrqBadge); jrqEl.innerHTML=`<div class="empty" style="padding:1rem;"><p>No pending join requests.</p></div>`; }
+  } else { hide(capSection); }
+}
+
+async function respondInvite(reqId, decision) {
+  const session=getSession(); if(!session)return;
+  try {
+    await apiPost({action:"respondInvite",memberId:session.id,captainKey:session.captainKey,requestId:reqId,decision});
+    const r=allRequests.find(x=>x.id===reqId); if(r){r.status=decision==="accept"?"accepted":"declined";
+    if(decision==="accept"){statusMember.teamIds=[...(statusMember.teamIds||[]),r.teamId];}}
+    renderStatus(); toast(decision==="accept"?"Joined team!":"Invite declined.");
+  } catch(e){toast(e.message,"error");}
+}
+async function respondJoin(reqId,decision) {
+  const session=getSession(); if(!session)return;
+  try {
+    await apiPost({action:"respondJoinRequest",captainId:session.id,captainKey:session.captainKey,requestId:reqId,decision});
+    const r=allRequests.find(x=>x.id===reqId); if(r)r.status=decision==="accept"?"accepted":"declined";
+    renderStatus(); toast(decision==="accept"?"Member added to team!":"Request declined.");
+  } catch(e){toast(e.message,"error");}
+}
+async function cancelRequest(reqId) {
+  const session=getSession(); if(!session)return;
+  try {
+    await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
+    const idx=allRequests.findIndex(x=>x.id===reqId); if(idx>=0)allRequests.splice(idx,1);
+    renderStatus(); toast("Request cancelled.");
+  } catch(e){toast(e.message,"error");}
+}
+function confirmLeave(teamId, teamName) {
+  confirm_(`Leave ${teamName}`, "Are you sure? If you are the captain and the only member, the team will be dissolved.", async () => {
+    const session=getSession(); if(!session)return;
+    try {
+      await apiPost({action:"leaveTeam",memberId:session.id,captainKey:session.captainKey,teamId});
+      statusMember.teamIds=(statusMember.teamIds||[]).filter(id=>id!==teamId);
+      renderStatus(); toast("Left team.");
+    } catch(e){toast(e.message,"error");}
+  });
+}
+</script>
+</body>
+</html>
