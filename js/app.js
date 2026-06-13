@@ -133,9 +133,9 @@ function esc(s) {
 }
 
 // ── Show/hide element ─────────────────────────────────────
-function show(el)  { if (el) el.classList.remove("hidden"); }
-function hide(el)  { if (el) el.classList.add("hidden"); }
-function toggle(el){ if (el) el.classList.toggle("hidden"); }
+function show(el)  { if (el) { el.classList.remove("hidden"); el.style.display = ""; } }
+function hide(el)  { if (el) { el.classList.add("hidden");    el.style.display = "none"; } }
+function toggle(el){ if (el) { if (el.style.display === "none" || el.classList.contains("hidden")) { show(el); } else { hide(el); } } }
 
 function el(id)    { return document.getElementById(id); }
 

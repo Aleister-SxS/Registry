@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Register / Log In — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  .panel { display: none; }
+  .panel.active { display: block; }
+</style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -20,7 +24,7 @@
   </div>
 
   <!-- ── LOGGED IN STATE ──────────────────────────────── -->
-  <div id="logged-in-state" style="display:none;">
+  <div class="panel" id="logged-in-state">
     <div class="form-card">
       <div class="form-title" id="welcome-msg">Welcome back!</div>
       <p class="form-subtitle">You are currently logged in.</p>
@@ -33,15 +37,15 @@
     </div>
   </div>
 
-  <!-- ── AUTH TABS ─────────────────────────────────────── -->
+  <!-- ── AUTH STATE ────────────────────────────────────── -->
   <div id="auth-state">
     <div class="auth-tabs">
       <button id="tab-login"    class="auth-tab active"  onclick="switchTab('login')">Log In</button>
       <button id="tab-register" class="auth-tab"         onclick="switchTab('register')">Create Profile</button>
     </div>
 
-    <!-- ── LOGIN PANEL ─────────────────────────────────── -->
-    <div id="panel-login">
+    <!-- LOGIN PANEL -->
+    <div class="panel active" id="panel-login">
       <div class="form-card">
         <div class="form-title">Welcome back</div>
         <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you first registered.</div>
@@ -63,8 +67,8 @@
       </div>
     </div>
 
-    <!-- ── REGISTER PANEL ──────────────────────────────── -->
-    <div id="panel-register" style="display:none;">
+    <!-- REGISTER PANEL -->
+    <div class="panel" id="panel-register">
       <div class="form-card">
         <div class="form-title">Create Your Profile</div>
         <div class="form-subtitle">
@@ -74,8 +78,11 @@
 
         <div class="form-section-label">Basic Info</div>
         <div class="field-row">
-          <div class="field"><label>In-Game Name</label><input id="r-name" placeholder="Alex Chen" /></div>
-          <div class="field"><label>Player ID <span class="optional">(your in-game Player ID)</span></label><input id="r-tag" placeholder="Enter ID Here" /></div>
+          <div class="field"><label>In-Game Name</label><input id="r-name" placeholder="Your name" /></div>
+          <div class="field">
+            <label>Player ID <span class="optional">(your in-game Player ID)</span></label>
+            <input id="r-tag" placeholder="Enter ID Here" />
+          </div>
         </div>
 
         <div class="form-section-label">Class</div>
@@ -94,13 +101,16 @@
         </div>
 
         <div class="form-section-label">Playstyle</div>
-        <div class="field"><label>Describe Your Playstyle</label>
+        <div class="field">
+          <label>Describe Your Playstyle</label>
           <textarea id="r-bio" placeholder="Tell teams about your approach — how you play, what you're good at…"></textarea>
         </div>
-        <div class="field"><label>Describe Yourself</label>
+        <div class="field">
+          <label>Describe Yourself</label>
           <textarea id="r-desc" placeholder="A bit about you — your history, goals, what you're looking for in a team…"></textarea>
         </div>
-        <div class="field"><label>Playstyle Preference</label>
+        <div class="field">
+          <label>Playstyle Preference</label>
           <select id="r-playstyle">
             <option value="">— Select —</option>
             <option value="Casual">Casual — Just Need a Team</option>
@@ -114,37 +124,36 @@
           <div class="field"><label>Discord Display Name <span class="optional">(optional)</span></label><input id="r-discord-name" placeholder="YourDisplayName" /></div>
         </div>
 
-        <!-- Multi-select: Languages Spoken -->
         <div class="field">
           <label>Languages Spoken</label>
           <div class="tag-input-wrap" id="r-languages-wrap">
-            <div class="tag-input-tags"  id="r-languages-tags"></div>
+            <div class="tag-input-tags" id="r-languages-tags"></div>
             <div class="tag-input-dropdown-wrap">
               <input class="tag-input-search" id="r-languages-search" placeholder="Search languages…" autocomplete="off"
                 oninput="tagInputFilter('r-languages')"
-                onfocus="tagInputOpen('r-languages')"
-              />
+                onfocus="tagInputOpen('r-languages')" />
               <div class="tag-dropdown" id="r-languages-dropdown"></div>
             </div>
           </div>
         </div>
 
-        <!-- Multi-select: Preferred Languages -->
         <div class="field">
           <label>Preferred Language(s)</label>
           <div class="tag-input-wrap" id="r-preflang-wrap">
-            <div class="tag-input-tags"  id="r-preflang-tags"></div>
+            <div class="tag-input-tags" id="r-preflang-tags"></div>
             <div class="tag-input-dropdown-wrap">
               <input class="tag-input-search" id="r-preflang-search" placeholder="Search languages…" autocomplete="off"
                 oninput="tagInputFilter('r-preflang')"
-                onfocus="tagInputOpen('r-preflang')"
-              />
+                onfocus="tagInputOpen('r-preflang')" />
               <div class="tag-dropdown" id="r-preflang-dropdown"></div>
             </div>
           </div>
         </div>
 
-        <div class="field"><label>Time Zone</label><select id="r-timezone"><option value="">— Select Time Zone —</option></select></div>
+        <div class="field">
+          <label>Time Zone</label>
+          <select id="r-timezone"><option value="">— Select Time Zone —</option></select>
+        </div>
 
         <div class="form-section-label">Settings</div>
         <div class="field">
@@ -167,7 +176,7 @@
   </div>
 
   <!-- ── SUCCESS STATE ────────────────────────────────── -->
-  <div id="reg-success" style="display:none;">
+  <div class="panel" id="reg-success">
     <div class="form-card">
       <div class="alert alert-success">Profile created! Your Secret Key is below — save it now, you will not see it again.</div>
       <div class="text-xs text-muted mt-md mb-sm">Your Player ID:</div>
@@ -189,16 +198,17 @@
 </main>
 
 <script>
-// ── Tag-input state ───────────────────────────────────────
+// ── Tag-input component ───────────────────────────────────
 const tagInputState = {};
 
 function tagInputInit(id, options) {
   tagInputState[id] = { options, selected: [] };
   renderTagDropdown(id);
-  // Close on outside click
   document.addEventListener("click", e => {
-    if (!document.getElementById(id + "-wrap").contains(e.target)) {
-      document.getElementById(id + "-dropdown").classList.remove("open");
+    const wrap = document.getElementById(id + "-wrap");
+    if (wrap && !wrap.contains(e.target)) {
+      const dd = document.getElementById(id + "-dropdown");
+      if (dd) dd.classList.remove("open");
     }
   });
 }
@@ -237,11 +247,8 @@ function tagInputGet(id) {
 
 function renderTagChips(id) {
   const state = tagInputState[id];
-  const el_ = document.getElementById(id + "-tags");
-  el_.innerHTML = state.selected.map(v =>
-    `<span class="tag-chip">${esc(v)}
-      <button class="tag-chip-x" onclick="tagInputRemove('${id}','${esc(v)}')" title="Remove">✕</button>
-    </span>`
+  document.getElementById(id + "-tags").innerHTML = state.selected.map(v =>
+    `<span class="tag-chip">${esc(v)}<button class="tag-chip-x" onclick="tagInputRemove('${id}','${esc(v)}')" title="Remove">✕</button></span>`
   ).join("");
 }
 
@@ -250,14 +257,32 @@ function renderTagDropdown(id) {
   const q = (document.getElementById(id + "-search").value || "").toLowerCase();
   const filtered = state.options.filter(o => !q || o.toLowerCase().includes(q));
   const ddEl = document.getElementById(id + "-dropdown");
-  if (!filtered.length) {
-    ddEl.innerHTML = `<div class="tag-dropdown-empty">No results</div>`;
-    return;
+  ddEl.innerHTML = filtered.length
+    ? filtered.map(o => {
+        const sel = state.selected.includes(o);
+        return `<div class="tag-dropdown-item ${sel ? "selected" : ""}" onclick="tagInputToggle('${id}','${esc(o)}')">${esc(o)}${sel ? " ✓" : ""}</div>`;
+      }).join("")
+    : `<div class="tag-dropdown-empty">No results</div>`;
+}
+
+// ── Tab switcher ──────────────────────────────────────────
+function switchTab(tab) {
+  const loginPanel    = document.getElementById("panel-login");
+  const registerPanel = document.getElementById("panel-register");
+  const tabLogin      = document.getElementById("tab-login");
+  const tabRegister   = document.getElementById("tab-register");
+
+  if (tab === "login") {
+    loginPanel.classList.add("active");
+    registerPanel.classList.remove("active");
+    tabLogin.classList.add("active");
+    tabRegister.classList.remove("active");
+  } else {
+    registerPanel.classList.add("active");
+    loginPanel.classList.remove("active");
+    tabRegister.classList.add("active");
+    tabLogin.classList.remove("active");
   }
-  ddEl.innerHTML = filtered.map(o => {
-    const sel = state.selected.includes(o);
-    return `<div class="tag-dropdown-item ${sel ? "selected" : ""}" onclick="tagInputToggle('${id}','${esc(o)}')">${esc(o)}${sel ? " ✓" : ""}</div>`;
-  }).join("");
 }
 
 // ── Page init ─────────────────────────────────────────────
@@ -269,40 +294,30 @@ onReady(() => {
 
   const session = getSession();
   if (session) {
-    hide(el("hero-block"));
-    hide(el("auth-state"));
-    show(el("logged-in-state"));
-    el("welcome-msg").textContent = `Welcome back, ${session.name || session.gamertag}!`;
-    el("view-profile-btn").href = `profile.html?id=${session.id}`;
+    document.getElementById("hero-block").style.display    = "none";
+    document.getElementById("auth-state").style.display    = "none";
+    document.getElementById("logged-in-state").classList.add("active");
+    document.getElementById("welcome-msg").textContent = `Welcome back, ${session.name || session.gamertag}!`;
+    document.getElementById("view-profile-btn").href   = `profile.html?id=${session.id}`;
   }
 });
 
-function switchTab(tab) {
-  if (tab === "login") {
-    show(el("panel-login")); hide(el("panel-register"));
-    el("tab-login").classList.add("active");
-    el("tab-register").classList.remove("active");
-  } else {
-    hide(el("panel-login")); show(el("panel-register"));
-    el("tab-register").classList.add("active");
-    el("tab-login").classList.remove("active");
-  }
-}
-
+// ── Auth actions ──────────────────────────────────────────
 async function doLogin() {
   clearAlert("login-error");
-  const tag = el("l-tag").value.trim();
-  const key = el("l-key").value.trim();
+  const tag = document.getElementById("l-tag").value.trim();
+  const key = document.getElementById("l-key").value.trim();
   if (!tag || !key) { showAlert("login-error", "Enter your Player ID and Secret Key."); return; }
   try {
     const res = await apiPost({ action: "login", gamertag: tag, captainKey: key });
     const m = res.member;
-    const session = { id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain };
-    setSession(session);
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain });
     toast("Welcome back, " + (m.name || m.gamertag) + "!");
-    hide(el("hero-block")); hide(el("auth-state")); show(el("logged-in-state"));
-    el("welcome-msg").textContent = `Welcome back, ${m.name || m.gamertag}!`;
-    el("view-profile-btn").href = `profile.html?id=${m.id}`;
+    document.getElementById("hero-block").style.display    = "none";
+    document.getElementById("auth-state").style.display    = "none";
+    document.getElementById("logged-in-state").classList.add("active");
+    document.getElementById("welcome-msg").textContent = `Welcome back, ${m.name || m.gamertag}!`;
+    document.getElementById("view-profile-btn").href   = `profile.html?id=${m.id}`;
   } catch(e) {
     showAlert("login-error", e.message);
   }
@@ -310,45 +325,47 @@ async function doLogin() {
 
 async function doRegister() {
   clearAlert("reg-error");
-  const name      = el("r-name").value.trim();
-  const tag       = el("r-tag").value.trim();
-  const tier      = el("r-tier").value;
-  const cls       = el("r-class").value;
-  const power     = parsePower(el("r-power").value);
-  const level     = el("r-level").value.trim();
-  const bio       = el("r-bio").value.trim();
-  const desc      = el("r-desc").value.trim();
-  const playstyle = el("r-playstyle").value;
-  const discId    = el("r-discord-id").value.trim();
-  const discName  = el("r-discord-name").value.trim();
-  const tz        = el("r-timezone").value;
-  const lfg       = el("r-lfg").checked;
-  const isCaptain = el("r-captain").checked;
+  const name      = document.getElementById("r-name").value.trim();
+  const tag       = document.getElementById("r-tag").value.trim();
+  const tier      = document.getElementById("r-tier").value;
+  const cls       = document.getElementById("r-class").value;
+  const power     = parsePower(document.getElementById("r-power").value);
+  const level     = document.getElementById("r-level").value.trim();
+  const bio       = document.getElementById("r-bio").value.trim();
+  const desc      = document.getElementById("r-desc").value.trim();
+  const playstyle = document.getElementById("r-playstyle").value;
+  const discId    = document.getElementById("r-discord-id").value.trim();
+  const discName  = document.getElementById("r-discord-name").value.trim();
+  const tz        = document.getElementById("r-timezone").value;
+  const lfg       = document.getElementById("r-lfg").checked;
+  const isCaptain = document.getElementById("r-captain").checked;
   const languages = tagInputGet("r-languages").join(",");
   const prefLang  = tagInputGet("r-preflang").join(",");
 
   if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
   if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
 
-  el("reg-btn").disabled = true;
+  const btn = document.getElementById("reg-btn");
+  btn.disabled = true;
   try {
     const res = await apiPost({
       action: "registerMember", name, gamertag: tag, tier, class: cls,
       power, level, bio, description: desc, playstyle,
       discordId: discId, discordName: discName, timezone: tz,
-      languages, prefLanguage: prefLang,
-      lookingForTeam: lfg, isCaptain,
+      languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain,
     });
     const m = res.member;
     setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain });
-    hide(el("auth-state")); hide(el("hero-block")); show(el("reg-success"));
-    el("out-tag").textContent = m.gamertag;
-    el("out-key").textContent = m.captainKey;
-    el("goto-profile").href   = `profile.html?id=${m.id}`;
+    document.getElementById("auth-state").style.display  = "none";
+    document.getElementById("hero-block").style.display  = "none";
+    document.getElementById("reg-success").classList.add("active");
+    document.getElementById("out-tag").textContent = m.gamertag;
+    document.getElementById("out-key").textContent = m.captainKey;
+    document.getElementById("goto-profile").href   = `profile.html?id=${m.id}`;
   } catch(e) {
     showAlert("reg-error", e.message);
   } finally {
-    el("reg-btn").disabled = false;
+    btn.disabled = false;
   }
 }
 
@@ -357,7 +374,7 @@ function doLogout() {
 }
 
 function copyKey() {
-  navigator.clipboard.writeText(el("out-key").textContent)
+  navigator.clipboard.writeText(document.getElementById("out-key").textContent)
     .then(() => toast("Key copied!"))
     .catch(() => toast("Copy failed — please copy it manually.", "error"));
 }
