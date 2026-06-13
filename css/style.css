@@ -115,7 +115,7 @@ nav{background:var(--bg2);border-bottom:1px solid var(--border2);padding:0 2rem;
 main{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
 .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;align-items:start;}
 
 /* ── Section headings — high contrast ───────────────────── */
 .section-title{font-family:var(--mono);font-size:0.7rem;color:var(--text2);

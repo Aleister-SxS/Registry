@@ -329,6 +329,19 @@ function renderMgmt(teamId){
         <button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>
       </div>
     </div>
+    ${isCaptain ? `
+    <div class="flex-center gap-md mb-md flex-wrap" style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0.75rem 1.25rem;">
+      <div class="toggle-row" style="flex:1;min-width:220px;background:transparent;border:none;padding:0;">
+        <div>
+          <div class="toggle-label" style="font-size:0.82rem;">Looking for a Captain</div>
+          <div class="toggle-sublabel">Mark this team as open to a new captain — visible as a filter in Team Registry</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="lfc-team-${teamId}" ${t.lookingForCaptain==="TRUE"?"checked":""} onchange="toggleTeamLFC('${teamId}',this.checked)" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>` : ""}
 
     <div class="mgmt-grid">
       <!-- LEFT: Roster + Formation -->
@@ -639,6 +652,15 @@ function confirmLeave(teamId,teamName){
     }catch(e){toast(e.message,"error");}
   });
 }
+async function toggleTeamLFC(teamId, checked) {
+  try {
+    await apiPost({action:"updateTeamLFC",captainId:session.id,captainKey:session.captainKey,teamId,lookingForCaptain:checked});
+    const t = allTeams.find(x=>x.id===teamId);
+    if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
+    toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
+  } catch(e) { toast(e.message,"error"); }
+}
+
 function confirmKick(teamId,memberId,memberName){
   confirm_(`Kick ${memberName}`,`Remove ${memberName} from the team?`,async()=>{
     try{

@@ -529,13 +529,18 @@ function confirmAvatarPick() {
 
 // ── Translation via MyMemory (free, no key needed) ───────
 async function translateText(text, targetLang) {
-  const langCode = getLangCode(targetLang);
+  const targetCode = getLangCode(targetLang);
   // MyMemory free API — 5,000 chars/day, no account needed
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${langCode}`;
+  // Uses en as source since most guild chat will be in English;
+  // if target is English, translate from auto-detected via xx pair
+  const srcCode = targetCode === "en" ? "zh-CN" : "en";
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcCode}|${targetCode}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error("Translation service unavailable. Try again shortly.");
   const d = await r.json();
-  if (d.responseStatus !== 200) throw new Error(d.responseDetails || "Translation failed.");
+  if (!d.responseData) throw new Error("Translation failed — please try again.");
+  // responseStatus 200 or 429 (rate limit)
+  if (d.responseStatus === 429) throw new Error("Translation limit reached for today. Try again tomorrow.");
   return d.responseData.translatedText;
 }
 
