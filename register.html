@@ -335,7 +335,7 @@ async function doLogin() {
   try {
     const res = await apiPost({ action: "login", gamertag: tag, captainKey: key });
     const m = res.member;
-    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain });
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain, avatarUrl: m.avatarUrl || "" });
     toast("Welcome back, " + (m.name || m.gamertag) + "!");
     document.getElementById("hero-block").style.display    = "none";
     document.getElementById("auth-state").style.display    = "none";
@@ -380,7 +380,7 @@ async function doRegister() {
       avatarUrl: selectedAvatarUrl,
     });
     const m = res.member;
-    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain });
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain, avatarUrl: m.avatarUrl || "" });
     document.getElementById("auth-state").style.display  = "none";
     document.getElementById("hero-block").style.display  = "none";
     document.getElementById("reg-success").classList.add("active");

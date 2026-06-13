@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Team Status — Team Registry</title>
+<title>Team Status — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -12,7 +12,11 @@
 <main>
   <div class="section-title mb-lg">Team Status</div>
 
-  <div id="login-box" class="login-box">
+  <!-- Loading spinner shown while data fetches -->
+  <div id="status-loading" class="loading"><span class="spinner"></span></div>
+
+  <!-- Only shown if truly not logged in after load -->
+  <div id="login-box" class="login-box" style="display:none;">
     <div class="text-sm text-muted mb-sm">Log in to view your teams, invites, and requests.</div>
     <div class="login-row">
       <div class="field"><label>Player ID</label><input id="sl-tag" placeholder="#YourID" /></div>
@@ -70,11 +74,15 @@ onReady(async () => {
     allTeams=d.teams||[]; allMembers=d.members||[]; allRequests=d.requests||[]; settings=d.settings||{};
   } catch(e) { loadDemo(); }
 
+  hide(el("status-loading"));
+
   const session = getSession();
   if (session) {
-    el("sl-tag").value = session.gamertag || "";
-    autoLoad(session);
+    const m = allMembers.find(mb=>mb.id===session.id);
+    if (m) { statusMember = m; showStatus(); return; }
   }
+  // Not logged in — show login box
+  el("login-box").style.display = "block";
 });
 
 function loadDemo() {

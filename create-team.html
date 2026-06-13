@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Create a Team — Team Registry</title>
+<title>Create a Team — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -16,8 +16,8 @@
   <!-- Not logged in / not captain -->
   <div id="access-denied" class="empty" style="display:none;">
     <div class="empty-icon">🔒</div>
-    <p>Only registered Team Captains can create teams.<br>
-    <a href="register.html">Register or log in</a> — make sure to enable the Team Captain option on your profile.</p>
+    <p>You need to be logged in to create a team.<br>
+    <a href="register.html">Log in or register here →</a></p>
   </div>
 
   <!-- Create team form -->
@@ -117,13 +117,9 @@ onReady(() => {
   compPicker = buildCompSelector("comp-selector", 4);
 
   const session = getSession();
-  if (!session || session.isCaptain !== true) {
-    // Check if isCaptain is stored as boolean or string
-    const isCap = session && (session.isCaptain === true || session.isCaptain === "TRUE" || session.isCaptain === "true");
-    if (!isCap) {
-      show(el("access-denied"));
-      return;
-    }
+  if (!session) {
+    show(el("access-denied"));
+    return;
   }
   show(el("create-form"));
 });

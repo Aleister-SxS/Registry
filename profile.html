@@ -13,11 +13,11 @@
 
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
-  <div id="profile-content" style="display:none;"></div>
+  <div id="profile-content"></div>
 </main>
 
 <!-- Edit profile modal -->
-<div class="modal-overlay" id="edit-modal">
+<div class="modal-overlay" id="edit-modal" style="z-index:400;">
   <div class="modal" style="max-width:600px;">
     <div class="modal-title">Edit Profile</div>
     <div class="field-row">
@@ -37,8 +37,8 @@
     <div class="field"><label>Playstyle Preference</label>
       <select id="ep-playstyle">
         <option value="">— Select —</option>
-        <option value="Casual">Casual — Just Need a Team</option>
-        <option value="Competitive">Competitive — Aiming for Top 10</option>
+        <option value="Casual">Casual</option>
+        <option value="Competitive">Competitive</option>
       </select>
     </div>
     <div class="field-row">
@@ -72,10 +72,43 @@
   </div>
 </div>
 
+<!-- Build editor modal -->
+<div class="modal-overlay" id="build-modal" style="z-index:400;">
+  <div class="modal" style="max-width:700px;width:100%;">
+    <div class="modal-title">Edit PVP Build</div>
+    <div class="modal-body">Select up to 4 Techniques and 4 Charms. Click a slot to open the skill browser, click again to remove.</div>
+
+    <!-- Techniques -->
+    <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.7rem;">(4 slots)</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem;" id="bm-technique-slots"></div>
+
+    <!-- Charms -->
+    <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.7rem;">(4 slots)</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem;" id="bm-charm-slots"></div>
+
+    <!-- Skill browser -->
+    <div id="bm-browser-wrap" style="display:none;">
+      <hr class="divider" />
+      <div class="flex-between mb-sm flex-wrap gap-sm">
+        <div class="flex gap-xs">
+          <button class="filter-btn active" id="bm-tab-technique" onclick="bmSetTab('technique')">Techniques</button>
+          <button class="filter-btn" id="bm-tab-charm" onclick="bmSetTab('charm')">Charms</button>
+        </div>
+        <input class="search-input" id="bm-search" placeholder="Search skills…" oninput="bmRenderBrowser()" />
+      </div>
+      <div id="bm-skill-grid" class="build-grid" style="max-height:260px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBuildModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBuildFromModal()">Save Build</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let profileMember = null;
-let allTeams = [], allMembers = [];
-let bm = null;
+let allTeams = [], allMembers = [], settings = {};
 
 onReady(async () => {
   const params = new URLSearchParams(location.search);
@@ -83,70 +116,72 @@ onReady(async () => {
   if (!memberId) { renderError("No profile ID specified."); return; }
 
   try {
-    const d = await apiGet({ action:"getAll" });
+    const d = await apiGet({ action: "getAll" });
     allTeams   = d.teams   || [];
     allMembers = d.members || [];
+    settings   = d.settings || {};
     profileMember = allMembers.find(m => m.id === memberId);
   } catch(e) {
-    // demo fallback
     profileMember = demoMember();
-    allTeams = demoTeams();
+    allTeams = [];
   }
 
   if (!profileMember) { renderError("Member not found."); return; }
+
+  hide(el("loading"));
+  show(el("profile-content"));
   renderProfile();
   populateEditModal();
 });
 
 function demoMember() {
   return {
-    id:"m4", name:"Taylor Kim", gamertag:"TK_Radiant#777",
+    id:"m1", name:"Test User", gamertag:"Test#0001",
     tier:"T2", class:"Duelist", power:1900000, level:55,
-    bio:"Burst-window melee striker. Short cooldowns drive most damage.", description:"Been playing since beta. Looking for a team to push ranked.",
-    playstyle:"Competitive", discordId:"tkim#4521", discordName:"TK_Radiant",
-    timezone:"UTC-05:00 (EST)", languages:"English,Korean", prefLanguage:"English",
+    bio:"Testing.", description:"Test account.", playstyle:"Competitive",
+    discordId:"", discordName:"", timezone:"UTC-05:00 (EST)",
+    languages:"English", prefLanguage:"English",
     lookingForTeam:"TRUE", isCaptain:"FALSE", teamIds:[],
-    captainedTeams:[],
-    pvpBuild:{ techniques:["10009","10014","10016"], charms:["10588","10543"] },
+    pvpBuild:{ techniques:[], charms:[] }, avatarUrl:"",
   };
 }
-function demoTeams() {
-  return [{ id:"t1", name:"Shadow Protocol", captainId:"m1", captainName:"Alex Chen", status:"open", memberCount:2, composition:["Tank","DPS","DPS","Support"], description:"Competitive team." }];
-}
 
+// ── Render profile ────────────────────────────────────────
 function renderProfile() {
   const m = profileMember;
   const session = getSession();
   const isOwn = session && session.id === m.id;
-  const teamsList = allTeams.filter(t => (m.teamIds||[]).includes(t.id));
+  const teamsList    = allTeams.filter(t => (m.teamIds||[]).includes(t.id));
   const captainTeams = allTeams.filter(t => t.captainId === m.id);
-  const languages = (m.languages||"").split(",").filter(Boolean);
+  const languages    = (m.languages||"").split(",").filter(Boolean);
+  const maxTeams     = Number(settings.maxMemberTeams) || 3;
+  const atLimit      = (m.teamIds||[]).length >= maxTeams;
+  const isLFT        = String(m.lookingForTeam).toUpperCase() === "TRUE";
 
-  el("loading").style.display = "none";
-  el("profile-content").style.display = "block";
   el("profile-content").innerHTML = `
     <!-- Hero -->
     <div class="profile-hero">
-    <div style="position:relative;flex-shrink:0;">
-      ${m.avatarUrl
-        ? `<img src="${esc(m.avatarUrl)}" alt="${esc(m.name)}"
-            style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
-            onerror="this.style.display='none'" />`
-        : `<div class="avatar avatar-lg">${initials(m.name)}</div>`
-      }
-      ${isOwn ? `<button onclick="openAvatarPicker(url => changeAvatar(url))"
-        style="position:absolute;bottom:-4px;right:-4px;background:var(--blue);border:none;
-          border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.7rem;
-          display:flex;align-items:center;justify-content:center;" title="Change avatar">✏️</button>` : ""}
-    </div>
+      <div style="position:relative;flex-shrink:0;">
+        ${m.avatarUrl
+          ? `<img src="${esc(m.avatarUrl)}" alt="${esc(m.name)}"
+              style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
+              onerror="this.style.display='none'" />`
+          : `<div class="avatar avatar-lg">${initials(m.name)}</div>`
+        }
+        ${isOwn ? `<button onclick="openAvatarPicker(onAvatarSelected)"
+          style="position:absolute;bottom:-4px;right:-4px;background:var(--blue);border:none;
+            border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.65rem;
+            display:flex;align-items:center;justify-content:center;" title="Change avatar">✏️</button>` : ""}
+      </div>
       <div class="profile-info">
         <div class="profile-name">${esc(m.name)}</div>
         <div class="profile-id">${esc(m.gamertag)}</div>
         <div class="profile-badges">
           ${m.tier && m.class ? `<span class="badge badge-captain">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)} (${esc(m.tier)})</span>` : ""}
-          ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Team Captain</span>` : ""}
-          ${m.lookingForTeam==="TRUE" ? `<span class="badge badge-lfg">🔍 Looking for Team</span>` : ""}
+          ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Captain</span>` : ""}
+          ${isLFT ? `<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>` : ""}
           ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
+          ${atLimit && isOwn ? `<span class="badge badge-full">Team Limit Reached</span>` : ""}
         </div>
         <div class="tags-row mb-sm">
           ${m.power ? `<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>` : ""}
@@ -154,23 +189,35 @@ function renderProfile() {
           ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
           ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
         </div>
-        ${m.bio ? `<div class="profile-bio"><strong>Playstyle:</strong> ${esc(m.bio)}</div>` : ""}
-        ${m.description ? `<div class="profile-bio mt-sm"><strong>About:</strong> ${esc(m.description)}</div>` : ""}
+        ${m.bio        ? `<div class="profile-bio mb-sm"><strong>Playstyle:</strong> ${esc(m.bio)}</div>` : ""}
+        ${m.description? `<div class="profile-bio"><strong>About:</strong> ${esc(m.description)}</div>` : ""}
       </div>
-      ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openEditModal()">Edit Profile</button>` : ""}
+      <div class="flex-col gap-xs" style="flex-shrink:0;">
+        ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openEditModal()">Edit Profile</button>` : ""}
+        ${isOwn ? `
+          <div class="toggle-row" style="min-width:190px;">
+            <div>
+              <div class="toggle-label" style="font-size:0.78rem;">Looking for Team</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="lft-toggle" ${isLFT ? "checked" : ""} onchange="toggleLFT(this.checked)" />
+              <span class="slider"></span>
+            </label>
+          </div>` : ""}
+        ${atLimit && isOwn ? `<div class="alert alert-amber" style="font-size:0.75rem;padding:6px 10px;margin:0;">
+          You've reached your team limit (${maxTeams}). Leave a team to join another.</div>` : ""}
+      </div>
     </div>
 
     <div class="two-col" style="align-items:start;">
       <div>
-        <!-- Communication -->
-        ${m.discordId || m.languages ? `
+        ${m.discordId || languages.length ? `
         <div class="card mb-md">
           <div class="section-title mb-sm">Communication</div>
-          ${m.discordId   ? `<div class="text-sm mb-sm">💬 <strong>Discord:</strong> ${esc(m.discordId)}${m.discordName?" ("+esc(m.discordName)+")":""}</div>` : ""}
-          ${languages.length ? `<div class="text-sm mb-sm">🗣️ <strong>Languages:</strong> ${languages.map(l=>esc(l)).join(", ")}</div>` : ""}
+          ${m.discordId ? `<div class="text-sm mb-sm">💬 <strong>Discord:</strong> ${esc(m.discordId)}${m.discordName?" ("+esc(m.discordName)+")":""}</div>` : ""}
+          ${languages.length ? `<div class="text-sm">🗣️ <strong>Languages:</strong> ${languages.map(l=>esc(l)).join(", ")}</div>` : ""}
         </div>` : ""}
 
-        <!-- Teams they're in -->
         <div class="card mb-md">
           <div class="section-title mb-sm">Current Teams</div>
           ${teamsList.length ? teamsList.map(t => `
@@ -178,74 +225,242 @@ function renderProfile() {
               <div class="flex-between">
                 <div>
                   <div class="status-card-name">${esc(t.name)}</div>
-                  <div class="status-card-sub">Captain: ${esc(t.captainName||"—")} · ${esc(t.status)}</div>
+                  <div class="status-card-sub">Captain: ${esc(t.captainName||"—")}</div>
                 </div>
-                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team</a>
+                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View</a>
               </div>
-            </div>
-          `).join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
+            </div>`) .join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
         </div>
 
-        <!-- Teams captained -->
         ${m.isCaptain==="TRUE" ? `
-        <div class="card mb-md">
-          <div class="section-title mb-sm">Team Captain</div>
+        <div class="card">
+          <div class="section-title mb-sm">Captained Teams</div>
           ${captainTeams.length ? captainTeams.map(t => `
             <div class="status-card mb-sm">
               <div class="flex-between">
                 <div>
                   <div class="status-card-name">${esc(t.name)}</div>
                   <div class="comp-row mt-sm">${renderComposition(t.composition)}</div>
-                  <div class="req-row">
-                    ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>` : ""}
-                    ${t.minLevel ? `<span class="req-pill">🎯 Lv.${t.minLevel}+</span>` : ""}
-                  </div>
-                  <span class="badge badge-${t.status==='open'?'open':t.status==='full'?'full':'closed'} mt-sm">
-                    <span class="badge-dot"></span>${esc(t.status)}
-                  </span>
                 </div>
                 <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Manage</a>
               </div>
-            </div>
-          `).join("") : `<p class="text-sm text-muted">No teams captained yet. <a href="create-team.html">Create one →</a></p>`}
+            </div>`).join("") : `<p class="text-sm text-muted">No teams captained yet. <a href="create-team.html">Create one →</a></p>`}
         </div>` : ""}
       </div>
 
       <!-- PVP Build -->
       <div>
         <div class="card">
-          <div class="section-title mb-sm">PVP Build</div>
-          <div id="build-maker-container"></div>
+          <div class="flex-between mb-md">
+            <div class="section-title">PVP Build</div>
+            ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openBuildModal()">Edit Build</button>` : ""}
+          </div>
+          <div id="build-display"></div>
         </div>
       </div>
     </div>
   `;
 
-  // Mount build maker
-  const existingBuild = m.pvpBuild || { techniques:[], charms:[] };
-  bm = new BuildMaker({
-    containerId: "build-maker-container",
-    currentClass: m.class || "",
-    readOnly: !isOwn,
-    onSave: isOwn ? saveBuild : null,
-    maxTechniques: 6,
-    maxCharms: 6,
-  }).mount();
-  bm.load(existingBuild.techniques || [], existingBuild.charms || []);
+  renderBuildDisplay();
 }
 
-async function saveBuild(build) {
+// ── Build display (read-only slots) ──────────────────────
+function renderBuildDisplay() {
+  const m = profileMember;
+  const build = m.pvpBuild || { techniques:[], charms:[] };
+  const techs  = Array.isArray(build.techniques) ? build.techniques : [];
+  const charms = Array.isArray(build.charms)     ? build.charms     : [];
+
+  const slotHtml = (ids, label) => {
+    const slots = Array.from({length:4}, (_,i) => {
+      const id = ids[i];
+      const skill = id ? SKILLS.find(s=>s.id===id) : null;
+      if (skill) {
+        return `<div class="build-slot filled" title="${esc(skill.name)}" style="min-height:80px;">
+          <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
+            style="width:44px;height:44px;" alt="${esc(skill.name)}" onerror="this.style.display='none'" />
+          <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
+        </div>`;
+      }
+      return `<div class="build-slot" style="min-height:80px;">
+        <div style="color:var(--text3);font-size:0.65rem;">Empty</div>
+      </div>`;
+    });
+    return `<div class="section-title mb-sm" style="font-size:0.65rem;">${label}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:1rem;">${slots.join("")}</div>`;
+  };
+
+  const hasAny = techs.length || charms.length;
+  el("build-display").innerHTML = hasAny
+    ? slotHtml(techs,"Techniques") + slotHtml(charms,"Charms")
+    : `<div class="empty" style="padding:1.5rem;"><p class="text-sm">No build set yet.</p></div>`;
+}
+
+// ── LFT toggle ────────────────────────────────────────────
+async function toggleLFT(checked) {
   const session = getSession();
   if (!session) return;
+  const maxTeams = Number(settings.maxMemberTeams) || 3;
+  if (checked && (profileMember.teamIds||[]).length >= maxTeams) {
+    // Revert toggle
+    el("lft-toggle").checked = false;
+    toast("You've reached your team limit. Leave a team before enabling LFT.", "amber");
+    return;
+  }
   try {
-    confirm_("Save Build","Confirm saving your PVP build to your profile?", async () => {
-      await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey, pvpBuild: JSON.stringify(build) });
-      toast("Build saved!");
-      profileMember.pvpBuild = build;
-    }, false);
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
+      lookingForTeam: checked });
+    profileMember.lookingForTeam = checked ? "TRUE" : "FALSE";
+    toast(checked ? "Now visible to captains!" : "Removed from LFT listings.");
+    renderProfile();
   } catch(e) { toast(e.message,"error"); }
 }
 
+// ── Avatar ────────────────────────────────────────────────
+async function onAvatarSelected(url) {
+  const session = getSession();
+  if (!session) return;
+  try {
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, avatarUrl:url });
+    profileMember.avatarUrl = url;
+    // Update session so nav updates too
+    const s = getSession();
+    s.avatarUrl = url;
+    setSession(s);
+    renderProfile();
+    // Refresh nav to show new avatar
+    document.querySelector("nav").remove();
+    document.getElementById("confirm-modal").remove();
+    buildNav("");
+    toast("Avatar updated!");
+  } catch(e) { toast(e.message,"error"); }
+}
+
+// ── Build modal ───────────────────────────────────────────
+let bmState = { techniques:[], charms:[], activeTab:"technique", activeSlot:null };
+
+function openBuildModal() {
+  const build = profileMember.pvpBuild || { techniques:[], charms:[] };
+  bmState.techniques = [...(build.techniques||[])];
+  bmState.charms     = [...(build.charms||[])];
+  bmState.activeTab  = "technique";
+  bmState.activeSlot = null;
+  bmRenderSlots();
+  hide(el("bm-browser-wrap"));
+  el("build-modal").classList.add("open");
+}
+
+function closeBuildModal() { el("build-modal").classList.remove("open"); }
+
+function bmRenderSlots() {
+  const renderSlots = (ids, type, containerId) => {
+    const container = el(containerId);
+    container.innerHTML = Array.from({length:4}, (_,i) => {
+      const id = ids[i];
+      const skill = id ? SKILLS.find(s=>s.id===id) : null;
+      const isActive = bmState.activeSlot && bmState.activeSlot.type === type && bmState.activeSlot.index === i;
+      if (skill) {
+        return `<div class="build-slot filled ${isActive?"" :""}"
+          style="cursor:pointer;${isActive?"border-color:var(--blue);":""}"
+          onclick="bmSlotClick('${type}',${i})" title="Click to replace or remove">
+          <button class="build-slot-remove" onclick="event.stopPropagation();bmClearSlot('${type}',${i})">✕</button>
+          <img class="skill-icon" style="width:40px;height:40px;"
+            src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
+            alt="${esc(skill.name)}" onerror="this.style.display='none'" />
+          <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
+        </div>`;
+      }
+      return `<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}"
+        onclick="bmSlotClick('${type}',${i})">
+        <div style="font-size:1.4rem;opacity:0.2;">+</div>
+        <div style="font-size:0.62rem;color:var(--text3);">${isActive?"Selecting…":"Empty"}</div>
+      </div>`;
+    }).join("");
+  };
+  renderSlots(bmState.techniques, "technique", "bm-technique-slots");
+  renderSlots(bmState.charms,     "charm",     "bm-charm-slots");
+}
+
+function bmSlotClick(type, index) {
+  // If same slot clicked again, deselect
+  if (bmState.activeSlot && bmState.activeSlot.type===type && bmState.activeSlot.index===index) {
+    bmState.activeSlot = null;
+    hide(el("bm-browser-wrap"));
+    bmRenderSlots();
+    return;
+  }
+  bmState.activeSlot = { type, index };
+  bmState.activeTab  = type;
+  show(el("bm-browser-wrap"));
+  bmSetTab(type);
+  bmRenderSlots();
+}
+
+function bmClearSlot(type, index) {
+  if (type==="technique") bmState.techniques[index] = null;
+  else                    bmState.charms[index]     = null;
+  bmState.activeSlot = null;
+  hide(el("bm-browser-wrap"));
+  bmRenderSlots();
+}
+
+function bmSetTab(tab) {
+  bmState.activeTab = tab;
+  el("bm-tab-technique").classList.toggle("active", tab==="technique");
+  el("bm-tab-charm").classList.toggle("active",     tab==="charm");
+  el("bm-search").value = "";
+  bmRenderBrowser();
+}
+
+function bmRenderBrowser() {
+  if (!bmState.activeSlot) return;
+  const q = (el("bm-search").value||"").toLowerCase();
+  const cls = profileMember.class || "";
+  const skills = SKILLS.filter(s => {
+    if (s.type !== bmState.activeTab) return false;
+    if (cls && s.classes.length && !s.classes.includes(cls)) return false;
+    if (q && !s.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const selectedArr = bmState.activeTab==="technique" ? bmState.techniques : bmState.charms;
+  el("bm-skill-grid").innerHTML = skills.map(s => {
+    const isSel = selectedArr.includes(s.id);
+    return `<div class="skill-card ${isSel?"selected":""}" onclick="bmSelectSkill('${s.id}')" title="${esc(s.name)}">
+      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp"
+        loading="lazy" onerror="this.style.display='none'" alt="${esc(s.name)}" />
+      <div class="skill-name">${esc(s.name)}</div>
+    </div>`;
+  }).join("") || `<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>`;
+}
+
+function bmSelectSkill(skillId) {
+  if (!bmState.activeSlot) return;
+  const { type, index } = bmState.activeSlot;
+  if (type==="technique") bmState.techniques[index] = skillId;
+  else                    bmState.charms[index]     = skillId;
+  bmState.activeSlot = null;
+  hide(el("bm-browser-wrap"));
+  bmRenderSlots();
+}
+
+async function saveBuildFromModal() {
+  const session = getSession();
+  if (!session) return;
+  const build = {
+    techniques: bmState.techniques.filter(Boolean),
+    charms:     bmState.charms.filter(Boolean),
+  };
+  try {
+    await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey,
+      pvpBuild: JSON.stringify(build) });
+    profileMember.pvpBuild = build;
+    closeBuildModal();
+    renderBuildDisplay();
+    toast("Build saved!");
+  } catch(e) { toast(e.message,"error"); }
+}
+
+// ── Edit profile modal ────────────────────────────────────
 function populateEditModal() {
   populateSelect("ep-timezone", TIMEZONES, "— Select —");
   populateSelect("ep-pref-lang", LANGUAGES, "— Select —");
@@ -256,27 +471,25 @@ function populateEditModal() {
 
 function openEditModal() {
   const m = profileMember;
-  el("ep-name").value    = m.name || "";
-  el("ep-tag").value     = m.gamertag || "";
-  el("ep-power").value   = m.power ? formatPower(m.power) : "";
-  el("ep-level").value   = m.level || "";
-  el("ep-bio").value     = m.bio || "";
-  el("ep-desc").value    = m.description || "";
-  el("ep-playstyle").value = m.playstyle || "";
+  el("ep-name").value         = m.name || "";
+  el("ep-tag").value          = m.gamertag || "";
+  el("ep-power").value        = m.power ? formatPower(m.power) : "";
+  el("ep-level").value        = m.level || "";
+  el("ep-bio").value          = m.bio || "";
+  el("ep-desc").value         = m.description || "";
+  el("ep-playstyle").value    = m.playstyle || "";
   el("ep-discord-id").value   = m.discordId || "";
   el("ep-discord-name").value = m.discordName || "";
   el("ep-timezone").value     = m.timezone || "";
   el("ep-pref-lang").value    = m.prefLanguage || "";
-  el("ep-lfg").checked     = m.lookingForTeam === "TRUE";
-  el("ep-captain").checked = m.isCaptain === "TRUE";
-  // pre-select languages
+  el("ep-lfg").checked        = String(m.lookingForTeam).toUpperCase() === "TRUE";
+  el("ep-captain").checked    = m.isCaptain === "TRUE";
   const spoken = (m.languages||"").split(",").filter(Boolean);
   Array.from(el("ep-languages").options).forEach(o => o.selected = spoken.includes(o.value));
-  // set tier/class
   if (m.tier) {
     el("ep-tier").value = m.tier;
     el("ep-tier").dispatchEvent(new Event("change"));
-    setTimeout(() => { if (m.class) el("ep-class").value = m.class; }, 50);
+    setTimeout(() => { if (m.class) el("ep-class").value = m.class; }, 60);
   }
   clearAlert("edit-error");
   el("edit-modal").classList.add("open");
@@ -285,7 +498,8 @@ function openEditModal() {
 function closeEditModal() { el("edit-modal").classList.remove("open"); }
 
 function confirmSave() {
-  confirm_("Save Changes","Are you sure you want to update your profile?", doSaveProfile, false);
+  closeEditModal();
+  confirm_("Save Changes", "Are you sure you want to update your profile?", doSaveProfile, false);
 }
 
 async function doSaveProfile() {
@@ -308,44 +522,31 @@ async function doSaveProfile() {
   const lfg       = el("ep-lfg").checked;
   const isCaptain = el("ep-captain").checked;
   const languages = Array.from(el("ep-languages").selectedOptions).map(o=>o.value).join(",");
-
-  if (!name) { showAlert("edit-error","In-Game Name is required."); return; }
+  if (!name) { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
   try {
-    await apiPost({
-      action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
       name, gamertag:tag, tier, class:cls, power, level, bio, description:desc,
       playstyle, discordId:discId, discordName:discName, timezone:tz,
-      languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain,
-    });
-    // update local
-    Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,description:desc,
-      playstyle,discordId:discId,discordName:discName,timezone:tz,languages,prefLanguage:prefLang,
+      languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain });
+    Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,
+      description:desc,playstyle,discordId:discId,discordName:discName,timezone:tz,
+      languages,prefLanguage:prefLang,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
-    // update session name/tag
     const s = getSession();
-    s.gamertag = tag; s.name = name; s.isCaptain = isCaptain;
+    s.gamertag=tag; s.name=name; s.isCaptain=isCaptain;
     setSession(s);
-    closeEditModal();
     renderProfile();
     toast("Profile updated!");
-  } catch(e) { showAlert("edit-error", e.message); }
-}
-
-async function changeAvatar(url) {
-  const session = getSession();
-  if (!session) return;
-  try {
-    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, avatarUrl:url });
-    profileMember.avatarUrl = url;
-    renderProfile();
-    toast("Avatar updated!");
-  } catch(e) { toast(e.message, "error"); }
+  } catch(e) {
+    openEditModal();
+    showAlert("edit-error", e.message);
+  }
 }
 
 function renderError(msg) {
-  el("loading").style.display = "none";
-  el("profile-content").style.display = "block";
-  el("profile-content").innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>${esc(msg)}</p></div>`;
+  hide(el("loading"));
+  show(el("profile-content"));
+  el("profile-content").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><p>${esc(msg)}</p></div>`;
 }
 </script>
 </body>

@@ -464,6 +464,8 @@ input:checked + .slider::before { transform: translateX(18px); }
   align-items: center; justify-content: center; padding: 1rem;
 }
 .modal-overlay.open { display: flex; }
+/* Confirm modal always on top */
+#confirm-modal { z-index: 500; }
 .modal {
   background: var(--bg2); border: 1px solid var(--border2);
   border-radius: var(--radius-lg); padding: 1.75rem;

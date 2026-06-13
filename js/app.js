@@ -206,7 +206,7 @@ function buildNav(activePage, opts = {}) {
   const session = getSession();
   const pages = [
     { href: "index.html",       label: "Current Teams",    requiresAuth: true },
-    { href: "players.html",     label: "Players",          requiresAuth: true },
+    { href: "players.html",     label: "Guild Members",    requiresAuth: true },
     { href: "status.html",      label: "Team Status",      requiresAuth: true },
     { href: "your-team.html",   label: "Your Team",        requiresAuth: true },
   ];
@@ -218,8 +218,13 @@ function buildNav(activePage, opts = {}) {
 
   const rightHtml = session
     ? `<div class="nav-dropdown-wrap" id="nav-user-wrap">
-        <button class="session-tag" onclick="toggleNavDropdown()" title="Account menu">
-          ${esc(session.gamertag || session.name)} ▾
+        <button class="session-tag" onclick="toggleNavDropdown()" title="Account menu"
+          style="display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;">
+          ${session.avatarUrl
+            ? `<img src="${esc(session.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" />`
+            : `<div style="width:26px;height:26px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--blue-bright);">${esc((session.gamertag||session.name||"?")[0].toUpperCase())}</div>`
+          }
+          <span>${esc(session.gamertag || session.name)}</span> ▾
         </button>
         <div class="nav-dropdown" id="nav-dropdown">
           <a href="profile.html?id=${session.id}" class="nav-dropdown-item">👤 View Profile</a>
