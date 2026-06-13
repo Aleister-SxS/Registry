@@ -3,211 +3,128 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Team Management — Berserk Guild</title>
+<title>Your Teams — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css"/>
 <style>
-  /* Section dividers for better contrast */
-  .team-section {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    margin-bottom: 1rem;
-    overflow: hidden;
-  }
-  .team-section-header {
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border2);
-    padding: 0.75rem 1.25rem;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 0.75rem;
-  }
-  .team-section-title {
-    font-family: var(--mono); font-size: 0.72rem; color: var(--blue-bright);
-    text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
-  }
-  .team-section-body { padding: 1.25rem; }
+/* ── Team landing cards ──────────────────────────────────── */
+.my-team-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+.my-team-card:hover { border-color: var(--border3); }
+.my-team-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:0.75rem; }
+.my-team-card-name { font-size:1.05rem; font-weight:700; margin-bottom:3px; }
+.my-team-card-captain { font-size:0.72rem; color:var(--text3); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:3px; }
+.my-team-card-captain-info { display:flex; align-items:center; gap:6px; }
 
-  /* Formation grid — front row at top */
-  .formation-wrap { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
-  .formation-grid-3x3 {
-    display: grid; grid-template-columns: repeat(3,1fr);
-    gap: 8px; width: 270px; flex-shrink: 0;
-  }
-  .formation-cell {
-    aspect-ratio: 1; border-radius: var(--radius);
-    background: var(--surface2); border: 1px dashed var(--border2);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; cursor: pointer; transition: border-color 0.15s, background 0.15s; padding: 6px;
-    text-align: center;
-  }
-  .formation-cell:hover  { border-color: var(--blue-mid); background: var(--surface3); }
-  .formation-cell.filled { border-style: solid; border-color: var(--blue-mid); background: var(--blue-dim); }
-  .formation-cell.active-select { border-color: var(--blue); border-style: solid; box-shadow: 0 0 0 2px rgba(79,142,247,0.3); }
-  .formation-cell .cell-emoji { font-size: 1.3rem; }
-  .formation-cell .cell-name  { font-size: 0.58rem; color: var(--text2); line-height: 1.2; }
-  .formation-cell .cell-label { font-size: 0.52rem; color: var(--text3); }
-  .row-label { font-size: 0.68rem; color: var(--text2); padding: 2px 0; text-align: center; }
+/* ── Collapsible sections ────────────────────────────────── */
+.collapsible-section {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+.collapsible-header {
+  background: var(--surface2);
+  border-bottom: 1px solid transparent;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.collapsible-header:hover { background: var(--surface3); }
+.collapsible-header.open { border-bottom-color: var(--border2); }
+.collapsible-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--blue-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.collapsible-chevron {
+  color: var(--text3);
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+.collapsible-header.open .collapsible-chevron { transform: rotate(180deg); }
+.collapsible-body { display: none; padding: 1.25rem; }
+.collapsible-body.open { display: block; }
 
-  /* Build modal slots */
-  .bm-slots-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+/* ── Two column layout for management ───────────────────── */
+.mgmt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media(max-width:700px) { .mgmt-grid { grid-template-columns:1fr; } }
 
-  /* ── Team Chat ─────────────────────────────────────────── */
-  .chat-panel {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    height: 480px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-  }
-  .chat-header {
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border2);
-    padding: 0.75rem 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-  .chat-title {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--blue-bright);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 700;
-  }
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    scroll-behavior: smooth;
-  }
-  .chat-messages::-webkit-scrollbar { width: 4px; }
-  .chat-messages::-webkit-scrollbar-track { background: transparent; }
-  .chat-messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-  .chat-msg {
-    display: flex;
-    gap: 9px;
-    padding: 5px 8px;
-    border-radius: 7px;
-    transition: background 0.1s;
-    align-items: flex-start;
-  }
-  .chat-msg:hover { background: var(--surface2); }
-  .chat-msg:hover .chat-msg-delete { opacity: 1; }
-  .chat-msg-avatar {
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--blue-mid);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .chat-msg-avatar-fallback {
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    background: var(--surface2);
-    border: 1px solid var(--blue-mid);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 0.55rem; font-weight: 700;
-    color: var(--blue-bright); flex-shrink: 0; margin-top: 1px;
-  }
-  .chat-msg-body { flex: 1; min-width: 0; }
-  .chat-msg-meta {
-    display: flex;
-    align-items: baseline;
-    gap: 7px;
-    margin-bottom: 2px;
-  }
-  .chat-msg-name {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .chat-msg-name.is-me { color: var(--blue-bright); }
-  .chat-msg-name.is-captain { color: var(--amber); }
-  .chat-msg-time {
-    font-size: 0.67rem;
-    color: var(--text3);
-    font-family: var(--mono);
-  }
-  .chat-msg-text {
-    font-size: 0.84rem;
-    color: var(--text2);
-    line-height: 1.5;
-    word-break: break-word;
-  }
-  .chat-msg-delete {
-    background: none; border: none; color: var(--text3);
-    cursor: pointer; font-size: 0.72rem; padding: 2px 5px;
-    border-radius: 4px; opacity: 0; transition: opacity 0.15s, color 0.15s;
-    flex-shrink: 0; align-self: center;
-  }
-  .chat-msg-delete:hover { color: var(--red); background: var(--red-dim); }
-  .chat-date-divider {
-    text-align: center;
-    font-size: 0.65rem;
-    color: var(--text3);
-    font-family: var(--mono);
-    padding: 6px 0;
-    position: relative;
-  }
-  .chat-date-divider::before, .chat-date-divider::after {
-    content: "";
-    position: absolute;
-    top: 50%; width: 38%;
-    height: 1px; background: var(--border);
-  }
-  .chat-date-divider::before { left: 0; }
-  .chat-date-divider::after  { right: 0; }
-  .chat-empty {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 8px; color: var(--text3);
-    font-size: 0.82rem; text-align: center; padding: 2rem;
-  }
-  .chat-empty-icon { font-size: 2rem; opacity: 0.3; }
-  .chat-input-area {
-    border-top: 1px solid var(--border2);
-    padding: 0.75rem 1rem;
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-    flex-shrink: 0;
-    background: var(--surface2);
-  }
-  .chat-input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 8px 12px;
-    color: var(--text);
-    font-size: 0.86rem;
-    resize: none;
-    min-height: 38px;
-    max-height: 100px;
-    outline: none;
-    font-family: inherit;
-    line-height: 1.45;
-    transition: border-color 0.15s;
-  }
-  .chat-input:focus { border-color: var(--blue); }
-  .chat-input::placeholder { color: var(--text3); }
-  .chat-send-btn {
-    background: var(--blue); border: none; border-radius: 7px;
-    color: #fff; font-size: 0.82rem; font-weight: 600;
-    padding: 8px 14px; cursor: pointer; flex-shrink: 0;
-    transition: opacity 0.15s; align-self: flex-end;
-  }
-  .chat-send-btn:hover { opacity: 0.85; }
-  .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .chat-refresh-info { font-size: 0.67rem; color: var(--text3); }
+/* ── Chat ────────────────────────────────────────────────── */
+.chat-panel {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  height: 460px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.chat-header {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.chat-title { font-family:var(--mono); font-size:0.72rem; color:var(--blue-bright); text-transform:uppercase; letter-spacing:0.1em; font-weight:700; }
+.chat-messages {
+  flex:1; overflow-y:auto; padding:1rem;
+  display:flex; flex-direction:column; gap:2px; scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.chat-msg { display:flex; gap:9px; padding:5px 8px; border-radius:7px; transition:background 0.1s; align-items:flex-start; }
+.chat-msg:hover { background:var(--surface2); }
+.chat-msg:hover .chat-msg-delete { opacity:1; }
+.chat-msg-avatar { width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);flex-shrink:0;margin-top:1px; }
+.chat-msg-avatar-fb { width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.5rem;font-weight:700;color:var(--blue-bright);flex-shrink:0;margin-top:1px; }
+.chat-msg-body { flex:1;min-width:0; }
+.chat-msg-meta { display:flex;align-items:baseline;gap:7px;margin-bottom:2px; }
+.chat-msg-name { font-size:0.78rem;font-weight:700;color:var(--text); }
+.chat-msg-name.is-me { color:var(--blue-bright); }
+.chat-msg-name.is-captain { color:var(--amber); }
+.chat-msg-time { font-size:0.65rem;color:var(--text3);font-family:var(--mono); }
+.chat-msg-text { font-size:0.83rem;color:var(--text2);line-height:1.5;word-break:break-word; }
+.chat-msg-delete { background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.7rem;padding:2px 5px;border-radius:4px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;align-self:center; }
+.chat-msg-delete:hover { color:var(--red);background:var(--red-dim); }
+.chat-date-div { text-align:center;font-size:0.63rem;color:var(--text3);font-family:var(--mono);padding:6px 0;position:relative; }
+.chat-date-div::before,.chat-date-div::after { content:"";position:absolute;top:50%;width:36%;height:1px;background:var(--border); }
+.chat-date-div::before{left:0;} .chat-date-div::after{right:0;}
+.chat-empty-msg { flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text3);font-size:0.82rem;text-align:center;padding:2rem; }
+.chat-input-area { border-top:1px solid var(--border2);padding:0.75rem 1rem;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:var(--surface2); }
+.chat-input { flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;resize:none;min-height:38px;max-height:100px;outline:none;font-family:inherit;line-height:1.45;transition:border-color 0.15s; }
+.chat-input:focus { border-color:var(--blue); }
+.chat-input::placeholder { color:var(--text3); }
+.chat-send-btn { background:var(--blue);border:none;border-radius:7px;color:#fff;font-size:0.82rem;font-weight:600;padding:8px 14px;cursor:pointer;flex-shrink:0;transition:opacity 0.15s;align-self:flex-end; }
+.chat-send-btn:hover{opacity:0.85;} .chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.chat-refresh-info { font-size:0.65rem;color:var(--text3); }
+
+/* ── Build display ───────────────────────────────────────── */
+.build-member-card { background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.5rem; }
+.build-slots-row { display:grid;grid-template-columns:repeat(4,1fr);gap:5px; }
+.build-slot-sm { background:var(--bg);border:1px dashed var(--border2);border-radius:6px;padding:5px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:68px;justify-content:center;cursor:pointer;transition:border-color 0.15s; }
+.build-slot-sm.filled { border-style:solid;border-color:var(--blue-mid);background:var(--surface); }
+.build-slot-sm:hover { border-color:var(--blue-mid); }
 </style>
 </head>
 <body>
@@ -216,24 +133,29 @@
 <script>onReady(()=>buildNav("your-team.html"));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
-  <div id="content"></div>
   <div id="not-logged-in" class="empty" style="display:none;">
     <div class="empty-icon">🛡️</div>
     <h3>You're not logged in.</h3>
     <p>Log in to manage your teams.</p>
     <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
+
+  <!-- Landing: list of teams -->
+  <div id="teams-landing" style="display:none;"></div>
+
+  <!-- Management view for one team -->
+  <div id="team-mgmt-view" style="display:none;"></div>
 </main>
 
 <!-- Team build modal -->
 <div class="modal-overlay" id="team-build-modal" style="z-index:400;">
   <div class="modal" style="max-width:700px;width:100%;">
     <div class="modal-title">Edit Team Build — <span id="tbm-member-name"></span></div>
-    <div class="modal-body">Select up to 4 Techniques and 4 Charms for your team strategy board.</div>
+    <div class="modal-body">Select up to 4 Techniques and 4 Charms.</div>
     <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
-    <div class="bm-slots-grid mb-md" id="tbm-technique-slots"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-technique-slots"></div>
     <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
-    <div class="bm-slots-grid mb-md" id="tbm-charm-slots"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-charm-slots"></div>
     <div id="tbm-browser" style="display:none;">
       <hr class="divider"/>
       <div class="flex-between mb-sm flex-wrap gap-sm">
@@ -255,11 +177,11 @@
 <script>
 let allTeams=[],allMembers=[],settings={};
 let session=null;
-
-// Formation state per team
-const fgState = {};
-// Build modal state
-let tbmState = { techniques:[], charms:[], activeTab:"technique", activeSlot:null, teamId:null, memberId:null, memberClass:"" };
+let activeTeamId=null;
+const fgState={};
+const chatCache={};
+const chatIntervals={};
+let tbmState={techniques:[],charms:[],activeTab:"technique",activeSlot:null,teamId:null,memberId:null,memberClass:""};
 
 onReady(async()=>{
   session=getSession();
@@ -267,276 +189,333 @@ onReady(async()=>{
   try{
     const d=await apiGet({action:"getAll"});
     allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
-  }catch(e){ loadDemo(); }
+  }catch(e){ allTeams=[];allMembers=[]; }
   hide(el("loading"));
-  render();
+  renderLanding();
 });
 
-function loadDemo(){
-  allTeams=[{id:"t1",name:"Shadow Protocol",captainId:"m1",captainName:"Alex Chen",
-    status:"open",memberCount:2,composition:["Tank","DPS","DPS","Support"],formation:{}}];
-  allMembers=[
-    {id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",captainKey:"demo",teamIds:["t1"],class:"Duelist",tier:"T2",power:2100000,level:60,avatarUrl:""},
-    {id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",captainKey:"demo2",teamIds:["t1"],class:"Knight",tier:"T2",power:1900000,level:55,avatarUrl:""},
-  ];
-  if(!session)session={id:"m1",gamertag:"ShadowAce#1234",captainKey:"demo"};
-}
+// ── Landing ───────────────────────────────────────────────
+function renderLanding(){
+  activeTeamId=null;
+  // Stop all chat polling
+  Object.keys(chatIntervals).forEach(id=>{ clearInterval(chatIntervals[id]); delete chatIntervals[id]; });
 
-function render(){
+  hide(el("team-mgmt-view"));
+  show(el("teams-landing"));
+
   const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
   const myTeams=allTeams.filter(t=>(me.teamIds||[]).includes(t.id));
   const maxSize=Number(settings.maxTeamSize)||4;
 
   if(!myTeams.length){
-    el("content").innerHTML=`<div class="empty">
+    el("teams-landing").innerHTML=`<div class="empty">
       <div class="empty-icon">🛡️</div>
       <h3>You're currently not in any team.</h3>
       <p>Join an existing team or start your own.</p>
       <div class="empty-actions">
-        <a href="index.html" class="btn btn-primary">View Current Teams</a>
+        <a href="index.html" class="btn btn-primary">View Team Registry</a>
         <a href="create-team.html" class="btn btn-ghost">Start Your Own Team</a>
       </div></div>`;
     return;
   }
 
-  el("content").innerHTML = `
+  el("teams-landing").innerHTML=`
     <div class="flex-between mb-lg flex-wrap gap-sm">
-      <div class="section-title">Team Management</div>
+      <div style="font-size:1.1rem;font-weight:700;">Your Teams <span style="color:var(--text3);font-size:0.8rem;font-weight:400;">(${myTeams.length})</span></div>
+      <a href="create-team.html" class="btn btn-ghost btn-sm">+ Create a Team</a>
     </div>
     ${myTeams.map(t=>{
       const members=allMembers.filter(m=>(m.teamIds||[]).includes(t.id));
       const isCaptain=t.captainId===session.id;
-      // Init formation state
-      if(!fgState[t.id]){
-        let pos={};
-        try{ pos=t.formation||{}; if(typeof pos==="string")pos=JSON.parse(pos); }catch{}
-        fgState[t.id]={ positions:{...pos}, selected:null };
-      }
+      const capMember=allMembers.find(m=>m.id===t.captainId);
+      const capAv=capMember?.avatarUrl
+        ?`<img src="${esc(capMember.avatarUrl)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
+        :`<div style="width:18px;height:18px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.45rem;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
+      const capClass=capMember?.class?` · ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}`:"";
+      const comp=Array.isArray(t.composition)?t.composition:[];
+      const compPills=comp.map(r=>`<span class="comp-pill comp-${r.toLowerCase()}">${r}</span>`).join("");
+      const lineupIcons=Array.from({length:maxSize},(_,i)=>{
+        const m=members[i];
+        if(!m) return `<div class="pip pip-empty" title="Open slot"></div>`;
+        return m.avatarUrl
+          ?`<img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" title="${esc(m.name)}" />`
+          :`<div class="pip pip-filled" title="${esc(m.name)}">${(m.name||"?")[0].toUpperCase()}</div>`;
+      }).join("");
 
-      return `
-      <!-- Team header -->
-      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
-        <div>
-          <div style="font-size:1.15rem;font-weight:700;">${esc(t.name)}</div>
-          <div class="text-xs text-muted">Captain: ${esc(t.captainName||"—")} · ${members.length}/${maxSize} members · <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}">${esc(t.status)}</span></div>
+      return `<div class="my-team-card">
+        <div class="my-team-card-header">
+          <div style="min-width:0;">
+            <div class="my-team-card-name">${esc(t.name)}
+              ${isCaptain?`<span class="badge badge-captain" style="margin-left:6px;font-size:0.62rem;">⚜️ You're the Captain</span>`:""}
+            </div>
+            <div class="my-team-card-captain">⚜️ Team Captain</div>
+            <div class="my-team-card-captain-info">
+              ${capAv}
+              <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${capClass}</span>
+            </div>
+          </div>
+          <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}">
+            <span class="badge-dot"></span>${t.status==="open"?"Recruiting":t.status==="full"?"Full":"Closed"}
+          </span>
         </div>
-        <div class="flex gap-xs flex-wrap">
-          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Team Profile</a>
-          ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${t.id}')">Transfer Captaincy</button>`:""}
-          <button class="btn btn-danger btn-sm" onclick="confirmLeave('${t.id}','${esc(t.name)}')">Leave Team</button>
+        ${compPills?`<div class="comp-row mb-sm">${compPills}</div>`:""}
+        ${t.description?`<div class="text-sm text-muted mb-sm">${esc(t.description)}</div>`:""}
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:0.78rem;margin-bottom:0.875rem;">
+          <div class="flex-center gap-sm">
+            <span style="color:var(--text3);width:120px;flex-shrink:0;">Requirements</span>
+            <div class="flex gap-xs flex-wrap">
+              ${t.minPower?`<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>`:""}
+              ${t.minLevel?`<span class="req-pill">🎯 Lv.${t.minLevel}+</span>`:""}
+              ${!t.minPower&&!t.minLevel?`<span style="color:var(--text3);">None</span>`:""}
+            </div>
+          </div>
+          ${t.playstyle?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:120px;flex-shrink:0;">Playstyle</span><span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span></div>`:""}
+          ${t.prefLanguage?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:120px;flex-shrink:0;">Language</span><span>${esc(t.prefLanguage)}</span></div>`:""}
         </div>
+        <div class="flex-between">
+          <div style="display:flex;gap:5px;align-items:center;">
+            ${lineupIcons}
+            <span class="text-xs text-muted" style="margin-left:4px;">${members.length}/${maxSize}</span>
+          </div>
+          <div class="flex gap-xs">
+            <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team Profile</a>
+            <button class="btn btn-primary btn-sm" onclick="openMgmt('${t.id}')">Team Management →</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}
+  `;
+}
+
+// ── Management view ───────────────────────────────────────
+function openMgmt(teamId){
+  activeTeamId=teamId;
+  hide(el("teams-landing"));
+  show(el("team-mgmt-view"));
+  renderMgmt(teamId);
+  chatLoad(teamId);
+  chatStartPolling(teamId);
+}
+
+function renderMgmt(teamId){
+  const t=allTeams.find(x=>x.id===teamId);
+  if(!t){ renderLanding(); return; }
+  const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId));
+  const isCaptain=t.captainId===session.id;
+  const maxSize=Number(settings.maxTeamSize)||4;
+
+  if(!fgState[teamId]){
+    let pos={};
+    try{ pos=t.formation||{}; if(typeof pos==="string")pos=JSON.parse(pos); }catch{}
+    fgState[teamId]={positions:{...pos},selected:null};
+  }
+
+  el("team-mgmt-view").innerHTML=`
+    <!-- Back button + header -->
+    <div class="flex-between mb-md flex-wrap gap-sm">
+      <div>
+        <button class="btn btn-ghost btn-sm mb-sm" onclick="renderLanding()">← Return to Your Teams</button>
+        <div style="font-size:1.15rem;font-weight:700;">${esc(t.name)}</div>
+        <div class="text-xs text-muted">${members.length}/${maxSize} members · <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}" style="font-size:0.65rem;">${esc(t.status)}</span></div>
       </div>
+      <div class="flex gap-xs flex-wrap">
+        <a href="team.html?id=${teamId}" class="btn btn-ghost btn-sm">Team Profile</a>
+        ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>`:""}
+        <button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>
+      </div>
+    </div>
 
-      <!-- Roster -->
-      <div class="team-section">
-        <div class="team-section-header">
-          <span class="team-section-title">Roster</span>
-          <span class="text-xs text-muted">${members.length} / ${maxSize} members</span>
-        </div>
-        <div class="team-section-body">
+    <div class="mgmt-grid">
+      <!-- LEFT: Roster + Formation -->
+      <div>
+        <!-- Roster -->
+        ${collapsibleSection("roster-"+teamId, "👥 Roster", `
           <div class="roster-list">
             ${members.map(m=>{
               const isCap=m.id===t.captainId;
-              const avatarEl = m.avatarUrl
-                ? `<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
-                : `<div class="avatar avatar-sm">${initials(m.name)}</div>`;
+              const av=m.avatarUrl
+                ?`<img src="${esc(m.avatarUrl)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
+                :`<div class="avatar avatar-sm">${initials(m.name)}</div>`;
               return `<div class="roster-row">
                 <div class="roster-info">
-                  <a href="profile.html?id=${m.id}">${avatarEl}</a>
+                  <a href="profile.html?id=${m.id}">${av}</a>
                   <div>
                     <div class="flex-center gap-xs">
                       <a href="profile.html?id=${m.id}" class="font-semibold text-sm">${esc(m.name)}</a>
-                      ${isCap?`<span class="badge badge-captain">Captain</span>`:""}
+                      ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
                     </div>
-                    <div class="roster-meta">${esc(m.gamertag||"")}${m.class?" · "+esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):""}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
+                    <div class="roster-meta">${esc(m.class?CLASS_ICONS[m.class]||"":"")} ${esc(m.class||"")}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
                   </div>
                 </div>
-                ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${t.id}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
+                ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${teamId}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
               </div>`;
             }).join("")}
-            ${Array.from({length:maxSize-members.length},(_,i)=>`
-              <div class="roster-row" style="border-style:dashed;opacity:0.6;cursor:pointer;" onclick="location.href='players.html'" title="Go to Guild Members to recruit">
-                <div class="roster-info">
-                  <div class="pip pip-empty"></div>
-                  <span class="text-xs text-muted">Open Slot — <span style="color:var(--blue-bright);">Find a member →</span></span>
+            ${Array.from({length:maxSize-members.length},()=>`
+              <div class="roster-row" style="border-style:dashed;opacity:0.5;cursor:pointer;" onclick="location.href='players.html'">
+                <div class="roster-info"><div class="pip pip-empty"></div>
+                  <span class="text-xs" style="color:var(--blue-bright);">Open Slot — Find a member →</span>
                 </div>
               </div>`).join("")}
           </div>
-        </div>
-      </div>
+        `, true)}
 
-      <!-- Battle Formation -->
-      <div class="team-section">
-        <div class="team-section-header">
-          <span class="team-section-title">⚔️ Battle Formation</span>
-          ${isCaptain?`<button class="btn btn-ghost btn-sm" onclick="fgSave('${t.id}')">Save Formation</button>`:""}
-        </div>
-        <div class="team-section-body">
-          <div class="formation-wrap">
-            <div>
-              <!-- Member picker -->
-              ${isCaptain&&members.length?`
-                <div style="margin-bottom:0.75rem;">
-                  <div class="text-xs text-muted mb-sm">1. Select a member, then click a cell to place them</div>
-                  <div class="flex gap-xs flex-wrap" id="fg-picker-${t.id}">
-                    ${members.map(m=>`
-                      <button class="btn btn-ghost btn-xs" id="fg-mbtn-${t.id}-${m.id}"
-                        onclick="fgSelectMember('${t.id}','${m.id}')">
-                        ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" />`:""}
-                        ${esc(m.name)}
-                      </button>`).join("")}
-                  </div>
-                </div>`:""}
-              <!-- Grid: row 0 = Front, row 1 = Mid, row 2 = Back -->
-              <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-                <div class="row-label" style="color:var(--red);font-weight:600;">⚔️ Front Row</div>
-                <div class="formation-grid-3x3" id="fg-grid-${t.id}"></div>
-                <div class="row-label" style="color:var(--blue-bright);">🛡️ Back Row</div>
+        <!-- Battle Formation -->
+        ${collapsibleSection("fg-"+teamId, "⚔️ Battle Formation", `
+          <div>
+            ${isCaptain&&members.length?`
+            <div style="margin-bottom:0.75rem;">
+              <div class="text-xs text-muted mb-sm">Select a member, then click a cell to place them. Click a placed member to move them.</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fg-picker-${teamId}">
+                ${members.map(m=>`<button class="btn btn-ghost btn-xs" id="fg-mbtn-${teamId}-${m.id}" onclick="fgSelectMember('${teamId}','${m.id}')">
+                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;margin-right:3px;" />`:""}
+                  ${esc(m.name.split(" ")[0])}
+                </button>`).join("")}
               </div>
+            </div>`:""}
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+              <div style="font-size:0.65rem;color:var(--red);font-weight:600;letter-spacing:0.04em;">⚔️ FRONT ROW</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:240px;" id="fg-grid-${teamId}"></div>
+              <div style="font-size:0.65rem;color:var(--blue-bright);font-weight:600;letter-spacing:0.04em;">🛡️ BACK ROW</div>
             </div>
-            <div class="text-xs text-muted" style="line-height:2.2;">
-              <div>Click a member to select</div>
-              <div>Click a cell to place them</div>
-              <div>Click an occupied cell to clear it</div>
-            </div>
+            ${isCaptain?`<div class="mt-md"><button class="btn btn-primary btn-sm" onclick="fgSave('${teamId}')">Save Formation</button></div>`:""}
           </div>
-        </div>
+        `, true)}
       </div>
 
-      <!-- Team Chat -->
-      <div class="chat-panel" id="chat-panel-${t.id}">
-        <div class="chat-header">
-          <span class="chat-title">💬 Team Chat</span>
-          <div class="flex-center gap-sm">
-            <span class="chat-refresh-info" id="chat-refresh-label-${t.id}">Auto-refreshes every 15s</span>
-            <button class="btn btn-ghost btn-xs" onclick="chatLoad('${t.id}')">↻ Refresh</button>
-          </div>
-        </div>
-        <div class="chat-messages" id="chat-messages-${t.id}">
-          <div class="chat-empty"><div class="chat-empty-icon">💬</div><div>Loading messages…</div></div>
-        </div>
-        <div class="chat-input-area">
-          <textarea class="chat-input" id="chat-input-${t.id}"
-            placeholder="Message your team…" rows="1"
-            onkeydown="chatKeydown(event,'${t.id}')"
-            oninput="chatAutoResize(this)"></textarea>
-          <button class="chat-send-btn" id="chat-send-${t.id}"
-            onclick="chatSend('${t.id}')">Send</button>
-        </div>
-      </div>
-
-      <!-- Team Builds -->
-      <div class="team-section mb-lg">
-        <div class="team-section-header">
-          <span class="team-section-title">🗡️ Team Builds</span>
-        </div>
-        <div class="team-section-body">
+      <!-- RIGHT: Team Builds -->
+      <div>
+        ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
           ${members.map(m=>{
             const build=m.teamBuild||{techniques:[],charms:[]};
             const techs=Array.isArray(build.techniques)?build.techniques:[];
             const chms=Array.isArray(build.charms)?build.charms:[];
             const isMe=m.id===session.id;
-            const slotHtml=(ids,label)=>Array.from({length:4},(_,i)=>{
+            const isCap=m.id===t.captainId;
+            const slotHtml=ids=>Array.from({length:4},(_,i)=>{
               const sid=ids[i];
               const sk=sid?SKILLS.find(s=>s.id===sid):null;
               return sk
-                ?`<div class="build-slot filled" style="min-height:70px;" title="${esc(sk.name)}">
-                    <img class="skill-icon" style="width:36px;height:36px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
-                    <div class="skill-name" style="font-size:0.58rem;">${esc(sk.name)}</div>
+                ?`<div class="build-slot-sm filled" title="${esc(sk.name)}">
+                    <img style="width:32px;height:32px;border-radius:6px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
+                    <div style="font-size:0.55rem;color:var(--text2);text-align:center;line-height:1.2;">${esc(sk.name)}</div>
                   </div>`
-                :`<div class="build-slot" style="min-height:70px;"><div style="color:var(--text3);font-size:0.6rem;">Empty</div></div>`;
+                :`<div class="build-slot-sm"><div style="font-size:0.6rem;color:var(--text3);">—</div></div>`;
             }).join("");
-            return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.75rem;">
+            return `<div class="build-member-card">
               <div class="flex-between mb-sm">
                 <div class="flex-center gap-xs">
-                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />`:`<div class="avatar avatar-xs">${initials(m.name)}</div>`}
+                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" />`:`<div class="avatar avatar-xs">${initials(m.name)}</div>`}
                   <span class="font-semibold text-sm">${esc(m.name)}</span>
-                  ${m.class?`<span class="badge badge-info">${esc(m.class)}</span>`:""}
+                  ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
+                  ${m.class?`<span class="badge badge-info" style="font-size:0.65rem;">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
                 </div>
-                ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${t.id}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`:""}
+                ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${teamId}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`:""}
               </div>
-              <div style="font-size:0.65rem;color:var(--text3);margin-bottom:4px;">TECHNIQUES</div>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;">${slotHtml(techs,"Techniques")}</div>
-              <div style="font-size:0.65rem;color:var(--text3);margin-bottom:4px;">CHARMS</div>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">${slotHtml(chms,"Charms")}</div>
+              <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">TECHNIQUES</div>
+              <div class="build-slots-row mb-sm">${slotHtml(techs)}</div>
+              <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">CHARMS</div>
+              <div class="build-slots-row">${slotHtml(chms)}</div>
             </div>`;
           }).join("")}
+        `, true)}
+      </div>
+    </div>
+
+    <!-- Team Chat (full width, below grid) -->
+    ${collapsibleSection("chat-"+teamId, "💬 Team Chat", `
+      <div class="chat-panel" id="chat-panel-${teamId}" style="height:400px;border:none;border-radius:0;margin-bottom:0;">
+        <div class="chat-header" style="background:transparent;border-bottom:1px solid var(--border);">
+          <span class="chat-refresh-info" id="chat-refresh-label-${teamId}">Auto-refreshes every 15s</span>
+          <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
+        </div>
+        <div class="chat-messages" id="chat-messages-${teamId}">
+          <div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>Loading…</div></div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input-${teamId}" placeholder="Message your team…" rows="1"
+            onkeydown="chatKeydown(event,'${teamId}')" oninput="chatAutoResize(this)"></textarea>
+          <button class="chat-send-btn" id="chat-send-${teamId}" onclick="chatSend('${teamId}')">Send</button>
         </div>
       </div>
-      `;
-    }).join("")}
+    `, true)}
   `;
 
-  // Render all formation grids and start chat
-  myTeams.forEach(t=>{
-    renderFgGrid(t.id);
-    chatLoad(t.id);
-    chatStartPolling(t.id);
-  });
-}
-
-// ── Formation grid ────────────────────────────────────────
-const ROW_LABELS = ["Front","Front","Front","Mid","Mid","Mid","Back","Back","Back"];
-
-function renderFgGrid(teamId){
-  const gridEl = el(`fg-grid-${teamId}`);
-  if(!gridEl) return;
-  const state = fgState[teamId];
-  const members = allMembers.filter(m=>(m.teamIds||[]).includes(teamId));
-  const team = allTeams.find(t=>t.id===teamId);
-  const isCaptain = team && team.captainId===session.id;
-
-  gridEl.innerHTML = Array.from({length:9},(_,i)=>{
-    const memberId = state.positions[i];
-    const m = memberId ? members.find(x=>x.id===memberId) : null;
-    const isActive = state.selected===null&&false; // handled via class
-    const label = `${ROW_LABELS[i]} ${["L","C","R"][i%3]}`;
-    if(m){
-      const av = m.avatarUrl
-        ? `<img src="${esc(m.avatarUrl)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" />`
-        : `<div style="font-size:1.2rem;">${esc(CLASS_ICONS[m.class]||"👤")}</div>`;
-      return `<div class="formation-cell filled" onclick="fgCellClick('${teamId}',${i})" title="${label}">
-        ${av}
-        <div class="cell-name">${esc(m.name.split(" ")[0])}</div>
-      </div>`;
-    }
-    return `<div class="formation-cell" onclick="fgCellClick('${teamId}',${i})" title="${label}">
-      <div class="cell-label">${label}</div>
-    </div>`;
-  }).join("");
-
-  // Highlight selected member button - make it very obvious
-  members.forEach(m=>{
-    const btn = el(`fg-mbtn-${teamId}-${m.id}`);
-    if(!btn) return;
-    const isSelected = state.selected===m.id;
-    const isPlaced = Object.values(state.positions).includes(m.id);
-    btn.className = "btn btn-xs " + (isSelected ? "btn-primary" : isPlaced ? "btn-success" : "btn-ghost");
-    btn.style.outline = isSelected ? "2px solid var(--blue-bright)" : "";
-    btn.style.boxShadow = isSelected ? "0 0 8px rgba(79,142,247,0.5)" : "";
-  });
-}
-
-function fgSelectMember(teamId, memberId){
-  const state = fgState[teamId];
-  state.selected = state.selected===memberId ? null : memberId;
   renderFgGrid(teamId);
 }
 
-function fgCellClick(teamId, cellIndex){
-  const team = allTeams.find(t=>t.id===teamId);
-  if(!team||team.captainId!==session.id) return;
-  const state = fgState[teamId];
-  if(state.positions[cellIndex]){
-    // Clear the cell
-    delete state.positions[cellIndex];
-  } else if(state.selected){
-    // Check if already placed somewhere
-    const alreadyAt = Object.keys(state.positions).find(k=>state.positions[k]===state.selected);
-    if(alreadyAt) {
-      // Move them instead of duplicating
-      delete state.positions[alreadyAt];
+// ── Collapsible helper ────────────────────────────────────
+function collapsibleSection(id, title, bodyHtml, startOpen=false){
+  return `<div class="collapsible-section">
+    <div class="collapsible-header ${startOpen?"open":""}" onclick="toggleCollapsible('${id}')">
+      <span class="collapsible-title">${title}</span>
+      <span class="collapsible-chevron">▼</span>
+    </div>
+    <div class="collapsible-body ${startOpen?"open":""}" id="cb-${id}">${bodyHtml}</div>
+  </div>`;
+}
+
+function toggleCollapsible(id){
+  const header=document.querySelector(`[onclick="toggleCollapsible('${id}')"]`);
+  const body=el("cb-"+id);
+  if(!header||!body)return;
+  header.classList.toggle("open");
+  body.classList.toggle("open");
+}
+
+// ── Formation ─────────────────────────────────────────────
+const ROW_LABELS=["Front L","Front C","Front R","Mid L","Mid C","Mid R","Back L","Back C","Back R"];
+
+function renderFgGrid(teamId){
+  const gridEl=el(`fg-grid-${teamId}`);
+  if(!gridEl)return;
+  const state=fgState[teamId];
+  const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId));
+  const team=allTeams.find(t=>t.id===teamId);
+  const isCaptain=team&&team.captainId===session.id;
+
+  gridEl.innerHTML=Array.from({length:9},(_,i)=>{
+    const memberId=state.positions[i];
+    const m=memberId?members.find(x=>x.id===memberId):null;
+    const label=ROW_LABELS[i];
+    if(m){
+      const av=m.avatarUrl
+        ?`<img src="${esc(m.avatarUrl)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" />`
+        :`<div style="font-size:1.1rem;">${esc(CLASS_ICONS[m.class]||"👤")}</div>`;
+      return `<div class="formation-cell filled" onclick="fgCellClick('${teamId}',${i})" title="${label}" style="aspect-ratio:1;border-radius:8px;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px;">
+        ${av}
+        <div style="font-size:0.55rem;color:var(--text2);text-align:center;">${esc(m.name.split(" ")[0])}</div>
+      </div>`;
     }
+    return `<div onclick="fgCellClick('${teamId}',${i})" title="${label}" style="aspect-ratio:1;border-radius:8px;background:var(--surface2);border:1px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:4px;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border2)'">
+      <div style="font-size:0.5rem;color:var(--text3);text-align:center;">${label}</div>
+    </div>`;
+  }).join("");
+
+  members.forEach(m=>{
+    const btn=el(`fg-mbtn-${teamId}-${m.id}`);
+    if(!btn)return;
+    const isSelected=state.selected===m.id;
+    const isPlaced=Object.values(state.positions).includes(m.id);
+    btn.className="btn btn-xs "+(isSelected?"btn-primary":isPlaced?"btn-success":"btn-ghost");
+    btn.style.outline=isSelected?"2px solid var(--blue-bright)":"";
+    btn.style.boxShadow=isSelected?"0 0 8px rgba(79,142,247,0.5)":"";
+  });
+}
+
+function fgSelectMember(teamId,memberId){
+  const state=fgState[teamId];
+  state.selected=state.selected===memberId?null:memberId;
+  renderFgGrid(teamId);
+}
+
+function fgCellClick(teamId,cellIndex){
+  const team=allTeams.find(t=>t.id===teamId);
+  if(!team||team.captainId!==session.id)return;
+  const state=fgState[teamId];
+  if(state.positions[cellIndex]){
+    delete state.positions[cellIndex];
+  }else if(state.selected){
+    Object.keys(state.positions).forEach(k=>{ if(state.positions[k]===state.selected)delete state.positions[k]; });
     state.positions[cellIndex]=state.selected;
     state.selected=null;
   }
@@ -544,72 +523,61 @@ function fgCellClick(teamId, cellIndex){
 }
 
 async function fgSave(teamId){
-  const state = fgState[teamId];
+  const state=fgState[teamId];
   try{
-    await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,
-      teamId,formation:JSON.stringify(state.positions)});
+    await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(state.positions)});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
 }
 
 // ── Team build modal ──────────────────────────────────────
-function openTbm(teamId, memberId, memberClass){
-  const m = allMembers.find(x=>x.id===memberId);
-  const build = m?.teamBuild||{techniques:[],charms:[]};
-  tbmState = {
+function openTbm(teamId,memberId,memberClass){
+  const m=allMembers.find(x=>x.id===memberId);
+  const build=m?.teamBuild||{techniques:[],charms:[]};
+  tbmState={
     techniques:[...(build.techniques||[])].slice(0,4).concat(Array(4)).slice(0,4),
-    charms:    [...(build.charms||[])].slice(0,4).concat(Array(4)).slice(0,4),
-    activeTab:"technique", activeSlot:null,
-    teamId, memberId, memberClass,
+    charms:[...(build.charms||[])].slice(0,4).concat(Array(4)).slice(0,4),
+    activeTab:"technique",activeSlot:null,teamId,memberId,memberClass,
   };
-  el("tbm-member-name").textContent = m?.name||memberId;
+  el("tbm-member-name").textContent=m?.name||memberId;
   tbmRenderSlots();
   hide(el("tbm-browser"));
   el("team-build-modal").classList.add("open");
 }
-function closeTbm(){ el("team-build-modal").classList.remove("open"); }
-
+function closeTbm(){el("team-build-modal").classList.remove("open");}
 function tbmRenderSlots(){
-  const mkSlots=(ids,type,containerId)=>{
-    el(containerId).innerHTML=Array.from({length:4},(_,i)=>{
-      const id=ids[i];
-      const sk=id?SKILLS.find(s=>s.id===id):null;
+  const mk=(ids,type,cid)=>{
+    el(cid).innerHTML=Array.from({length:4},(_,i)=>{
+      const id=ids[i];const sk=id?SKILLS.find(s=>s.id===id):null;
       const isActive=tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===i;
-      if(sk) return `<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
-          <button class="build-slot-remove" onclick="event.stopPropagation();tbmClearSlot('${type}',${i})">✕</button>
-          <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
-          <div class="skill-name" style="font-size:0.6rem;">${esc(sk.name)}</div>
-        </div>`;
-      return `<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
-          <div style="font-size:1.3rem;opacity:0.2;">+</div>
-          <div style="font-size:0.6rem;color:var(--text3);">${isActive?"Selecting…":"Empty"}</div>
-        </div>`;
+      if(sk)return`<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
+        <button class="build-slot-remove" onclick="event.stopPropagation();tbmClearSlot('${type}',${i})">✕</button>
+        <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
+        <div class="skill-name" style="font-size:0.6rem;">${esc(sk.name)}</div></div>`;
+      return`<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
+        <div style="font-size:1.2rem;opacity:0.2;">+</div>
+        <div style="font-size:0.6rem;color:var(--text3);">${isActive?"Selecting…":"Empty"}</div></div>`;
     }).join("");
   };
-  mkSlots(tbmState.techniques,"technique","tbm-technique-slots");
-  mkSlots(tbmState.charms,    "charm",    "tbm-charm-slots");
+  mk(tbmState.techniques,"technique","tbm-technique-slots");
+  mk(tbmState.charms,"charm","tbm-charm-slots");
 }
-
 function tbmSlotClick(type,index){
-  if(tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===index){
-    tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots(); return;
-  }
-  tbmState.activeSlot={type,index}; tbmState.activeTab=type;
-  show(el("tbm-browser")); tbmSetTab(type); tbmRenderSlots();
+  if(tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===index){tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();return;}
+  tbmState.activeSlot={type,index};tbmState.activeTab=type;show(el("tbm-browser"));tbmSetTab(type);tbmRenderSlots();
 }
 function tbmClearSlot(type,index){
-  if(type==="technique") tbmState.techniques[index]=null;
-  else tbmState.charms[index]=null;
-  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
+  if(type==="technique")tbmState.techniques[index]=null;else tbmState.charms[index]=null;
+  tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();
 }
 function tbmSetTab(tab){
   tbmState.activeTab=tab;
   el("tbm-tab-t").classList.toggle("active",tab==="technique");
   el("tbm-tab-c").classList.toggle("active",tab==="charm");
-  el("tbm-search").value=""; tbmRenderBrowser();
+  el("tbm-search").value="";tbmRenderBrowser();
 }
 function tbmRenderBrowser(){
-  if(!tbmState.activeSlot) return;
+  if(!tbmState.activeSlot)return;
   const q=(el("tbm-search").value||"").toLowerCase();
   const skills=SKILLS.filter(s=>{
     if(s.type!==tbmState.activeTab)return false;
@@ -627,20 +595,16 @@ function tbmRenderBrowser(){
 }
 function tbmSelectSkill(skillId){
   if(!tbmState.activeSlot)return;
-  const {type,index}=tbmState.activeSlot;
-  if(type==="technique") tbmState.techniques[index]=skillId;
-  else tbmState.charms[index]=skillId;
-  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
+  const{type,index}=tbmState.activeSlot;
+  if(type==="technique")tbmState.techniques[index]=skillId;else tbmState.charms[index]=skillId;
+  tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();
 }
 async function saveTbm(){
   const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean)};
   try{
-    await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,
-      teamId:tbmState.teamId,build:JSON.stringify(build)});
-    // Update local member data
-    const m=allMembers.find(x=>x.id===tbmState.memberId);
-    if(m) m.teamBuild=build;
-    closeTbm(); render(); toast("Team build saved!");
+    await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId:tbmState.teamId,build:JSON.stringify(build)});
+    const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
+    closeTbm();if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
   }catch(e){toast(e.message,"error");}
 }
 
@@ -653,21 +617,20 @@ function openTransfer(teamId){
   if(!name)return;
   const target=members.find(m=>(m.gamertag||"").toLowerCase()===name.toLowerCase());
   if(!target){toast("Player ID not found in this team.","error");return;}
-  confirm_("Transfer Captaincy",`Transfer captain role to ${target.name}? You'll become a regular member.`,async()=>{
+  confirm_("Transfer Captaincy",`Transfer captain role to ${target.name}?`,async()=>{
     try{
       await apiPost({action:"transferCaptaincy",captainId:session.id,captainKey:session.captainKey,teamId,newCaptainId:target.id});
       const t=allTeams.find(x=>x.id===teamId);if(t){t.captainId=target.id;t.captainName=target.name;}
-      toast("Captaincy transferred!"); render();
+      toast("Captaincy transferred!");renderMgmt(teamId);
     }catch(e){toast(e.message,"error");}
   });
 }
 function confirmLeave(teamId,teamName){
-  confirm_(`Leave ${teamName}`,"Are you sure? You must transfer captaincy before leaving if other members remain.",async()=>{
+  confirm_(`Leave ${teamName}`,"Are you sure? Transfer captaincy first if other members remain.",async()=>{
     try{
       await apiPost({action:"leaveTeam",memberId:session.id,captainKey:session.captainKey,teamId});
-      const me=allMembers.find(m=>m.id===session.id);
-      if(me)me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
-      toast("Left team."); render();
+      const me=allMembers.find(m=>m.id===session.id);if(me)me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
+      toast("Left team.");renderLanding();
     }catch(e){toast(e.message,"error");}
   });
 }
@@ -675,162 +638,90 @@ function confirmKick(teamId,memberId,memberName){
   confirm_(`Kick ${memberName}`,`Remove ${memberName} from the team?`,async()=>{
     try{
       await apiPost({action:"kickMember",captainId:session.id,captainKey:session.captainKey,teamId,targetId:memberId});
-      const m=allMembers.find(x=>x.id===memberId);
-      if(m)m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
-      toast(`${memberName} removed.`); render();
+      const m=allMembers.find(x=>x.id===memberId);if(m)m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
+      toast(`${memberName} removed.`);renderMgmt(teamId);
     }catch(e){toast(e.message,"error");}
   });
 }
 
-// ── Team Chat ─────────────────────────────────────────────
-const chatPollingIntervals = {};
-const chatMessageCache = {}; // teamId -> last message count
-
-function chatStartPolling(teamId) {
-  // Clear any existing interval for this team
-  if (chatPollingIntervals[teamId]) clearInterval(chatPollingIntervals[teamId]);
-  chatPollingIntervals[teamId] = setInterval(() => chatLoad(teamId, true), 15000);
+// ── Chat ──────────────────────────────────────────────────
+function chatStartPolling(teamId){
+  if(chatIntervals[teamId])clearInterval(chatIntervals[teamId]);
+  chatIntervals[teamId]=setInterval(()=>chatLoad(teamId,true),15000);
 }
-
-async function chatLoad(teamId, silent = false) {
-  if (!session) return;
-  const label = el(`chat-refresh-label-${teamId}`);
-  try {
-    const d = await apiGet({
-      action: "getMessages",
-      teamId,
-      memberId: session.id,
-      captainKey: session.captainKey,
-    });
-    const messages = d.messages || [];
-    chatRender(teamId, messages);
-    const now = new Date();
-    if (label) label.textContent = `Last updated ${now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
-  } catch(e) {
-    if (!silent && label) label.textContent = "Failed to load — click ↻ to retry";
+async function chatLoad(teamId,silent=false){
+  if(!session)return;
+  const label=el(`chat-refresh-label-${teamId}`);
+  try{
+    const d=await apiGet({action:"getMessages",teamId,memberId:session.id,captainKey:session.captainKey});
+    const messages=d.messages||[];
+    chatRender(teamId,messages);
+    const now=new Date();
+    if(label)label.textContent=`Updated ${now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
+  }catch(e){
+    if(!silent&&label)label.textContent="Failed to load";
   }
 }
-
-function chatRender(teamId, messages) {
-  const container = el(`chat-messages-${teamId}`);
-  if (!container) return;
-  const team = allTeams.find(t=>t.id===teamId);
-  const captainId = team?.captainId;
-  const isNewMessages = messages.length !== (chatMessageCache[teamId]||0);
-  const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
-  chatMessageCache[teamId] = messages.length;
-
-  if (!messages.length) {
-    container.innerHTML = `<div class="chat-empty">
-      <div class="chat-empty-icon">💬</div>
-      <div>No messages yet. Say hello to your team!</div>
-    </div>`;
+function chatRender(teamId,messages){
+  const container=el(`chat-messages-${teamId}`);
+  if(!container)return;
+  const team=allTeams.find(t=>t.id===teamId);
+  const captainId=team?.captainId;
+  const wasAtBottom=container.scrollHeight-container.scrollTop<=container.clientHeight+40;
+  const isNew=messages.length!==(chatCache[teamId]||0);
+  chatCache[teamId]=messages.length;
+  if(!messages.length){
+    container.innerHTML=`<div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>No messages yet — say hello!</div></div>`;
     return;
   }
-
-  // Group messages by date
-  let lastDate = "";
-  const html = messages.map(msg => {
-    const date    = new Date(msg.sentAt);
-    const dateStr = date.toLocaleDateString([], {weekday:"short", month:"short", day:"numeric"});
-    const timeStr = date.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-    const isMe      = msg.memberId === session.id;
-    const isCaptain = msg.memberId === captainId;
-    const canDelete = isMe || session.id === captainId;
-
-    const avatarEl = msg.avatarUrl
-      ? `<img src="${esc(msg.avatarUrl)}" class="chat-msg-avatar" onerror="this.style.display='none'" />`
-      : `<div class="chat-msg-avatar-fallback">${esc((msg.memberName||"?")[0].toUpperCase())}</div>`;
-
-    const dateDivider = dateStr !== lastDate
-      ? `<div class="chat-date-divider">${dateStr}</div>`
-      : "";
-    lastDate = dateStr;
-
-    return `${dateDivider}
-    <div class="chat-msg" id="msg-${msg.id}">
-      ${avatarEl}
+  let lastDate="";
+  container.innerHTML=messages.map(msg=>{
+    const date=new Date(msg.sentAt);
+    const dateStr=date.toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"});
+    const timeStr=date.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    const isMe=msg.memberId===session.id;
+    const isCap=msg.memberId===captainId;
+    const canDelete=isMe||session.id===captainId;
+    const av=msg.avatarUrl
+      ?`<img src="${esc(msg.avatarUrl)}" class="chat-msg-avatar" onerror="this.style.display='none'" />`
+      :`<div class="chat-msg-avatar-fb">${esc((msg.memberName||"?")[0].toUpperCase())}</div>`;
+    const div=dateStr!==lastDate?`<div class="chat-date-div">${dateStr}</div>`:"";
+    lastDate=dateStr;
+    return `${div}<div class="chat-msg" id="msg-${msg.id}">
+      ${av}
       <div class="chat-msg-body">
         <div class="chat-msg-meta">
-          <span class="chat-msg-name ${isMe?"is-me":""} ${isCaptain?"is-captain":""}">${esc(msg.memberName)}${isCaptain?" ⚜️":""}</span>
+          <span class="chat-msg-name ${isMe?"is-me":""} ${isCap?"is-captain":""}">${esc(msg.memberName)}${isCap?" ⚜️":""}</span>
           <span class="chat-msg-time">${timeStr}</span>
         </div>
         <div class="chat-msg-text">${esc(msg.text).replace(/\n/g,"<br>")}</div>
       </div>
-      ${canDelete ? `<button class="chat-msg-delete" onclick="chatDelete('${teamId}','${msg.id}')" title="Delete message">✕</button>` : ""}
+      ${canDelete?`<button class="chat-msg-delete" onclick="chatDelete('${teamId}','${msg.id}')" title="Delete">✕</button>`:""}
     </div>`;
   }).join("");
-
-  container.innerHTML = html;
-
-  // Scroll to bottom if new messages arrived or already at bottom
-  if (isNewMessages || wasAtBottom) {
-    container.scrollTop = container.scrollHeight;
-  }
+  if(isNew||wasAtBottom)container.scrollTop=container.scrollHeight;
 }
-
-async function chatSend(teamId) {
-  if (!session) return;
-  const input = el(`chat-input-${teamId}`);
-  const btn   = el(`chat-send-${teamId}`);
-  const text  = input.value.trim();
-  if (!text) return;
-
-  btn.disabled = true;
-  input.disabled = true;
-  try {
-    await apiPost({
-      action: "sendMessage",
-      memberId: session.id,
-      captainKey: session.captainKey,
-      teamId,
-      text,
-    });
-    input.value = "";
-    input.style.height = "";
-    await chatLoad(teamId);
-  } catch(e) {
-    toast(e.message, "error");
-  } finally {
-    btn.disabled = false;
-    input.disabled = false;
-    input.focus();
-  }
+async function chatSend(teamId){
+  if(!session)return;
+  const input=el(`chat-input-${teamId}`);const btn=el(`chat-send-${teamId}`);
+  const text=input.value.trim();if(!text)return;
+  btn.disabled=true;input.disabled=true;
+  try{
+    await apiPost({action:"sendMessage",memberId:session.id,captainKey:session.captainKey,teamId,text});
+    input.value="";input.style.height="";await chatLoad(teamId);
+  }catch(e){toast(e.message,"error");}
+  finally{btn.disabled=false;input.disabled=false;input.focus();}
 }
-
-async function chatDelete(teamId, messageId) {
-  if (!session) return;
-  try {
-    await apiPost({
-      action: "deleteMessage",
-      memberId: session.id,
-      captainKey: session.captainKey,
-      teamId,
-      messageId,
-    });
-    // Remove from DOM immediately
-    const msgEl = el(`msg-${messageId}`);
-    if (msgEl) msgEl.remove();
-    // Update cache count
-    if (chatMessageCache[teamId]) chatMessageCache[teamId]--;
-  } catch(e) {
-    toast(e.message, "error");
-  }
+async function chatDelete(teamId,messageId){
+  if(!session)return;
+  try{
+    await apiPost({action:"deleteMessage",memberId:session.id,captainKey:session.captainKey,teamId,messageId});
+    const m=el(`msg-${messageId}`);if(m)m.remove();
+    if(chatCache[teamId])chatCache[teamId]--;
+  }catch(e){toast(e.message,"error");}
 }
-
-function chatKeydown(e, teamId) {
-  // Send on Enter, new line on Shift+Enter
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    chatSend(teamId);
-  }
-}
-
-function chatAutoResize(el) {
-  el.style.height = "";
-  el.style.height = Math.min(el.scrollHeight, 100) + "px";
-}
-
+function chatKeydown(e,teamId){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend(teamId);}}
+function chatAutoResize(el){el.style.height="";el.style.height=Math.min(el.scrollHeight,100)+"px";}
 </script>
 </body>
 </html>

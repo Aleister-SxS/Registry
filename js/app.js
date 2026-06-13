@@ -208,7 +208,7 @@ function buildNav(activePage, opts = {}) {
     { href: "index.html",       label: "Team Registry",    requiresAuth: true },
     { href: "players.html",     label: "Guild Members",    requiresAuth: true },
     { href: "status.html",      label: "Team Status",      requiresAuth: true },
-    { href: "your-team.html",   label: "Your Team",        requiresAuth: true },
+    { href: "your-team.html",   label: "Your Teams",       requiresAuth: true },
   ];
 
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {

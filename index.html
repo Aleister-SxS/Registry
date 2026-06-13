@@ -152,10 +152,12 @@ function renderTeams() {
       <div class="team-card-header">
         <div style="min-width:0;">
           <div class="team-card-name">${esc(t.name)}</div>
-          <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
-            <span style="font-size:0.62rem;color:var(--text3);letter-spacing:0.04em;">⚜️ TEAM CAPTAIN</span>
-            ${captainAvatar}
-            <span style="font-size:0.75rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${captainClass}</span>
+          <div style="margin-top:5px;">
+            <div style="font-size:0.63rem;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;font-family:var(--mono);margin-bottom:3px;">⚜️ Team Captain</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              ${captainAvatar}
+              <span style="font-size:0.82rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${captainClass}</span>
+            </div>
           </div>
         </div>
         <span class="badge badge-${status}" style="flex-shrink:0;">
@@ -164,12 +166,26 @@ function renderTeams() {
       </div>
       ${comp ? `<div class="comp-row">${comp}</div>` : ""}
       <div class="team-card-desc">${t.description ? esc(t.description) : `<span style="color:var(--text3);font-style:italic;">No description.</span>`}</div>
-      <div class="req-row" style="margin-bottom:0.75rem;">
-        ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>` : ""}
-        ${t.minLevel ? `<span class="req-pill">🎯 Lv.${t.minLevel}+</span>` : ""}
-        ${t.playstyle ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>` : ""}
-        ${t.requiresDiscord === "TRUE" ? `<span class="req-pill">💬 Discord</span>` : ""}
-        ${t.prefLanguage ? `<span class="req-pill">🌐 ${esc(t.prefLanguage)}</span>` : ""}
+      <div style="margin-bottom:0.75rem;display:flex;flex-direction:column;gap:5px;font-size:0.78rem;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:var(--text3);width:130px;flex-shrink:0;">Requirements to Join</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+ Power</span>` : `<span style="color:var(--text3);">None</span>`}
+            ${t.minLevel ? `<span class="req-pill">🎯 Lv.${t.minLevel}+</span>` : ""}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:var(--text3);width:130px;flex-shrink:0;">Playstyle</span>
+          ${t.playstyle ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>` : `<span style="color:var(--text3);">Not specified</span>`}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:var(--text3);width:130px;flex-shrink:0;">Language Preference</span>
+          <span style="color:var(--text);">${t.prefLanguage ? esc(t.prefLanguage) : "No preference"}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:var(--text3);width:130px;flex-shrink:0;">Discord Preference</span>
+          <span style="color:var(--text);">${t.requiresDiscord==="TRUE" ? "💬 Discord recommended" : "Not required"}</span>
+        </div>
       </div>
       <div class="team-card-footer">
         <div class="flex-center gap-xs">
