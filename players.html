@@ -20,6 +20,7 @@
   <div class="filter-bar">
     <button class="filter-btn active" onclick="setFilter(this,'all')">All Members</button>
     <button class="filter-btn" onclick="setFilter(this,'lft')">Looking for Team</button>
+    <button class="filter-btn" onclick="setFilter(this,'captain')">Team Captains</button>
     <button class="filter-btn" onclick="setFilter(this,'Casual')">Casual</button>
     <button class="filter-btn" onclick="setFilter(this,'Competitive')">Competitive</button>
   </div>
@@ -81,8 +82,9 @@ function renderPlayers() {
 
   // Show ALL members (including self), filtered by tab
   const members = allMembers.filter(m => {
-    if (playstyleFilter === "lft" && String(m.lookingForTeam).toUpperCase() !== "TRUE") return false;
-    if (playstyleFilter === "Casual" && m.playstyle !== "Casual") return false;
+    if (playstyleFilter === "lft"     && String(m.lookingForTeam).toUpperCase() !== "TRUE") return false;
+    if (playstyleFilter === "captain" && String(m.isCaptain).toUpperCase() !== "TRUE") return false;
+    if (playstyleFilter === "Casual"  && m.playstyle !== "Casual") return false;
     if (playstyleFilter === "Competitive" && m.playstyle !== "Competitive") return false;
     if (search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
     return true;
@@ -135,6 +137,10 @@ function renderPlayers() {
         ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
         ${statusBadge}
       </div>
+      ${String(m.isCaptain).toUpperCase()==="TRUE" ? (() => {
+        const captainedTeams = allTeams.filter(t=>t.captainId===m.id);
+        return captainedTeams.length ? `<div class="text-xs text-muted mb-sm">Captains: ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();" style="color:var(--blue-bright);">${esc(t.name)}</a>`).join(", ")}</div>` : "";
+      })() : ""}
       ${captainTeam && !isMe && !atLimit && isLFT && !alreadyInvited
         ? `<button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`
         : alreadyInvited

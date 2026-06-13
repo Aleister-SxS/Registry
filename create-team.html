@@ -5,6 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create a Team — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  .comp-role-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); padding: 9px 18px; border-radius: 7px;
+    cursor: pointer; font-size: 0.88rem; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .comp-role-btn:hover { border-color: var(--border3); }
+  .comp-role-btn.tank    { background: var(--blue-dim);  border-color: var(--blue-mid);  color: var(--blue-bright); }
+  .comp-role-btn.support { background: var(--green-dim); border-color: var(--green-mid); color: var(--green); }
+  .comp-role-btn.dps     { background: var(--red-dim);   border-color: var(--red-mid);   color: var(--red); }
+  .comp-role-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .comp-slots { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; min-height: 44px; }
+  .comp-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;
+    border: 1px solid; cursor: default;
+  }
+  .comp-chip.tank    { background: var(--blue-dim);  border-color: var(--blue-mid);  color: var(--blue-bright); }
+  .comp-chip.support { background: var(--green-dim); border-color: var(--green-mid); color: var(--green); }
+  .comp-chip.dps     { background: var(--red-dim);   border-color: var(--red-mid);   color: var(--red); }
+  .comp-chip-x { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; font-size: 0.8rem; padding: 0 2px; }
+  .comp-chip-x:hover { opacity: 1; }
+</style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -13,18 +38,17 @@
 <main>
 <div class="form-wrap">
 
-  <!-- Not logged in / not captain -->
   <div id="access-denied" class="empty" style="display:none;">
     <div class="empty-icon">🔒</div>
-    <p>You need to be logged in to create a team.<br>
-    <a href="register.html">Log in or register here →</a></p>
+    <h3>Not logged in</h3>
+    <p>You need to be logged in to create a team.</p>
+    <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
 
-  <!-- Create team form -->
   <div id="create-form" style="display:none;">
     <div class="form-card">
       <div class="form-title">Create a Team</div>
-      <div class="form-subtitle">Set up your team details. You'll be the captain and can invite or accept members after creation.</div>
+      <div class="form-subtitle">Set up your team. You'll be the default Team Captain and can manage membership after creation.</div>
 
       <div class="form-section-label">Team Identity</div>
       <div class="field">
@@ -32,11 +56,16 @@
         <input id="ct-name" placeholder="Team Phantom" />
       </div>
 
-      <div class="form-section-label">Team Composition</div>
+      <div class="form-section-label">Ideal Composition</div>
       <div class="field">
-        <label>Ideal Composition</label>
-        <div class="comp-selector" id="comp-selector"></div>
-        <div class="comp-note mt-sm" id="comp-selector-count">0 / 4 selected — click a role to add it (can repeat)</div>
+        <label>Add roles to build your lineup <span class="optional">(up to 4 total)</span></label>
+        <div class="flex gap-sm flex-wrap">
+          <button type="button" class="comp-role-btn" id="btn-tank"    onclick="compAdd('Tank')"   >🛡️ Tank</button>
+          <button type="button" class="comp-role-btn" id="btn-support" onclick="compAdd('Support')" >➕ Support</button>
+          <button type="button" class="comp-role-btn" id="btn-dps"     onclick="compAdd('DPS')"    >⚔️ DPS</button>
+        </div>
+        <div class="comp-slots" id="comp-slots"></div>
+        <div class="comp-note" id="comp-count" style="margin-top:4px;">0 / 4 roles selected</div>
       </div>
 
       <div class="form-section-label">Playstyle & Requirements</div>
@@ -67,8 +96,8 @@
       <div class="field">
         <div class="toggle-row">
           <div>
-            <div class="toggle-label">Requires Discord</div>
-            <div class="toggle-sublabel">Members must have a Discord account</div>
+            <div class="toggle-label">Discord Recommended</div>
+            <div class="toggle-sublabel">Team communication is primarily through Discord — members with Discord preferred</div>
           </div>
           <label class="toggle"><input type="checkbox" id="ct-discord" /><span class="slider"></span></label>
         </div>
@@ -76,17 +105,15 @@
       <div class="field">
         <div class="toggle-row">
           <div>
-            <div class="toggle-label">Looking for a Team Captain</div>
-            <div class="toggle-sublabel">Indicate the team is seeking a captain to take over</div>
+            <div class="toggle-label">Open to a New Captain</div>
+            <div class="toggle-sublabel">You will be the default Team Captain. Enable this if you're open to transferring the role to another member later.</div>
           </div>
           <label class="toggle"><input type="checkbox" id="ct-need-captain" /><span class="slider"></span></label>
         </div>
       </div>
       <div class="field">
         <label>Preferred Language</label>
-        <select id="ct-lang">
-          <option value="">— No preference —</option>
-        </select>
+        <select id="ct-lang"><option value="">— No preference —</option></select>
       </div>
 
       <div id="ct-error" class="alert alert-error alert-hidden mt-md"></div>
@@ -97,11 +124,14 @@
   <!-- Success -->
   <div id="create-success" style="display:none;">
     <div class="form-card">
-      <div class="alert alert-success">Team created successfully!</div>
-      <div style="font-size:0.9rem;margin-bottom:1rem;">Your team <strong id="new-team-name"></strong> is now live.</div>
+      <div class="alert alert-success mb-md">🎉 Team created! You are the Team Captain.</div>
+      <div style="font-size:1rem;font-weight:700;margin-bottom:0.4rem;" id="new-team-name-display"></div>
+      <p class="text-sm text-muted mb-lg">Your team is now live. You can invite members from the Guild Members page or wait for players to request to join.</p>
       <div class="flex gap-sm flex-wrap">
-        <a id="view-team-btn" href="#" class="btn btn-primary">View Team Page</a>
-        <a href="index.html" class="btn btn-ghost">Browse All Teams</a>
+        <a id="btn-view-team"    href="#" class="btn btn-primary">Visit Team Profile</a>
+        <a href="index.html"              class="btn btn-ghost">View Current Teams</a>
+        <a href="players.html"            class="btn btn-ghost">Start Recruiting →</a>
+        <a id="btn-team-mgmt"   href="#" class="btn btn-ghost">Team Management →</a>
       </div>
     </div>
   </div>
@@ -110,20 +140,51 @@
 </main>
 
 <script>
-let compPicker = null;
+// ── Composition state ─────────────────────────────────────
+const compSelected = [];
+const MAX_COMP = 4;
+const ROLE_ICONS = { Tank:"🛡️", Support:"➕", DPS:"⚔️" };
+const ROLE_CLASS = { Tank:"tank", Support:"support", DPS:"dps" };
 
+function compAdd(role) {
+  if (compSelected.length >= MAX_COMP) return;
+  compSelected.push(role);
+  compRender();
+}
+
+function compRemove(index) {
+  compSelected.splice(index, 1);
+  compRender();
+}
+
+function compRender() {
+  const count = compSelected.length;
+  el("comp-count").textContent = `${count} / ${MAX_COMP} roles selected`;
+
+  // Disable add buttons when full
+  ["tank","support","dps"].forEach(r => {
+    const btn = el("btn-" + r);
+    if (btn) btn.disabled = count >= MAX_COMP;
+  });
+
+  el("comp-slots").innerHTML = compSelected.map((role, i) =>
+    `<div class="comp-chip ${ROLE_CLASS[role]}">
+      ${ROLE_ICONS[role]} ${role}
+      <button class="comp-chip-x" onclick="compRemove(${i})" title="Remove">✕</button>
+    </div>`
+  ).join("");
+}
+
+// ── Page init ─────────────────────────────────────────────
 onReady(() => {
   populateSelect("ct-lang", LANGUAGES, "— No preference —");
-  compPicker = buildCompSelector("comp-selector", 4);
-
   const session = getSession();
-  if (!session) {
-    show(el("access-denied"));
-    return;
-  }
+  if (!session) { show(el("access-denied")); return; }
   show(el("create-form"));
+  compRender();
 });
 
+// ── Create team ───────────────────────────────────────────
 async function doCreateTeam() {
   clearAlert("ct-error");
   const session = getSession();
@@ -137,22 +198,23 @@ async function doCreateTeam() {
   const reqDiscord  = el("ct-discord").checked;
   const needCaptain = el("ct-need-captain").checked;
   const prefLang    = el("ct-lang").value;
-  const composition = compPicker ? compPicker.get() : [];
 
   if (!name) { showAlert("ct-error","Team name is required."); return; }
 
   try {
     const res = await apiPost({
       action:"createTeam",
-      captainId: session.id, captainKey: session.captainKey,
+      captainId:session.id, captainKey:session.captainKey,
       name, playstyle, description:desc, minPower, minLevel,
-      requiresDiscord: reqDiscord, lookingForCaptain: needCaptain,
-      prefLanguage: prefLang, composition,
+      requiresDiscord:reqDiscord, lookingForCaptain:needCaptain,
+      prefLanguage:prefLang, composition:[...compSelected],
     });
+
     hide(el("create-form"));
     show(el("create-success"));
-    el("new-team-name").textContent = name;
-    el("view-team-btn").href = `team.html?id=${res.teamId}`;
+    el("new-team-name-display").textContent = name;
+    el("btn-view-team").href  = `team.html?id=${res.teamId}`;
+    el("btn-team-mgmt").href  = `your-team.html`;
   } catch(e) {
     showAlert("ct-error", e.message);
   }

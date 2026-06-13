@@ -121,6 +121,18 @@ onReady(async () => {
     allMembers = d.members || [];
     settings   = d.settings || {};
     profileMember = allMembers.find(m => m.id === memberId);
+    // Parse pvpBuild if it came back as a string
+    if (profileMember && typeof profileMember.pvpBuild === "string" && profileMember.pvpBuild) {
+      try { profileMember.pvpBuild = JSON.parse(profileMember.pvpBuild); } catch { profileMember.pvpBuild = {techniques:[],charms:[]}; }
+    }
+    // Sync avatarUrl into session if viewing own profile
+    const session = getSession();
+    if (session && profileMember && session.id === profileMember.id && profileMember.avatarUrl) {
+      if (session.avatarUrl !== profileMember.avatarUrl) {
+        session.avatarUrl = profileMember.avatarUrl;
+        setSession(session);
+      }
+    }
   } catch(e) {
     profileMember = demoMember();
     allTeams = [];
@@ -220,16 +232,28 @@ function renderProfile() {
 
         <div class="card mb-md">
           <div class="section-title mb-sm">Current Teams</div>
-          ${teamsList.length ? teamsList.map(t => `
-            <div class="status-card mb-sm">
+          ${teamsList.length ? teamsList.map(t => {
+            const teamMembers = allMembers.filter(m => (m.teamIds||[]).includes(t.id));
+            const maxSize = Number(settings.maxTeamSize)||4;
+            const lineupIcons = Array.from({length: maxSize}, (_,i) => {
+              const tm = teamMembers[i];
+              if (!tm) return `<div class="pip pip-empty" title="Open slot"></div>`;
+              const av = tm.avatarUrl
+                ? `<img src="${esc(tm.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" title="${esc(tm.name)}" />`
+                : `<div class="avatar avatar-xs" title="${esc(tm.name)}">${initials(tm.name)}</div>`;
+              return `<a href="profile.html?id=${tm.id}" onclick="event.stopPropagation();" title="${esc(tm.name)}">${av}</a>`;
+            }).join("");
+            return `<div class="status-card mb-sm">
               <div class="flex-between">
                 <div>
                   <div class="status-card-name">${esc(t.name)}</div>
                   <div class="status-card-sub">Captain: ${esc(t.captainName||"—")}</div>
+                  <div class="member-pips mt-sm" style="gap:5px;">${lineupIcons}</div>
                 </div>
-                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View</a>
+                <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Visit Team Page</a>
               </div>
-            </div>`) .join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
+            </div>`;
+          }).join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
         </div>
 
         ${m.isCaptain==="TRUE" ? `

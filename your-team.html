@@ -3,8 +3,54 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Your Team — Team Registry</title>
+<title>Team Management — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css"/>
+<style>
+  /* Section dividers for better contrast */
+  .team-section {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .team-section-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border2);
+    padding: 0.75rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .team-section-title {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--blue-bright);
+    text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+  }
+  .team-section-body { padding: 1.25rem; }
+
+  /* Formation grid — front row at top */
+  .formation-wrap { display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
+  .formation-grid-3x3 {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 8px; width: 270px; flex-shrink: 0;
+  }
+  .formation-cell {
+    aspect-ratio: 1; border-radius: var(--radius);
+    background: var(--surface2); border: 1px dashed var(--border2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; transition: border-color 0.15s, background 0.15s; padding: 6px;
+    text-align: center;
+  }
+  .formation-cell:hover  { border-color: var(--blue-mid); background: var(--surface3); }
+  .formation-cell.filled { border-style: solid; border-color: var(--blue-mid); background: var(--blue-dim); }
+  .formation-cell.active-select { border-color: var(--blue); border-style: solid; box-shadow: 0 0 0 2px rgba(79,142,247,0.3); }
+  .formation-cell .cell-emoji { font-size: 1.3rem; }
+  .formation-cell .cell-name  { font-size: 0.58rem; color: var(--text2); line-height: 1.2; }
+  .formation-cell .cell-label { font-size: 0.52rem; color: var(--text3); }
+  .row-label { font-size: 0.68rem; color: var(--text2); padding: 2px 0; text-align: center; }
+
+  /* Build modal slots */
+  .bm-slots-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+</style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -12,203 +58,436 @@
 <script>onReady(()=>buildNav("your-team.html"));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
-  <div id="content" style="display:none;"></div>
+  <div id="content"></div>
   <div id="not-logged-in" class="empty" style="display:none;">
     <div class="empty-icon">🛡️</div>
     <h3>You're not logged in.</h3>
-    <p>Log in to view your teams, manage your roster, and plan your formations.</p>
-    <div class="empty-actions">
-      <a href="register.html" class="btn btn-primary">Log In / Register</a>
-    </div>
+    <p>Log in to manage your teams.</p>
+    <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
 </main>
+
+<!-- Team build modal -->
+<div class="modal-overlay" id="team-build-modal" style="z-index:400;">
+  <div class="modal" style="max-width:700px;width:100%;">
+    <div class="modal-title">Edit Team Build — <span id="tbm-member-name"></span></div>
+    <div class="modal-body">Select up to 4 Techniques and 4 Charms for your team strategy board.</div>
+    <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
+    <div class="bm-slots-grid mb-md" id="tbm-technique-slots"></div>
+    <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
+    <div class="bm-slots-grid mb-md" id="tbm-charm-slots"></div>
+    <div id="tbm-browser" style="display:none;">
+      <hr class="divider"/>
+      <div class="flex-between mb-sm flex-wrap gap-sm">
+        <div class="flex gap-xs">
+          <button class="filter-btn active" id="tbm-tab-t" onclick="tbmSetTab('technique')">Techniques</button>
+          <button class="filter-btn" id="tbm-tab-c" onclick="tbmSetTab('charm')">Charms</button>
+        </div>
+        <input class="search-input" id="tbm-search" placeholder="Search skills…" oninput="tbmRenderBrowser()"/>
+      </div>
+      <div class="build-grid" id="tbm-skill-grid" style="max-height:240px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTbm()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTbm()">Save Build</button>
+    </div>
+  </div>
+</div>
+
 <script>
-let allTeams=[],allMembers=[],allRequests=[],settings={};
+let allTeams=[],allMembers=[],settings={};
 let session=null;
+
+// Formation state per team
+const fgState = {};
+// Build modal state
+let tbmState = { techniques:[], charms:[], activeTab:"technique", activeSlot:null, teamId:null, memberId:null, memberClass:"" };
 
 onReady(async()=>{
   session=getSession();
-  if(!session){hide(el("loading"));show(el("not-logged-in"));return;}
+  if(!session){ hide(el("loading")); show(el("not-logged-in")); return; }
   try{
     const d=await apiGet({action:"getAll"});
-    allTeams=d.teams||[];allMembers=d.members||[];allRequests=d.requests||[];settings=d.settings||{};
-  }catch(e){loadDemo();}
-  hide(el("loading"));show(el("content"));
+    allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
+  }catch(e){ loadDemo(); }
+  hide(el("loading"));
   render();
 });
 
 function loadDemo(){
-  allTeams=[{id:"t1",name:"Shadow Protocol",captainId:"m1",captainName:"Alex Chen",status:"open",memberCount:2,composition:["Tank","DPS","DPS","Support"],description:"Competitive daily scrims.",minPower:1800000,minLevel:50,playstyle:"Competitive"}];
+  allTeams=[{id:"t1",name:"Shadow Protocol",captainId:"m1",captainName:"Alex Chen",
+    status:"open",memberCount:2,composition:["Tank","DPS","DPS","Support"],formation:{}}];
   allMembers=[
-    {id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",captainKey:"demo-key-alex",teamIds:["t1"],isCaptain:"TRUE",class:"Duelist",tier:"T2",power:2100000,level:60},
-    {id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",captainKey:"demo-key-tk",teamIds:["t1"],isCaptain:"FALSE",class:"Knight",tier:"T2",power:1900000,level:55},
+    {id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",captainKey:"demo",teamIds:["t1"],class:"Duelist",tier:"T2",power:2100000,level:60,avatarUrl:""},
+    {id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",captainKey:"demo2",teamIds:["t1"],class:"Knight",tier:"T2",power:1900000,level:55,avatarUrl:""},
   ];
-  allRequests=[];
-  if(!session)session={id:"m1",gamertag:"ShadowAce#1234",isCaptain:true,captainKey:"demo-key-alex"};
+  if(!session)session={id:"m1",gamertag:"ShadowAce#1234",captainKey:"demo"};
 }
 
 function render(){
-  const me = allMembers.find(m=>m.id===session.id)||{teamIds:[]};
-  const myTeams = allTeams.filter(t=>(me.teamIds||[]).includes(t.id));
-  const maxSize = Number(settings.maxTeamSize)||4;
+  const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
+  const myTeams=allTeams.filter(t=>(me.teamIds||[]).includes(t.id));
+  const maxSize=Number(settings.maxTeamSize)||4;
 
   if(!myTeams.length){
     el("content").innerHTML=`<div class="empty">
       <div class="empty-icon">🛡️</div>
       <h3>You're currently not in any team.</h3>
-      <p>Join an existing team or start your own — your teammates are out there.</p>
+      <p>Join an existing team or start your own.</p>
       <div class="empty-actions">
         <a href="index.html" class="btn btn-primary">View Current Teams</a>
         <a href="create-team.html" class="btn btn-ghost">Start Your Own Team</a>
-      </div>
-    </div>`;
+      </div></div>`;
     return;
   }
 
-  el("content").innerHTML=`
-    <div class="section-title mb-lg">Your Teams (${myTeams.length})</div>
+  el("content").innerHTML = `
+    <div class="flex-between mb-lg flex-wrap gap-sm">
+      <div class="section-title">Team Management</div>
+    </div>
     ${myTeams.map(t=>{
       const members=allMembers.filter(m=>(m.teamIds||[]).includes(t.id));
       const isCaptain=t.captainId===session.id;
-      return `<div class="card mb-lg" id="team-card-${t.id}">
-        <div class="flex-between mb-md">
-          <div>
-            <div style="font-size:1.1rem;font-weight:600;">${esc(t.name)}</div>
-            <div class="text-xs text-muted">Captain: ${esc(t.captainName||"—")} · ${members.length}/${maxSize} members</div>
-          </div>
-          <div class="flex gap-xs flex-wrap">
-            <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Team Profile</a>
-            ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${t.id}')">Transfer Captaincy</button>`:""}
-            <button class="btn btn-danger btn-sm" onclick="confirmLeave('${t.id}','${esc(t.name)}')">Leave</button>
+      // Init formation state
+      if(!fgState[t.id]){
+        let pos={};
+        try{ pos=t.formation||{}; if(typeof pos==="string")pos=JSON.parse(pos); }catch{}
+        fgState[t.id]={ positions:{...pos}, selected:null };
+      }
+
+      return `
+      <!-- Team header -->
+      <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;">
+        <div>
+          <div style="font-size:1.15rem;font-weight:700;">${esc(t.name)}</div>
+          <div class="text-xs text-muted">Captain: ${esc(t.captainName||"—")} · ${members.length}/${maxSize} members · <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}">${esc(t.status)}</span></div>
+        </div>
+        <div class="flex gap-xs flex-wrap">
+          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Team Profile</a>
+          ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${t.id}')">Transfer Captaincy</button>`:""}
+          <button class="btn btn-danger btn-sm" onclick="confirmLeave('${t.id}','${esc(t.name)}')">Leave Team</button>
+        </div>
+      </div>
+
+      <!-- Roster -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-title">Roster</span>
+          <span class="text-xs text-muted">${members.length} / ${maxSize} members</span>
+        </div>
+        <div class="team-section-body">
+          <div class="roster-list">
+            ${members.map(m=>{
+              const isCap=m.id===t.captainId;
+              const avatarEl = m.avatarUrl
+                ? `<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
+                : `<div class="avatar avatar-sm">${initials(m.name)}</div>`;
+              return `<div class="roster-row">
+                <div class="roster-info">
+                  <a href="profile.html?id=${m.id}">${avatarEl}</a>
+                  <div>
+                    <div class="flex-center gap-xs">
+                      <a href="profile.html?id=${m.id}" class="font-semibold text-sm">${esc(m.name)}</a>
+                      ${isCap?`<span class="badge badge-captain">Captain</span>`:""}
+                    </div>
+                    <div class="roster-meta">${esc(m.gamertag||"")}${m.class?" · "+esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):""}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
+                  </div>
+                </div>
+                ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${t.id}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
+              </div>`;
+            }).join("")}
+            ${Array.from({length:maxSize-members.length},(_,i)=>`
+              <div class="roster-row" style="border-style:dashed;opacity:0.6;cursor:pointer;" onclick="location.href='players.html'" title="Go to Guild Members to recruit">
+                <div class="roster-info">
+                  <div class="pip pip-empty"></div>
+                  <span class="text-xs text-muted">Open Slot — <span style="color:var(--blue-bright);">Find a member →</span></span>
+                </div>
+              </div>`).join("")}
           </div>
         </div>
+      </div>
 
-        <!-- Roster -->
-        <div class="section-title mb-sm">Roster</div>
-        <div class="roster-list mb-md">
-          ${members.map(m=>{
-            const isCap=m.id===t.captainId;
-            return `<div class="roster-row">
-              <div class="roster-info">
-                <a href="profile.html?id=${m.id}"><div class="avatar avatar-sm">${initials(m.name)}</div></a>
-                <div>
-                  <div class="flex-center gap-xs">
-                    <a href="profile.html?id=${m.id}" class="font-semibold text-sm">${esc(m.name)}</a>
-                    ${isCap?`<span class="badge badge-captain">Captain</span>`:""}
+      <!-- Battle Formation -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-title">⚔️ Battle Formation</span>
+          ${isCaptain?`<button class="btn btn-ghost btn-sm" onclick="fgSave('${t.id}')">Save Formation</button>`:""}
+        </div>
+        <div class="team-section-body">
+          <div class="formation-wrap">
+            <div>
+              <!-- Member picker -->
+              ${isCaptain&&members.length?`
+                <div style="margin-bottom:0.75rem;">
+                  <div class="text-xs text-muted mb-sm">1. Select a member, then click a cell to place them</div>
+                  <div class="flex gap-xs flex-wrap" id="fg-picker-${t.id}">
+                    ${members.map(m=>`
+                      <button class="btn btn-ghost btn-xs" id="fg-mbtn-${t.id}-${m.id}"
+                        onclick="fgSelectMember('${t.id}','${m.id}')">
+                        ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" />`:""}
+                        ${esc(m.name)}
+                      </button>`).join("")}
                   </div>
-                  <div class="roster-meta">${esc(m.gamertag)}${m.class?" · "+esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):""}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
-                </div>
+                </div>`:""}
+              <!-- Grid: row 0 = Front, row 1 = Mid, row 2 = Back -->
+              <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+                <div class="row-label" style="color:var(--red);font-weight:600;">⚔️ Front Row</div>
+                <div class="formation-grid-3x3" id="fg-grid-${t.id}"></div>
+                <div class="row-label" style="color:var(--blue-bright);">🛡️ Back Row</div>
               </div>
-              ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${t.id}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
+            </div>
+            <div class="text-xs text-muted" style="line-height:2.2;">
+              <div>Click a member to select</div>
+              <div>Click a cell to place them</div>
+              <div>Click an occupied cell to clear it</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Builds -->
+      <div class="team-section mb-lg">
+        <div class="team-section-header">
+          <span class="team-section-title">🗡️ Team Builds</span>
+        </div>
+        <div class="team-section-body">
+          ${members.map(m=>{
+            const build=m.teamBuild||{techniques:[],charms:[]};
+            const techs=Array.isArray(build.techniques)?build.techniques:[];
+            const chms=Array.isArray(build.charms)?build.charms:[];
+            const isMe=m.id===session.id;
+            const slotHtml=(ids,label)=>Array.from({length:4},(_,i)=>{
+              const sid=ids[i];
+              const sk=sid?SKILLS.find(s=>s.id===sid):null;
+              return sk
+                ?`<div class="build-slot filled" style="min-height:70px;" title="${esc(sk.name)}">
+                    <img class="skill-icon" style="width:36px;height:36px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
+                    <div class="skill-name" style="font-size:0.58rem;">${esc(sk.name)}</div>
+                  </div>`
+                :`<div class="build-slot" style="min-height:70px;"><div style="color:var(--text3);font-size:0.6rem;">Empty</div></div>`;
+            }).join("");
+            return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.75rem;">
+              <div class="flex-between mb-sm">
+                <div class="flex-center gap-xs">
+                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />`:`<div class="avatar avatar-xs">${initials(m.name)}</div>`}
+                  <span class="font-semibold text-sm">${esc(m.name)}</span>
+                  ${m.class?`<span class="badge badge-info">${esc(m.class)}</span>`:""}
+                </div>
+                ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${t.id}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`:""}
+              </div>
+              <div style="font-size:0.65rem;color:var(--text3);margin-bottom:4px;">TECHNIQUES</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:8px;">${slotHtml(techs,"Techniques")}</div>
+              <div style="font-size:0.65rem;color:var(--text3);margin-bottom:4px;">CHARMS</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;">${slotHtml(chms,"Charms")}</div>
             </div>`;
           }).join("")}
-          ${Array.from({length:maxSize-members.length},()=>`<div class="roster-row" style="opacity:0.4;border-style:dashed;">
-            <div class="roster-info"><div class="pip pip-empty"></div><span class="text-xs text-muted">Open slot</span></div>
-          </div>`).join("")}
         </div>
-
-        <!-- Formation -->
-        <div class="section-title mb-sm">Battle Formation</div>
-        <div id="fg-${t.id}"></div>
-
-        <!-- Team Strategy builds -->
-        <div class="section-title mb-md mt-lg">Team Builds</div>
-        ${members.map(m=>{
-          const myBuild=m.teamBuild||{techniques:[],charms:[]};
-          const bmId=`bm-${t.id}-${m.id}`;
-          return `<div class="card card-sm mb-sm">
-            <div class="flex-between mb-sm">
-              <div class="font-semibold text-sm">${esc(m.name)} ${m.class?`<span class="badge badge-captain">${esc(m.class)}</span>`:""}</div>
-              ${m.id===session.id?`<button class="btn btn-primary btn-xs" onclick="saveMemberBuild('${t.id}','${m.id}')">Save Build</button>`:""}
-            </div>
-            <div id="${bmId}"></div>
-          </div>`;
-        }).join("")}
-      </div>`;
+      </div>
+      `;
     }).join("")}
   `;
 
-  // Mount formations and builds
+  // Render all formation grids
   myTeams.forEach(t=>{
-    const members=allMembers.filter(m=>(m.teamIds||[]).includes(t.id));
-    const isCaptain=t.captainId===session.id;
-
-    new FormationGrid({
-      containerId:`fg-${t.id}`,
-      members:members.map(m=>({id:m.id,name:m.name,class:m.class||""})),
-      positions:t.formation||{},
-      readOnly:!isCaptain,
-      onSave:isCaptain?pos=>saveFormation(t.id,pos):null,
-    }).mount();
-
-    members.forEach(m=>{
-      const bmId=`bm-${t.id}-${m.id}`;
-      const bm=new BuildMaker({
-        containerId:bmId,
-        currentClass:m.class||"",
-        readOnly:m.id!==session.id,
-        maxTechniques:6,maxCharms:6,
-      }).mount();
-      const b=m.teamBuild||{techniques:[],charms:[]};
-      bm.load(b.techniques||[],b.charms||[]);
-      window[`_save_bm_${t.id}_${m.id}`]=()=>bm.getBuild();
-    });
+    renderFgGrid(t.id);
   });
 }
 
-async function saveMemberBuild(teamId,memberId){
-  confirm_("Save Team Build","Save your build for this team's strategy board?",async()=>{
-    const fn=window[`_save_bm_${teamId}_${memberId}`];
-    if(!fn)return;
-    const build=fn();
-    try{
-      await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId,build:JSON.stringify(build)});
-      toast("Build saved to team board!");
-    }catch(e){toast(e.message,"error");}
-  },false);
+// ── Formation grid ────────────────────────────────────────
+const ROW_LABELS = ["Front","Front","Front","Mid","Mid","Mid","Back","Back","Back"];
+
+function renderFgGrid(teamId){
+  const gridEl = el(`fg-grid-${teamId}`);
+  if(!gridEl) return;
+  const state = fgState[teamId];
+  const members = allMembers.filter(m=>(m.teamIds||[]).includes(teamId));
+  const team = allTeams.find(t=>t.id===teamId);
+  const isCaptain = team && team.captainId===session.id;
+
+  gridEl.innerHTML = Array.from({length:9},(_,i)=>{
+    const memberId = state.positions[i];
+    const m = memberId ? members.find(x=>x.id===memberId) : null;
+    const isActive = state.selected===null&&false; // handled via class
+    const label = `${ROW_LABELS[i]} ${["L","C","R"][i%3]}`;
+    if(m){
+      const av = m.avatarUrl
+        ? `<img src="${esc(m.avatarUrl)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" />`
+        : `<div style="font-size:1.2rem;">${esc(CLASS_ICONS[m.class]||"👤")}</div>`;
+      return `<div class="formation-cell filled" onclick="fgCellClick('${teamId}',${i})" title="${label}">
+        ${av}
+        <div class="cell-name">${esc(m.name.split(" ")[0])}</div>
+      </div>`;
+    }
+    return `<div class="formation-cell" onclick="fgCellClick('${teamId}',${i})" title="${label}">
+      <div class="cell-label">${label}</div>
+    </div>`;
+  }).join("");
+
+  // Highlight selected member button
+  members.forEach(m=>{
+    const btn = el(`fg-mbtn-${teamId}-${m.id}`);
+    if(btn) btn.classList.toggle("btn-primary", state.selected===m.id);
+  });
 }
 
-async function saveFormation(teamId,positions){
+function fgSelectMember(teamId, memberId){
+  const state = fgState[teamId];
+  state.selected = state.selected===memberId ? null : memberId;
+  renderFgGrid(teamId);
+}
+
+function fgCellClick(teamId, cellIndex){
+  const team = allTeams.find(t=>t.id===teamId);
+  if(!team||team.captainId!==session.id) return;
+  const state = fgState[teamId];
+  if(state.positions[cellIndex]){
+    delete state.positions[cellIndex];
+  } else if(state.selected){
+    // Remove from any existing cell first
+    Object.keys(state.positions).forEach(k=>{
+      if(state.positions[k]===state.selected) delete state.positions[k];
+    });
+    state.positions[cellIndex]=state.selected;
+    state.selected=null;
+  }
+  renderFgGrid(teamId);
+}
+
+async function fgSave(teamId){
+  const state = fgState[teamId];
   try{
-    await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(positions)});
+    await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,
+      teamId,formation:JSON.stringify(state.positions)});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
 }
 
+// ── Team build modal ──────────────────────────────────────
+function openTbm(teamId, memberId, memberClass){
+  const m = allMembers.find(x=>x.id===memberId);
+  const build = m?.teamBuild||{techniques:[],charms:[]};
+  tbmState = {
+    techniques:[...(build.techniques||[])].slice(0,4).concat(Array(4)).slice(0,4),
+    charms:    [...(build.charms||[])].slice(0,4).concat(Array(4)).slice(0,4),
+    activeTab:"technique", activeSlot:null,
+    teamId, memberId, memberClass,
+  };
+  el("tbm-member-name").textContent = m?.name||memberId;
+  tbmRenderSlots();
+  hide(el("tbm-browser"));
+  el("team-build-modal").classList.add("open");
+}
+function closeTbm(){ el("team-build-modal").classList.remove("open"); }
+
+function tbmRenderSlots(){
+  const mkSlots=(ids,type,containerId)=>{
+    el(containerId).innerHTML=Array.from({length:4},(_,i)=>{
+      const id=ids[i];
+      const sk=id?SKILLS.find(s=>s.id===id):null;
+      const isActive=tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===i;
+      if(sk) return `<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
+          <button class="build-slot-remove" onclick="event.stopPropagation();tbmClearSlot('${type}',${i})">✕</button>
+          <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
+          <div class="skill-name" style="font-size:0.6rem;">${esc(sk.name)}</div>
+        </div>`;
+      return `<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
+          <div style="font-size:1.3rem;opacity:0.2;">+</div>
+          <div style="font-size:0.6rem;color:var(--text3);">${isActive?"Selecting…":"Empty"}</div>
+        </div>`;
+    }).join("");
+  };
+  mkSlots(tbmState.techniques,"technique","tbm-technique-slots");
+  mkSlots(tbmState.charms,    "charm",    "tbm-charm-slots");
+}
+
+function tbmSlotClick(type,index){
+  if(tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===index){
+    tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots(); return;
+  }
+  tbmState.activeSlot={type,index}; tbmState.activeTab=type;
+  show(el("tbm-browser")); tbmSetTab(type); tbmRenderSlots();
+}
+function tbmClearSlot(type,index){
+  if(type==="technique") tbmState.techniques[index]=null;
+  else tbmState.charms[index]=null;
+  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
+}
+function tbmSetTab(tab){
+  tbmState.activeTab=tab;
+  el("tbm-tab-t").classList.toggle("active",tab==="technique");
+  el("tbm-tab-c").classList.toggle("active",tab==="charm");
+  el("tbm-search").value=""; tbmRenderBrowser();
+}
+function tbmRenderBrowser(){
+  if(!tbmState.activeSlot) return;
+  const q=(el("tbm-search").value||"").toLowerCase();
+  const skills=SKILLS.filter(s=>{
+    if(s.type!==tbmState.activeTab)return false;
+    if(tbmState.memberClass&&s.classes.length&&!s.classes.includes(tbmState.memberClass))return false;
+    if(q&&!s.name.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const selArr=tbmState.activeTab==="technique"?tbmState.techniques:tbmState.charms;
+  el("tbm-skill-grid").innerHTML=skills.map(s=>`
+    <div class="skill-card ${selArr.includes(s.id)?"selected":""}" onclick="tbmSelectSkill('${s.id}')" title="${esc(s.name)}">
+      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp" loading="lazy" onerror="this.style.display='none'" />
+      <div class="skill-name">${esc(s.name)}</div>
+    </div>`).join("")
+    ||`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>`;
+}
+function tbmSelectSkill(skillId){
+  if(!tbmState.activeSlot)return;
+  const {type,index}=tbmState.activeSlot;
+  if(type==="technique") tbmState.techniques[index]=skillId;
+  else tbmState.charms[index]=skillId;
+  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
+}
+async function saveTbm(){
+  const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean)};
+  try{
+    await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,
+      teamId:tbmState.teamId,build:JSON.stringify(build)});
+    // Update local member data
+    const m=allMembers.find(x=>x.id===tbmState.memberId);
+    if(m) m.teamBuild=build;
+    closeTbm(); render(); toast("Team build saved!");
+  }catch(e){toast(e.message,"error");}
+}
+
+// ── Roster actions ────────────────────────────────────────
 function openTransfer(teamId){
   const team=allTeams.find(t=>t.id===teamId);
   const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId)&&m.id!==session.id);
   if(!members.length){toast("No other members to transfer to.","amber");return;}
   const name=prompt(`Transfer captaincy of "${team?.name}".\nEnter the Player ID of the new captain:\n${members.map(m=>m.gamertag).join(", ")}`);
   if(!name)return;
-  const target=members.find(m=>m.gamertag.toLowerCase()===name.toLowerCase());
-  if(!target){toast("Player not found in team.","error");return;}
-  confirm_("Transfer Captaincy",`Transfer captain role to ${target.name}? You will become a regular member.`,async()=>{
+  const target=members.find(m=>(m.gamertag||"").toLowerCase()===name.toLowerCase());
+  if(!target){toast("Player ID not found in this team.","error");return;}
+  confirm_("Transfer Captaincy",`Transfer captain role to ${target.name}? You'll become a regular member.`,async()=>{
     try{
       await apiPost({action:"transferCaptaincy",captainId:session.id,captainKey:session.captainKey,teamId,newCaptainId:target.id});
-      toast("Captaincy transferred!");
       const t=allTeams.find(x=>x.id===teamId);if(t){t.captainId=target.id;t.captainName=target.name;}
-      render();
+      toast("Captaincy transferred!"); render();
     }catch(e){toast(e.message,"error");}
   });
 }
-
 function confirmLeave(teamId,teamName){
-  confirm_(`Leave ${teamName}`,"Are you sure? If you are the sole captain with members, you must transfer captaincy first.",async()=>{
+  confirm_(`Leave ${teamName}`,"Are you sure? You must transfer captaincy before leaving if other members remain.",async()=>{
     try{
       await apiPost({action:"leaveTeam",memberId:session.id,captainKey:session.captainKey,teamId});
-      const me=allMembers.find(m=>m.id===session.id);if(me)me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
-      toast("Left team.");render();
+      const me=allMembers.find(m=>m.id===session.id);
+      if(me)me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
+      toast("Left team."); render();
     }catch(e){toast(e.message,"error");}
   });
 }
-
 function confirmKick(teamId,memberId,memberName){
   confirm_(`Kick ${memberName}`,`Remove ${memberName} from the team?`,async()=>{
     try{
       await apiPost({action:"kickMember",captainId:session.id,captainKey:session.captainKey,teamId,targetId:memberId});
-      const m=allMembers.find(x=>x.id===memberId);if(m)m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
-      toast(`${memberName} removed from team.`);render();
+      const m=allMembers.find(x=>x.id===memberId);
+      if(m)m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
+      toast(`${memberName} removed.`); render();
     }catch(e){toast(e.message,"error");}
   });
 }
