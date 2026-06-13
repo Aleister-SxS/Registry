@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Current Teams — Team Registry</title>
+<title>Current Teams — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -110,9 +110,18 @@ function renderTeams() {
     const label   = { open:"Recruiting", full:"Full", closed:"Closed" }[status];
 
     const comp = renderComposition(t.composition);
-    const pips  = Array.from({length:maxSize},(_,i) => {
-      const m = allMembers.filter(m=>(m.teamIds||[]).includes(t.id))[i];
-      return `<div class="pip ${i<count?"pip-filled":"pip-empty"}">${i<count?(m?.name||"?")[0].toUpperCase():""}</div>`;
+    const teamMembers = allMembers.filter(m => (m.teamIds||[]).includes(t.id));
+    const pips = Array.from({length:maxSize}, (_,i) => {
+      const m = teamMembers[i];
+      if (m) {
+        if (m.avatarUrl) {
+          return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}" onclick="event.stopPropagation();">
+            <img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);display:block;" /></a>`;
+        }
+        return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}" onclick="event.stopPropagation();">
+          <div class="pip pip-filled">${(m.name||"?")[0].toUpperCase()}</div></a>`;
+      }
+      return `<div class="pip pip-empty"></div>`;
     }).join("");
 
     const alreadyReq = session && false; // would check allRequests
