@@ -217,9 +217,15 @@ function buildNav(activePage, opts = {}) {
   }).join("");
 
   const rightHtml = session
-    ? `<a href="profile.html?id=${session.id}" class="session-tag" title="View profile">
-         ${esc(session.gamertag || session.name)}
-       </a>`
+    ? `<div class="nav-dropdown-wrap" id="nav-user-wrap">
+        <button class="session-tag" onclick="toggleNavDropdown()" title="Account menu">
+          ${esc(session.gamertag || session.name)} ▾
+        </button>
+        <div class="nav-dropdown" id="nav-dropdown">
+          <a href="profile.html?id=${session.id}" class="nav-dropdown-item">👤 View Profile</a>
+          <div class="nav-dropdown-item nav-dropdown-danger" onclick="navLogout()">🚪 Log Out</div>
+        </div>
+      </div>`
     : "";
 
   const navHtml = `
@@ -353,6 +359,27 @@ function onReady(fn) {
   if (document.readyState !== "loading") fn();
   else document.addEventListener("DOMContentLoaded", fn);
 }
+
+function toggleNavDropdown() {
+  const dd = document.getElementById("nav-dropdown");
+  if (dd) dd.classList.toggle("open");
+}
+
+function navLogout() {
+  confirm_("Log Out", "Are you sure you want to log out?", () => {
+    clearSession();
+    location.href = "register.html";
+  }, false);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener("click", e => {
+  const wrap = document.getElementById("nav-user-wrap");
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById("nav-dropdown");
+    if (dd) dd.classList.remove("open");
+  }
+});
 
 // ── Avatar presets ────────────────────────────────────────
 // Fantomon portrait images from EOG.GG
