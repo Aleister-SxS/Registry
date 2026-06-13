@@ -22,7 +22,7 @@
     <div class="modal-title">Edit Profile</div>
     <div class="field-row">
       <div class="field"><label>In-Game Name</label><input id="ep-name" /></div>
-      <div class="field"><label>Player ID</label><input id="ep-tag" /></div>
+      <div class="field"><label>Player ID <span class="optional">(numbers only)</span></label><input id="ep-tag" type="number" inputmode="numeric" /></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Class Tier</label><select id="ep-tier"></select></div>
@@ -46,24 +46,25 @@
       <div class="field"><label>Discord Display Name</label><input id="ep-discord-name" /></div>
     </div>
     <div class="field"><label>Time Zone</label><select id="ep-timezone"></select></div>
-    <div class="field-row">
-      <div class="field"><label>Languages Spoken</label>
-        <select id="ep-languages" multiple style="min-height:80px;"></select>
+    <div class="field">
+      <label>Languages Spoken <span class="optional">(up to 3)</span></label>
+      <div class="tag-input-wrap" id="ep-languages-wrap">
+        <div class="tag-input-tags" id="ep-languages-tags"></div>
+        <div class="tag-input-dropdown-wrap">
+          <input class="tag-input-search" id="ep-languages-search" placeholder="Search languages…" autocomplete="off"
+            oninput="epTagFilter('ep-languages')" onfocus="epTagOpen('ep-languages')" />
+          <div class="tag-dropdown" id="ep-languages-dropdown"></div>
+        </div>
       </div>
-      <div class="field"><label>Preferred Language</label><select id="ep-pref-lang"></select></div>
     </div>
+    <div class="field"><label>Preferred Language</label><select id="ep-pref-lang"></select></div>
     <div class="field">
       <div class="toggle-row">
         <div><div class="toggle-label">Looking for a team</div></div>
         <label class="toggle"><input type="checkbox" id="ep-lfg" /><span class="slider"></span></label>
       </div>
     </div>
-    <div class="field">
-      <div class="toggle-row">
-        <div><div class="toggle-label">Team Captain</div></div>
-        <label class="toggle"><input type="checkbox" id="ep-captain" /><span class="slider"></span></label>
-      </div>
-    </div>
+
     <div id="edit-error" class="alert alert-error alert-hidden mt-sm"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
@@ -187,7 +188,7 @@ function renderProfile() {
       </div>
       <div class="profile-info">
         <div class="profile-name">${esc(m.name)}</div>
-        <div class="profile-id">${esc(m.gamertag)}</div>
+        <div class="profile-id"><span style="color:var(--text3);font-size:0.72rem;">Player ID:</span> ${esc(m.gamertag)}</div>
         <div class="profile-badges">
           ${m.tier && m.class ? `<span class="badge badge-captain">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)} (${esc(m.tier)})</span>` : ""}
           ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Captain</span>` : ""}
@@ -247,7 +248,7 @@ function renderProfile() {
               <div class="flex-between">
                 <div>
                   <div class="status-card-name">${esc(t.name)}</div>
-                  <div class="status-card-sub">Captain: ${esc(t.captainName||"—")}</div>
+                  <div class="status-card-sub">${m.id===t.captainId?'<span class="badge badge-captain" style="margin-right:4px;">⚜️ Captain</span>':""}Captain: ${esc(t.captainName||"—")}</div>
                   <div class="member-pips mt-sm" style="gap:5px;">${lineupIcons}</div>
                 </div>
                 <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">Visit Team Page</a>
@@ -485,11 +486,63 @@ async function saveBuildFromModal() {
 }
 
 // ── Edit profile modal ────────────────────────────────────
+// ── Edit modal tag input ──────────────────────────────────
+const epTagState = {};
+
+function epTagInit(id, options, maxItems=3) {
+  epTagState[id] = { options, selected: [], maxItems };
+  epTagRenderDropdown(id);
+  document.addEventListener("click", e => {
+    const wrap = document.getElementById(id+"-wrap");
+    if (wrap && !wrap.contains(e.target)) {
+      const dd = document.getElementById(id+"-dropdown");
+      if (dd) dd.classList.remove("open");
+    }
+  });
+}
+function epTagOpen(id) { epTagRenderDropdown(id); document.getElementById(id+"-dropdown").classList.add("open"); }
+function epTagFilter(id) { epTagRenderDropdown(id); document.getElementById(id+"-dropdown").classList.add("open"); }
+function epTagToggle(id, value) {
+  const s = epTagState[id];
+  const idx = s.selected.indexOf(value);
+  if (idx >= 0) s.selected.splice(idx,1);
+  else if (s.selected.length < s.maxItems) s.selected.push(value);
+  else { toast(`Max ${s.maxItems} languages allowed`,"amber"); return; }
+  epTagRenderChips(id); epTagRenderDropdown(id);
+  document.getElementById(id+"-search").value = "";
+  document.getElementById(id+"-search").focus();
+}
+function epTagRemove(id, value) {
+  epTagState[id].selected = epTagState[id].selected.filter(v=>v!==value);
+  epTagRenderChips(id); epTagRenderDropdown(id);
+}
+function epTagGet(id) { return epTagState[id]?.selected || []; }
+function epTagSet(id, arr) {
+  if (!epTagState[id]) return;
+  epTagState[id].selected = arr.filter(Boolean).slice(0, epTagState[id].maxItems);
+  epTagRenderChips(id);
+}
+function epTagRenderChips(id) {
+  const s = epTagState[id];
+  document.getElementById(id+"-tags").innerHTML = s.selected.map(v =>
+    `<span class="tag-chip">${esc(v)}<button class="tag-chip-x" onclick="epTagRemove('${id}','${esc(v)}')" title="Remove">✕</button></span>`
+  ).join("");
+}
+function epTagRenderDropdown(id) {
+  const s = epTagState[id];
+  const q = (document.getElementById(id+"-search")?.value||"").toLowerCase();
+  const filtered = s.options.filter(o => !s.selected.includes(o) && (!q||o.toLowerCase().includes(q)));
+  const dd = document.getElementById(id+"-dropdown");
+  if (!dd) return;
+  dd.innerHTML = filtered.length
+    ? filtered.map(o=>`<div class="tag-dropdown-item" onclick="epTagToggle('${id}','${esc(o)}')">${esc(o)}</div>`).join("")
+    : `<div class="tag-dropdown-empty">${s.selected.length>=s.maxItems?"Max "+s.maxItems+" selected":"No results"}</div>`;
+}
+
 function populateEditModal() {
   populateSelect("ep-timezone", TIMEZONES, "— Select —");
   populateSelect("ep-pref-lang", LANGUAGES, "— Select —");
-  const ls = el("ep-languages");
-  if (ls) ls.innerHTML = LANGUAGES.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join("");
+  epTagInit("ep-languages", LANGUAGES, 3);
   buildClassSelector("ep-tier","ep-class");
 }
 
@@ -508,8 +561,7 @@ function openEditModal() {
   el("ep-pref-lang").value    = m.prefLanguage || "";
   el("ep-lfg").checked        = String(m.lookingForTeam).toUpperCase() === "TRUE";
   el("ep-captain").checked    = m.isCaptain === "TRUE";
-  const spoken = (m.languages||"").split(",").filter(Boolean);
-  Array.from(el("ep-languages").options).forEach(o => o.selected = spoken.includes(o.value));
+  epTagSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
   if (m.tier) {
     el("ep-tier").value = m.tier;
     el("ep-tier").dispatchEvent(new Event("change"));
@@ -544,8 +596,8 @@ async function doSaveProfile() {
   const tz        = el("ep-timezone").value;
   const prefLang  = el("ep-pref-lang").value;
   const lfg       = el("ep-lfg").checked;
-  const isCaptain = el("ep-captain").checked;
-  const languages = Array.from(el("ep-languages").selectedOptions).map(o=>o.value).join(",");
+  const isCaptain = profileMember.isCaptain; // preserve existing value, not editable here
+  const languages = epTagGet("ep-languages").join(",");
   if (!name) { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,

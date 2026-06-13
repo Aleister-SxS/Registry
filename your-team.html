@@ -323,10 +323,15 @@ function renderFgGrid(teamId){
     </div>`;
   }).join("");
 
-  // Highlight selected member button
+  // Highlight selected member button - make it very obvious
   members.forEach(m=>{
     const btn = el(`fg-mbtn-${teamId}-${m.id}`);
-    if(btn) btn.classList.toggle("btn-primary", state.selected===m.id);
+    if(!btn) return;
+    const isSelected = state.selected===m.id;
+    const isPlaced = Object.values(state.positions).includes(m.id);
+    btn.className = "btn btn-xs " + (isSelected ? "btn-primary" : isPlaced ? "btn-success" : "btn-ghost");
+    btn.style.outline = isSelected ? "2px solid var(--blue-bright)" : "";
+    btn.style.boxShadow = isSelected ? "0 0 8px rgba(79,142,247,0.5)" : "";
   });
 }
 
@@ -341,12 +346,15 @@ function fgCellClick(teamId, cellIndex){
   if(!team||team.captainId!==session.id) return;
   const state = fgState[teamId];
   if(state.positions[cellIndex]){
+    // Clear the cell
     delete state.positions[cellIndex];
   } else if(state.selected){
-    // Remove from any existing cell first
-    Object.keys(state.positions).forEach(k=>{
-      if(state.positions[k]===state.selected) delete state.positions[k];
-    });
+    // Check if already placed somewhere
+    const alreadyAt = Object.keys(state.positions).find(k=>state.positions[k]===state.selected);
+    if(alreadyAt) {
+      // Move them instead of duplicating
+      delete state.positions[alreadyAt];
+    }
     state.positions[cellIndex]=state.selected;
     state.selected=null;
   }

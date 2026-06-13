@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Current Teams — Berserk Guild</title>
+<title>Team Registry — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -21,7 +21,7 @@
 
 <main>
   <div class="section-header">
-    <span class="section-title">Current Teams</span>
+    <span class="section-title">Team Registry</span>
     <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
       <input class="search-input" id="team-search" placeholder="Search teams…" oninput="renderTeams()" />
       <span class="count-badge" id="team-count">—</span>
@@ -128,38 +128,57 @@ function renderTeams() {
     const memberTeams = session ? (allMembers.find(m=>m.id===session.id)?.teamIds||[]) : [];
     const canReq = session && status === "open" && !memberTeams.includes(t.id);
 
+        // Captain info
+    const captainMember = allMembers.find(m => m.id === t.captainId);
+    const captainAvatar = captainMember?.avatarUrl
+      ? `<img src="${esc(captainMember.avatarUrl)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);flex-shrink:0;" onerror="this.style.display='none'" />`
+      : `<div style="width:18px;height:18px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
+    const captainClass = captainMember?.class ? ` · ${esc(CLASS_ICONS[captainMember.class]||"")} ${esc(captainMember.class)}` : "";
+
+    // Join button
+    const alreadyMember = memberTeams.includes(t.id);
+    let joinBtn = "";
+    if (alreadyMember) {
+      joinBtn = `<a href="your-team.html" class="btn btn-sm" style="background:var(--blue-dim);border:1px solid var(--blue-mid);color:var(--blue-bright);">✓ Your Team</a>`;
+    } else if (canReq) {
+      joinBtn = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
+    } else if (!session) {
+      joinBtn = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
+    } else {
+      joinBtn = `<button class="btn btn-ghost btn-sm" disabled style="opacity:0.4;">${status!=="open"?"Not Recruiting":"Team Full"}</button>`;
+    }
+
     return `<div class="team-card">
       <div class="team-card-header">
-        <div>
+        <div style="min-width:0;">
           <div class="team-card-name">${esc(t.name)}</div>
-          <div class="team-card-captain">Captain: ${esc(t.captainName||"—")}</div>
+          <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+            <span style="font-size:0.65rem;color:var(--amber);">⚜️</span>
+            ${captainAvatar}
+            <span style="font-size:0.72rem;color:var(--amber);">${esc(t.captainName||"—")}${captainClass}</span>
+          </div>
         </div>
-        <span class="badge badge-${status}">
+        <span class="badge badge-${status}" style="flex-shrink:0;">
           <span class="badge-dot"></span>${label}
         </span>
       </div>
       ${comp ? `<div class="comp-row">${comp}</div>` : ""}
-      <div class="team-card-desc">${esc(t.description) || "<em style='color:var(--text3)'>No description.</em>"}</div>
-      <div class="req-row">
-        ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+ Power</span>` : ""}
-        ${t.minLevel ? `<span class="req-pill">🎯 Level ${t.minLevel}+</span>` : ""}
-        ${t.playstyle ? `<span class="badge badge-${t.playstyle==='Competitive'?'competitive':'casual'}">${esc(t.playstyle)}</span>` : ""}
-        ${t.requiresDiscord === "TRUE" ? `<span class="req-pill">💬 Discord req.</span>` : ""}
+      <div class="team-card-desc">${t.description ? esc(t.description) : `<span style="color:var(--text3);font-style:italic;">No description.</span>`}</div>
+      <div class="req-row" style="margin-bottom:0.75rem;">
+        ${t.minPower ? `<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>` : ""}
+        ${t.minLevel ? `<span class="req-pill">🎯 Lv.${t.minLevel}+</span>` : ""}
+        ${t.playstyle ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>` : ""}
+        ${t.requiresDiscord === "TRUE" ? `<span class="req-pill">💬 Discord</span>` : ""}
         ${t.prefLanguage ? `<span class="req-pill">🌐 ${esc(t.prefLanguage)}</span>` : ""}
       </div>
       <div class="team-card-footer">
         <div class="flex-center gap-xs">
-          <div class="member-pips">${pips}</div>
-          <span class="text-xs text-muted">${count}/${maxSize}</span>
+          <div style="display:flex;gap:4px;align-items:center;">${pips}</div>
+          <span style="font-size:0.7rem;color:var(--text3);">${count}/${maxSize}</span>
         </div>
         <div class="flex gap-xs">
-          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View</a>
-          ${canReq
-            ? `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">Request to Join</button>`
-            : status === "open" && !session
-              ? `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">Request to Join</button>`
-              : `<button class="btn btn-ghost btn-sm" disabled>${status==="open"?"In a team":"Unavailable"}</button>`
-          }
+          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team</a>
+          ${joinBtn}
         </div>
       </div>
     </div>`;
