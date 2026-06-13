@@ -194,6 +194,7 @@ function renderProfile() {
           ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Captain</span>` : ""}
           ${isLFT ? `<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>` : ""}
           ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
+          ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? `<span class="badge badge-amber">⚜️ Wants to Captain</span>` : ""}
           ${atLimit && isOwn ? `<span class="badge badge-full">Team Limit Reached</span>` : ""}
         </div>
         <div class="tags-row mb-sm">
@@ -207,15 +208,14 @@ function renderProfile() {
       </div>
       <div class="flex-col gap-xs" style="flex-shrink:0;">
         ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openEditModal()">Edit Profile</button>` : ""}
-        ${isOwn ? `
+${isOwn ? `
+          <div class="toggle-row" style="min-width:190px;margin-bottom:6px;">
+            <div><div class="toggle-label" style="font-size:0.78rem;">Looking for Team</div></div>
+            <label class="toggle"><input type="checkbox" id="lft-toggle" ${isLFT ? "checked" : ""} onchange="toggleLFT(this.checked)" /><span class="slider"></span></label>
+          </div>
           <div class="toggle-row" style="min-width:190px;">
-            <div>
-              <div class="toggle-label" style="font-size:0.78rem;">Looking for Team</div>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="lft-toggle" ${isLFT ? "checked" : ""} onchange="toggleLFT(this.checked)" />
-              <span class="slider"></span>
-            </label>
+            <div><div class="toggle-label" style="font-size:0.78rem;">Wants to Captain</div></div>
+            <label class="toggle"><input type="checkbox" id="lfc-toggle" ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? "checked" : ""} onchange="toggleLFC(this.checked)" /><span class="slider"></span></label>
           </div>` : ""}
         ${atLimit && isOwn ? `<div class="alert alert-amber" style="font-size:0.75rem;padding:6px 10px;margin:0;">
           You've reached your team limit (${maxTeams}). Leave a team to join another.</div>` : ""}
@@ -336,7 +336,7 @@ function renderBuildDisplay() {
     : `<div class="empty" style="padding:1.5rem;"><p class="text-sm">No build set yet.</p></div>`;
 }
 
-// ── LFT toggle ────────────────────────────────────────────
+// ── LFT / LFC toggles ─────────────────────────────────────
 async function toggleLFT(checked) {
   const session = getSession();
   if (!session) return;
@@ -352,6 +352,18 @@ async function toggleLFT(checked) {
       lookingForTeam: checked });
     profileMember.lookingForTeam = checked ? "TRUE" : "FALSE";
     toast(checked ? "Now visible to captains!" : "Removed from LFT listings.");
+    renderProfile();
+  } catch(e) { toast(e.message,"error"); }
+}
+
+async function toggleLFC(checked) {
+  const session = getSession();
+  if (!session) return;
+  try {
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
+      lookingForCaptainRole: checked });
+    profileMember.lookingForCaptainRole = checked ? "TRUE" : "FALSE";
+    toast(checked ? "Marked as open to captaining!" : "Captain preference removed.");
     renderProfile();
   } catch(e) { toast(e.message,"error"); }
 }

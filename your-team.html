@@ -118,6 +118,11 @@
 .chat-send-btn { background:var(--blue);border:none;border-radius:7px;color:#fff;font-size:0.82rem;font-weight:600;padding:8px 14px;cursor:pointer;flex-shrink:0;transition:opacity 0.15s;align-self:flex-end; }
 .chat-send-btn:hover{opacity:0.85;} .chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
 .chat-refresh-info { font-size:0.65rem;color:var(--text3); }
+.chat-translate-btn { background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.68rem;padding:2px 5px;border-radius:4px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;align-self:center; }
+.chat-msg:hover .chat-translate-btn { opacity:1; }
+.chat-translate-btn:hover { color:var(--blue-bright);background:var(--blue-dim); }
+.chat-translation { margin-top:5px;padding-top:5px;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text2);font-style:italic;line-height:1.45; }
+.chat-translation-label { font-size:0.62rem;color:var(--text3);margin-bottom:2px;font-style:normal; }
 
 /* ── Build display ───────────────────────────────────────── */
 .build-member-card { background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.5rem; }
@@ -696,7 +701,10 @@ function chatRender(teamId,messages){
         </div>
         <div class="chat-msg-text">${esc(msg.text).replace(/\n/g,"<br>")}</div>
       </div>
-      ${canDelete?`<button class="chat-msg-delete" onclick="chatDelete('${teamId}','${msg.id}')" title="Delete">✕</button>`:""}
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;align-self:center;">
+        <button class="chat-translate-btn" onclick="chatTranslate('${msg.id}','${esc(msg.text).replace(/'/g,"\'")}')" title="Translate">🌐</button>
+        ${canDelete?`<button class="chat-msg-delete" onclick="chatDelete('${teamId}','${msg.id}')" title="Delete">✕</button>`:""}
+      </div>
     </div>`;
   }).join("");
   if(isNew||wasAtBottom)container.scrollTop=container.scrollHeight;
@@ -722,6 +730,40 @@ async function chatDelete(teamId,messageId){
 }
 function chatKeydown(e,teamId){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend(teamId);}}
 function chatAutoResize(el){el.style.height="";el.style.height=Math.min(el.scrollHeight,100)+"px";}
+
+// ── Chat translation ──────────────────────────────────────
+async function chatTranslate(msgId, text) {
+  const session = getSession();
+  if (!session) return;
+  const msgEl = el("msg-" + msgId);
+  if (!msgEl) return;
+
+  // Get user's preferred language
+  const myMember = allMembers.find(m=>m.id===session.id);
+  const prefLang = myMember?.prefLanguage || "English";
+
+  // Toggle: remove if already showing
+  const existing = msgEl.querySelector(".chat-translation");
+  if (existing) { existing.remove(); return; }
+
+  const btn = msgEl.querySelector(".chat-translate-btn");
+  if (btn) btn.textContent = "⏳";
+  try {
+    const translated = await translateText(text, prefLang);
+    // Don't show if same as original
+    if (translated.trim().toLowerCase() === text.trim().toLowerCase()) {
+      toast("Already in " + prefLang, "info"); if(btn)btn.textContent="🌐"; return;
+    }
+    const div = document.createElement("div");
+    div.className = "chat-translation";
+    div.innerHTML = `<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
+    msgEl.querySelector(".chat-msg-body").appendChild(div);
+  } catch(e) {
+    toast(e.message, "error");
+  } finally {
+    if (btn) btn.textContent = "🌐";
+  }
+}
 </script>
 </body>
 </html>

@@ -157,7 +157,7 @@
           <div class="tag-input-wrap" id="r-preflang-wrap">
             <div class="tag-input-tags" id="r-preflang-tags"></div>
             <div class="tag-input-dropdown-wrap">
-              <input class="tag-input-search" id="r-preflang-search" placeholder="Search languages…" autocomplete="off"
+              <input class="tag-input-search" id="r-preflang-search" placeholder="Required — search languages…" autocomplete="off"
                 oninput="tagInputFilter('r-preflang')"
                 onfocus="tagInputOpen('r-preflang')" />
               <div class="tag-dropdown" id="r-preflang-dropdown"></div>
@@ -179,8 +179,11 @@
         </div>
         <div class="field">
           <div class="toggle-row">
-            <div><div class="toggle-label">Team Captain</div><div class="toggle-sublabel">Enables you to create and manage teams</div></div>
-            <label class="toggle"><input type="checkbox" id="r-captain" /><span class="slider"></span></label>
+            <div>
+              <div class="toggle-label">Looking to Captain a Team</div>
+              <div class="toggle-sublabel">Show on your profile that you're open to captaining an existing team</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="r-want-captain" /><span class="slider"></span></label>
           </div>
         </div>
 
@@ -362,12 +365,14 @@ async function doRegister() {
   const discName  = document.getElementById("r-discord-name").value.trim();
   const tz        = document.getElementById("r-timezone").value;
   const lfg       = document.getElementById("r-lfg").checked;
-  const isCaptain = document.getElementById("r-captain").checked;
+  const isCaptain = false; // set by team creation
+  const wantCaptain = document.getElementById("r-want-captain").checked;
   const languages = tagInputGet("r-languages").join(",");
   const prefLang  = tagInputGet("r-preflang").join(",");
 
   if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
   if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
+  if (!prefLang.length) { showAlert("reg-error", "Please select at least one Preferred Language."); return; }
 
   const btn = document.getElementById("reg-btn");
   btn.disabled = true;
@@ -376,7 +381,7 @@ async function doRegister() {
       action: "registerMember", name, gamertag: tag, tier, class: cls,
       power, level, bio, description: desc, playstyle,
       discordId: discId, discordName: discName, timezone: tz,
-      languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain,
+      languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain, lookingForCaptainRole: wantCaptain,
       avatarUrl: selectedAvatarUrl,
     });
     const m = res.member;

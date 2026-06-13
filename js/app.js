@@ -526,3 +526,29 @@ function confirmAvatarPick() {
   }
   closeAvatarPicker();
 }
+
+// ── Translation via MyMemory (free, no key needed) ───────
+async function translateText(text, targetLang) {
+  const langCode = getLangCode(targetLang);
+  // MyMemory free API — 5,000 chars/day, no account needed
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=auto|${langCode}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Translation service unavailable. Try again shortly.");
+  const d = await r.json();
+  if (d.responseStatus !== 200) throw new Error(d.responseDetails || "Translation failed.");
+  return d.responseData.translatedText;
+}
+
+function getLangCode(langName) {
+  const map = {
+    "English":"en","Spanish":"es","Portuguese":"pt","French":"fr","German":"de",
+    "Italian":"it","Dutch":"nl","Russian":"ru","Polish":"pl","Turkish":"tr",
+    "Arabic":"ar","Hindi":"hi","Bengali":"bn","Japanese":"ja","Korean":"ko",
+    "Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW",
+    "Vietnamese":"vi","Thai":"th","Indonesian":"id","Malay":"ms",
+    "Filipino":"tl","Swedish":"sv","Norwegian":"no","Danish":"da",
+    "Finnish":"fi","Czech":"cs","Slovak":"sk","Romanian":"ro",
+    "Hungarian":"hu","Greek":"el","Other":"en",
+  };
+  return map[langName] || "en";
+}

@@ -8,33 +8,43 @@
 <style>
   .comp-role-btn {
     display: flex; align-items: center; gap: 8px;
-    background: var(--surface); border: 1px solid var(--border2);
-    color: var(--text); padding: 9px 18px; border-radius: 7px;
-    cursor: pointer; font-size: 0.88rem; font-weight: 600;
-    transition: all 0.15s;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text2); padding: 9px 18px; border-radius: 7px;
+    cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: all 0.15s;
   }
-  .comp-role-btn:hover { border-color: var(--border3); }
-  .comp-role-btn.tank    { background: var(--blue-dim);  border-color: var(--blue-mid);  color: var(--blue-bright); }
-  .comp-role-btn.support { background: var(--green-dim); border-color: var(--green-mid); color: var(--green); }
-  .comp-role-btn.dps     { background: var(--red-dim);   border-color: var(--red-mid);   color: var(--red); }
-  .comp-role-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .comp-slots { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; min-height: 44px; }
+  .comp-role-btn:hover { border-color: var(--border3); color: var(--text); background: var(--surface3); }
+  .comp-role-btn.active-tank    { background: var(--blue-dim);  border-color: var(--blue-mid);  color: var(--blue-bright); }
+  .comp-role-btn.active-support { background: var(--green-dim); border-color: var(--green-mid); color: var(--green); }
+  .comp-role-btn.active-dps     { background: var(--red-dim);   border-color: var(--red-mid);   color: var(--red); }
+  .comp-role-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .comp-slots { display: flex; gap: 8px; flex-wrap: wrap; min-height: 40px; margin-top: 0.6rem; }
   .comp-chip {
     display: flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600;
-    border: 1px solid; cursor: default;
+    padding: 5px 11px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; border: 1px solid;
   }
   .comp-chip.tank    { background: var(--blue-dim);  border-color: var(--blue-mid);  color: var(--blue-bright); }
   .comp-chip.support { background: var(--green-dim); border-color: var(--green-mid); color: var(--green); }
   .comp-chip.dps     { background: var(--red-dim);   border-color: var(--red-mid);   color: var(--red); }
   .comp-chip-x { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; font-size: 0.8rem; padding: 0 2px; }
   .comp-chip-x:hover { opacity: 1; }
+  /* Success options */
+  .success-option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius); padding: 0.875rem 1.125rem;
+    text-decoration: none; color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 0.5rem;
+  }
+  .success-option:hover { border-color: var(--blue-mid); background: var(--surface3); text-decoration: none; color: var(--text); }
+  .success-option-icon { font-size: 1.3rem; flex-shrink: 0; width: 32px; text-align: center; }
+  .success-option-label { font-weight: 600; font-size: 0.88rem; }
+  .success-option-sub { font-size: 0.75rem; color: var(--text2); margin-top: 1px; }
 </style>
 </head>
 <body>
 <script src="js/app.js"></script>
 <script>onReady(() => buildNav(""));</script>
-
 <main>
 <div class="form-wrap">
 
@@ -53,7 +63,8 @@
       <div class="form-section-label">Team Identity</div>
       <div class="field">
         <label>Team Name</label>
-        <input id="ct-name" placeholder="Team Phantom" />
+        <input id="ct-name" placeholder="Team Phantom"
+          style="background:var(--surface2);border-color:var(--border3);" />
       </div>
 
       <div class="form-section-label">Ideal Composition</div>
@@ -65,10 +76,10 @@
           <button type="button" class="comp-role-btn" id="btn-dps"     onclick="compAdd('DPS')"    >⚔️ DPS</button>
         </div>
         <div class="comp-slots" id="comp-slots"></div>
-        <div class="comp-note" id="comp-count" style="margin-top:4px;">0 / 4 roles selected</div>
+        <div class="comp-note mt-sm" id="comp-count">0 / 4 roles selected</div>
       </div>
 
-      <div class="form-section-label">Playstyle & Requirements</div>
+      <div class="form-section-label">Playstyle &amp; Requirements</div>
       <div class="field">
         <label>Team Playstyle</label>
         <select id="ct-playstyle">
@@ -78,13 +89,14 @@
         </select>
       </div>
       <div class="field">
-        <label>Team Description</label>
+        <label>Team Description <span class="optional">(optional — defaults to "Join up and let's win big!" if left blank)</span></label>
         <textarea id="ct-desc" placeholder="Tell potential members about your team's goals, schedule, vibe…"></textarea>
       </div>
       <div class="field-row">
         <div class="field">
           <label>Minimum Power Rating <span class="optional">(optional)</span></label>
-          <input id="ct-power" placeholder="e.g. 1.5m" />
+          <input id="ct-power" placeholder="e.g. 1.5m"
+            style="background:var(--surface2);border-color:var(--border3);" />
         </div>
         <div class="field">
           <label>Minimum Character Level <span class="optional">(optional)</span></label>
@@ -125,14 +137,25 @@
   <div id="create-success" style="display:none;">
     <div class="form-card">
       <div class="alert alert-success mb-md">🎉 Team created! You are the Team Captain.</div>
-      <div style="font-size:1rem;font-weight:700;margin-bottom:0.4rem;" id="new-team-name-display"></div>
-      <p class="text-sm text-muted mb-lg">Your team is now live. You can invite members from the Guild Members page or wait for players to request to join.</p>
-      <div class="flex gap-sm flex-wrap">
-        <a id="btn-view-team"    href="#" class="btn btn-primary">Visit Team Profile</a>
-        <a href="index.html"              class="btn btn-ghost">View Current Teams</a>
-        <a href="players.html"            class="btn btn-ghost">Start Recruiting →</a>
-        <a id="btn-team-mgmt"   href="#" class="btn btn-ghost">Team Management →</a>
-      </div>
+      <div style="font-size:1.15rem;font-weight:700;margin-bottom:0.3rem;" id="new-team-name-display"></div>
+      <p class="text-sm text-muted mb-lg">Your team is now live. Here's what you can do next:</p>
+
+      <a id="btn-view-team" href="#" class="success-option">
+        <div class="success-option-icon">🏆</div>
+        <div><div class="success-option-label">Visit Team Profile</div><div class="success-option-sub">See how your team looks to other members</div></div>
+      </a>
+      <a href="index.html" class="success-option">
+        <div class="success-option-icon">📋</div>
+        <div><div class="success-option-label">View Team Registry</div><div class="success-option-sub">Browse all active teams in the guild</div></div>
+      </a>
+      <a href="players.html" class="success-option">
+        <div class="success-option-icon">🔍</div>
+        <div><div class="success-option-label">Start Recruiting</div><div class="success-option-sub">Find players who are looking for a team</div></div>
+      </a>
+      <a id="btn-team-mgmt" href="your-team.html" class="success-option">
+        <div class="success-option-icon">⚙️</div>
+        <div><div class="success-option-label">Team Management</div><div class="success-option-sub">Set your formation, builds, and team chat</div></div>
+      </a>
     </div>
   </div>
 
@@ -140,33 +163,28 @@
 </main>
 
 <script>
-// ── Composition state ─────────────────────────────────────
 const compSelected = [];
 const MAX_COMP = 4;
-const ROLE_ICONS = { Tank:"🛡️", Support:"➕", DPS:"⚔️" };
-const ROLE_CLASS = { Tank:"tank", Support:"support", DPS:"dps" };
+const ROLE_ICONS  = { Tank:"🛡️", Support:"➕", DPS:"⚔️" };
+const ROLE_CLASS  = { Tank:"tank", Support:"support", DPS:"dps" };
+const ROLE_BTN_CLS= { Tank:"active-tank", Support:"active-support", DPS:"active-dps" };
 
 function compAdd(role) {
   if (compSelected.length >= MAX_COMP) return;
   compSelected.push(role);
   compRender();
 }
-
 function compRemove(index) {
   compSelected.splice(index, 1);
   compRender();
 }
-
 function compRender() {
   const count = compSelected.length;
   el("comp-count").textContent = `${count} / ${MAX_COMP} roles selected`;
-
-  // Disable add buttons when full
   ["tank","support","dps"].forEach(r => {
     const btn = el("btn-" + r);
     if (btn) btn.disabled = count >= MAX_COMP;
   });
-
   el("comp-slots").innerHTML = compSelected.map((role, i) =>
     `<div class="comp-chip ${ROLE_CLASS[role]}">
       ${ROLE_ICONS[role]} ${role}
@@ -175,7 +193,6 @@ function compRender() {
   ).join("");
 }
 
-// ── Page init ─────────────────────────────────────────────
 onReady(() => {
   populateSelect("ct-lang", LANGUAGES, "— No preference —");
   const session = getSession();
@@ -184,7 +201,6 @@ onReady(() => {
   compRender();
 });
 
-// ── Create team ───────────────────────────────────────────
 async function doCreateTeam() {
   clearAlert("ct-error");
   const session = getSession();
@@ -192,12 +208,14 @@ async function doCreateTeam() {
 
   const name        = el("ct-name").value.trim();
   const playstyle   = el("ct-playstyle").value;
-  const desc        = el("ct-desc").value.trim();
+  const rawDesc     = el("ct-desc").value.trim();
+  const desc        = rawDesc || "Join up and let's win big!";
   const minPower    = parsePower(el("ct-power").value);
   const minLevel    = el("ct-level").value.trim();
   const reqDiscord  = el("ct-discord").checked;
   const needCaptain = el("ct-need-captain").checked;
-  const prefLang    = el("ct-lang").value;
+  const rawLang     = el("ct-lang").value;
+  const prefLang    = rawLang || "Any Language";
 
   if (!name) { showAlert("ct-error","Team name is required."); return; }
 
@@ -209,12 +227,11 @@ async function doCreateTeam() {
       requiresDiscord:reqDiscord, lookingForCaptain:needCaptain,
       prefLanguage:prefLang, composition:[...compSelected],
     });
-
     hide(el("create-form"));
     show(el("create-success"));
     el("new-team-name-display").textContent = name;
-    el("btn-view-team").href  = `team.html?id=${res.teamId}`;
-    el("btn-team-mgmt").href  = `your-team.html`;
+    el("btn-view-team").href = `team.html?id=${res.teamId}`;
+    el("btn-team-mgmt").href = `your-team.html`;
   } catch(e) {
     showAlert("ct-error", e.message);
   }

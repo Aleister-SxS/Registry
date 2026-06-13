@@ -21,6 +21,7 @@
     <button class="filter-btn active" onclick="setFilter(this,'all')">All Members</button>
     <button class="filter-btn" onclick="setFilter(this,'lft')">Looking for Team</button>
     <button class="filter-btn" onclick="setFilter(this,'captain')">Team Captains</button>
+    <button class="filter-btn" onclick="setFilter(this,'wantcaptain')">Looking to Captain</button>
     <button class="filter-btn" onclick="setFilter(this,'Casual')">Casual</button>
     <button class="filter-btn" onclick="setFilter(this,'Competitive')">Competitive</button>
   </div>
@@ -84,6 +85,7 @@ function renderPlayers() {
   const members = allMembers.filter(m => {
     if (playstyleFilter === "lft"     && String(m.lookingForTeam).toUpperCase() !== "TRUE") return false;
     if (playstyleFilter === "captain" && String(m.isCaptain).toUpperCase() !== "TRUE") return false;
+    if (playstyleFilter === "wantcaptain" && String(m.lookingForCaptainRole).toUpperCase() !== "TRUE") return false;
     if (playstyleFilter === "Casual"  && m.playstyle !== "Casual") return false;
     if (playstyleFilter === "Competitive" && m.playstyle !== "Competitive") return false;
     if (search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
@@ -136,6 +138,7 @@ function renderPlayers() {
         ${m.level ? `<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>` : ""}
         ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
         ${statusBadge}
+        ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? `<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>` : ""}
       </div>
       ${String(m.isCaptain).toUpperCase()==="TRUE" ? (() => {
         const captainedTeams = allTeams.filter(t=>t.captainId===m.id);
