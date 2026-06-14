@@ -23,6 +23,20 @@
   <div class="processing-sub">Please wait and stay on this page.</div>
 </div>
 
+<style>
+  /* Edit profile modal — force readable text in all fields */
+  #edit-modal input, #edit-modal select, #edit-modal textarea,
+  #build-modal input, #build-modal select {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: var(--surface2) !important;
+    border-color: var(--border2) !important;
+  }
+  #edit-modal input::placeholder, #edit-modal textarea::placeholder {
+    color: var(--text3) !important;
+    -webkit-text-fill-color: var(--text3) !important;
+  }
+</style>
 <!-- Edit profile modal -->
 <div class="modal-overlay" id="edit-modal" style="z-index:400;">
   <div class="modal" style="max-width:600px;">
@@ -199,6 +213,7 @@ function renderProfile() {
         <div class="profile-badges">
           ${m.tier && m.class ? `<span class="badge badge-captain">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)} (${esc(m.tier)})</span>` : ""}
           ${m.isCaptain==="TRUE" ? `<span class="badge badge-amber">⚜️ Captain</span>` : ""}
+          ${m.discordId ? `<span class="badge badge-info" style="font-size:0.67rem;">💬 Has Discord</span>` : `<span class="badge" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);font-size:0.67rem;">💬 No Discord</span>`}
           ${isLFT ? `<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>` : ""}
           ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
           ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? `<span class="badge badge-amber">⚜️ Wants to Captain</span>` : ""}

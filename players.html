@@ -40,6 +40,9 @@
           <div class="filter-group-label">Playstyle</div>
           <label class="filter-check"><input type="checkbox" data-pf="Casual" onchange="renderPlayers()" /> Casual</label>
           <label class="filter-check"><input type="checkbox" data-pf="Competitive" onchange="renderPlayers()" /> Competitive</label>
+          <div class="filter-group-label">Discord</div>
+          <label class="filter-check"><input type="checkbox" data-pf="hasDiscord" onchange="renderPlayers()" /> Has Discord</label>
+          <label class="filter-check"><input type="checkbox" data-pf="noDiscord" onchange="renderPlayers()" /> No Discord</label>
           <div class="filter-group-label">Language Preference</div>
           <div style="padding:4px 8px;">
             <div class="tag-input-wrap" id="plang-filter-wrap" style="background:var(--bg);">
@@ -107,7 +110,7 @@ function clearPlayerFilters() {
   renderPlayers();
 }
 
-const PF_LABELS = { lft:"Looking for Team", wantcaptain:"Wants to Captain", captain:"Team Captains", Casual:"Casual", Competitive:"Competitive" };
+const PF_LABELS = { lft:"Looking for Team", wantcaptain:"Wants to Captain", captain:"Team Captains", Casual:"Casual", Competitive:"Competitive", hasDiscord:"Has Discord", noDiscord:"No Discord" };
 
 function updatePlayerFilterBadge(active) {
   const badge = el("player-filter-count");
@@ -147,6 +150,8 @@ function renderPlayers() {
     if(active.includes("captain") && String(m.isCaptain).toUpperCase()!=="TRUE") return false;
     if(active.includes("Casual") && m.playstyle!=="Casual") return false;
     if(active.includes("Competitive") && m.playstyle!=="Competitive") return false;
+    if(active.includes("hasDiscord") && !m.discordId) return false;
+    if(active.includes("noDiscord") && m.discordId) return false;
     if(_plangSelected.length){
       const ml=(m.prefLanguage||"").toLowerCase();
       if(!_plangSelected.some(l=>ml===l.toLowerCase())) return false;
@@ -204,12 +209,18 @@ function renderPlayers() {
           <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Language</span>
           <span style="font-size:0.78rem;color:var(--text2);">${esc(m.prefLanguage)}</span>
         </div>`:""}
-        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface2);">
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface2);">
           <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Status</span>
           <div style="display:flex;gap:4px;flex-wrap:wrap;">
             ${statusBadge||"<span style='font-size:0.72rem;color:var(--text3);'>—</span>"}
             ${isWC?`<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>`:""}
           </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Discord</span>
+          ${m.discordId
+            ? `<span class="badge badge-info" style="font-size:0.66rem;">💬 Has Discord</span>`
+            : `<span class="badge" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);font-size:0.66rem;">💬 No Discord</span>`}
         </div>
       </div>
       ${captainedTeams.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;">

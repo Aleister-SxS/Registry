@@ -4,7 +4,7 @@
 
 // ── Config ────────────────────────────────────────────────
 // Set this to the date you last deployed to GitHub Pages
-const DEPLOY_DATE = "Set your deploy date here";
+const DEPLOY_DATE = "June 2026";
 
 const API_URL = "https://script.google.com/macros/s/AKfycbwK6orjm0KV2Kw9oOesh26WEI1pTUkXtwBQVFhAZ56bfZ47tf3bIa1w9d_9QOKv6_kI/exec";
 
