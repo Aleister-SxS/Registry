@@ -63,7 +63,11 @@
         <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you first registered.</div>
         <div class="field">
           <label>Player ID <span class="optional">(your in-game Player ID)</span></label>
-          <input id="l-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" />
+          <input id="l-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417"
+          oninput="validatePlayerID(this,'l-tag-hint')" />
+        <div id="l-tag-hint" style="font-size:0.72rem;margin-top:4px;color:var(--text3);">
+          12-digit number — find it in your in-game profile.
+        </div>
         </div>
         <div class="field mt-sm">
           <label>Secret Key</label>
@@ -107,8 +111,12 @@
         <div class="field-row">
           <div class="field"><label>In-Game Name</label><input id="r-name" placeholder="Your name" /></div>
           <div class="field">
-            <label>Player ID <span style="color:var(--red);">*</span> <span class="optional">(your in-game Player ID)</span></label>
-            <input id="r-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" required />
+            <label>Player ID <span style="color:var(--red);">*</span></label>
+            <input id="r-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" required
+              maxlength="12" oninput="validatePlayerID(this,'r-tag-hint')" />
+            <div id="r-tag-hint" style="font-size:0.72rem;margin-top:4px;color:var(--text3);">
+              Must be 12 digits. Find your Player ID in your in-game profile.
+            </div>
           </div>
         </div>
 
@@ -307,6 +315,26 @@ function onAvatarSelected(url) {
   preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
 }
 
+// ── Player ID validation ─────────────────────────────────
+function validatePlayerID(input, hintId) {
+  const val = String(input.value).replace(/\D/g,"");
+  // Enforce max 12 digits
+  if (val.length > 12) input.value = val.slice(0,12);
+  const hint = document.getElementById(hintId);
+  if (!hint) return;
+  const len = String(input.value).length;
+  if (len === 0) {
+    hint.style.color = "var(--text3)";
+    hint.textContent = "Must be 12 digits. Find your Player ID in your in-game profile.";
+  } else if (len < 12) {
+    hint.style.color = "var(--amber)";
+    hint.textContent = `${len} / 12 digits entered — needs ${12 - len} more.`;
+  } else if (len === 12) {
+    hint.style.color = "var(--green)";
+    hint.textContent = "✓ Valid Player ID format.";
+  }
+}
+
 // ── Success countdown ─────────────────────────────────────
 function startSuccessCountdown() {
   let secs = 10;
@@ -406,6 +434,10 @@ async function doRegister() {
 
   if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
   if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
+  if (String(tag).length !== 12 || !/^\d{12}$/.test(String(tag))) {
+    showAlert("reg-error", "Player ID must be exactly 12 digits. Find it in your in-game profile.");
+    return;
+  }
   if (!prefLang.length) { showAlert("reg-error", "Please select at least one Preferred Language."); return; }
   // Check for duplicate Player ID
   showProcessing("Checking Player ID…");

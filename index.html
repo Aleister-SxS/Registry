@@ -80,6 +80,7 @@
     <span class="section-title">Team Registry</span>
     <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
       <input class="search-input" id="team-search" placeholder="Search teams…" oninput="renderTeams()" />
+      <button class="btn btn-ghost btn-sm" onclick="refreshTeams()" title="Refresh teams" style="flex-shrink:0;">↻ Refresh</button>
       <div class="filter-dropdown-wrap">
         <button class="filter-dropdown-btn" onclick="toggleFilterMenu()">🔽 Filters <span id="filter-count-badge"></span></button>
         <div class="filter-dropdown-menu" id="filter-menu">
@@ -439,6 +440,23 @@ function openJoinModal(teamId, teamName) {
 }
 function closeJoinModal() { el("join-modal").classList.remove("open"); }
 
+async function refreshTeams() {
+  const loadEl = el("loading");
+  const grid = el("teams-grid");
+  if (loadEl) { loadEl.style.display = "block"; }
+  if (grid) grid.style.display = "none";
+  try {
+    const d = await apiGet({ action:"getAll" });
+    allTeams   = d.teams   || [];
+    allMembers = d.members || [];
+    allRequests= d.requests|| [];
+    settings   = d.settings|| {};
+  } catch(e) {}
+  if (loadEl) loadEl.style.display = "none";
+  renderTeams();
+  toast("Teams refreshed!", "info", 2000);
+}
+
 async function doJoinRequest() {
   const session = getSession();
   clearAlert("jm-error");
@@ -446,12 +464,27 @@ async function doJoinRequest() {
     window.location.href = "register.html";
     return;
   }
+  showProcessing("Sending Join Request…");
+  closeJoinModal();
   try {
     await apiPost({ action:"joinRequest", memberId:session.id, captainKey:session.captainKey, teamId:joinTargetTeamId });
-    closeJoinModal();
-    toast("Join request sent!");
+    // Immediately mark the request as pending in local state so card updates right away
+    allRequests.push({
+      id: "pending-" + Date.now(),
+      type: "join",
+      teamId: joinTargetTeamId,
+      fromId: session.id,
+      toId: "",
+      status: "pending",
+    });
+    hideProcessing("Join request sent!");
     renderTeams();
-  } catch(e) { showAlert("jm-error", e.message); }
+  } catch(e) {
+    hideProcessing();
+    // Re-open modal with error
+    openJoinModal(joinTargetTeamId, el("jm-team-name")?.textContent || "");
+    showAlert("jm-error", e.message);
+  }
 }
 </script>
 </body>

@@ -100,21 +100,31 @@
 
 <!-- Broadcast Tab -->
 <div id="atab-broadcast" style="display:none;">
-  <div class="form-wrap" style="max-width:600px;">
+  <div style="max-width:700px;">
+    <!-- Compose new broadcast -->
+    <div class="form-card mb-md">
+      <div class="form-title">📢 Post a Broadcast</div>
+      <div class="form-subtitle">Post a pinned notice visible to all members on the Team Management page. Previous broadcasts are kept as a record below.</div>
+      <div class="field">
+        <label>Broadcast Message</label>
+        <textarea id="broadcast-msg" placeholder="Enter your announcement here…" style="min-height:90px;"></textarea>
+      </div>
+      <div id="broadcast-compose-result" class="alert alert-hidden mt-sm"></div>
+      <div class="flex gap-sm mt-md">
+        <button class="btn btn-primary" onclick="saveBroadcast()">📢 Post Broadcast</button>
+        <button class="btn btn-ghost" onclick="el('broadcast-msg').value=''">Clear</button>
+      </div>
+    </div>
+
+    <!-- Broadcast history -->
     <div class="form-card">
-      <div class="form-title">📢 Broadcast Message</div>
-      <div class="form-subtitle">Post a pinned notice that all members see when they visit Team Management. Useful for guild-wide announcements.</div>
-      <div class="field"><label>Broadcast Message</label>
-        <textarea id="broadcast-msg" placeholder="Enter your announcement here…" style="min-height:100px;"></textarea>
+      <div class="flex-between mb-md">
+        <div class="form-title" style="margin:0;">Broadcast History</div>
+        <button class="btn btn-ghost btn-sm" onclick="loadBroadcasts()">↻ Refresh</button>
       </div>
-      <div class="field mt-sm">
-        <div class="toggle-row">
-          <div><div class="toggle-label">Active</div><div class="toggle-sublabel">Uncheck to remove the broadcast</div></div>
-          <label class="toggle"><input type="checkbox" id="broadcast-active" checked /><span class="slider"></span></label>
-        </div>
+      <div id="broadcast-history">
+        <div class="loading"><span class="spinner"></span></div>
       </div>
-      <div id="broadcast-msg-result" class="alert alert-hidden mt-sm"></div>
-      <button class="btn btn-primary mt-md" onclick="saveBroadcast()">Post Broadcast</button>
     </div>
   </div>
 </div>
@@ -465,14 +475,103 @@ async function toggleSuspend(memberId,memberName,currentStatus){
 }
 
 // ── Broadcast ─────────────────────────────────────────────
-async function saveBroadcast(){
-  const msg=el("broadcast-msg").value.trim();
-  const active=el("broadcast-active").checked;
-  showProcessing("Saving Broadcast…");
+let broadcasts = []; // local cache of broadcast history
+
+async function loadBroadcasts(){
+  el("broadcast-history").innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    await apiPost({action:"adminSetBroadcast",adminPassword:ADMIN_PASSWORD,message:msg,active});
-    hideProcessing("Broadcast updated!");
-  }catch(e){hideProcessing();showAlert("broadcast-msg-result",e.message);}
+    const d = await apiGet({action:"adminGetBroadcasts",adminPassword:ADMIN_PASSWORD});
+    broadcasts = d.broadcasts || [];
+    renderBroadcastHistory();
+  }catch(e){
+    el("broadcast-history").innerHTML=`<p class="text-sm text-muted">Failed to load: ${e.message}</p>`;
+  }
+}
+
+function renderBroadcastHistory(){
+  const el_ = el("broadcast-history");
+  if(!broadcasts.length){
+    el_.innerHTML='<div class="empty" style="padding:1.5rem;"><p class="text-sm">No broadcasts yet.</p></div>';
+    return;
+  }
+  el_.innerHTML = broadcasts.slice().reverse().map((b,i)=>{
+    const realIdx = broadcasts.length - 1 - i;
+    const date = b.sentAt ? new Date(b.sentAt).toLocaleString([],{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) : "—";
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem 1rem;margin-bottom:0.5rem;">
+      <div class="flex-between mb-sm">
+        <div class="text-xs text-muted font-mono">${date} ${b.active==="TRUE"?'<span class="badge badge-open" style="font-size:0.6rem;">Active</span>':'<span class="badge badge-closed" style="font-size:0.6rem;">Inactive</span>'}</div>
+        <div class="flex gap-xs">
+          <button class="btn btn-ghost btn-xs" onclick="editBroadcast(${realIdx})">Edit</button>
+          <button class="btn btn-xs ${b.active==="TRUE"?"btn-amber":"btn-success"}" onclick="toggleBroadcastActive(${realIdx})">
+            ${b.active==="TRUE"?"Deactivate":"Activate"}
+          </button>
+          <button class="btn btn-danger btn-xs" onclick="deleteBroadcast(${realIdx})">Delete</button>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text2);line-height:1.5;" id="bc-text-${realIdx}">${b.message||""}</div>
+    </div>`;
+  }).join("");
+}
+
+function editBroadcast(idx){
+  const b = broadcasts[idx];
+  el("broadcast-msg").value = b.message || "";
+  el("broadcast-msg").focus();
+  // Store which index we're editing
+  el("broadcast-msg").dataset.editIdx = idx;
+  el("broadcast-compose-result").className="alert alert-info";
+  el("broadcast-compose-result").textContent="Editing existing broadcast — click Post to update.";
+}
+
+async function toggleBroadcastActive(idx){
+  const b = broadcasts[idx];
+  showProcessing(b.active==="TRUE"?"Deactivating…":"Activating…");
+  try{
+    await apiPost({action:"adminUpdateBroadcast",adminPassword:ADMIN_PASSWORD,
+      broadcastId:b.id, active:b.active!=="TRUE"});
+    broadcasts[idx].active = b.active==="TRUE"?"FALSE":"TRUE";
+    renderBroadcastHistory();
+    hideProcessing(b.active==="TRUE"?"Broadcast deactivated.":"Broadcast activated!");
+  }catch(e){hideProcessing();toast(e.message,"error");}
+}
+
+async function deleteBroadcast(idx){
+  const b = broadcasts[idx];
+  confirm_("Delete Broadcast","Permanently delete this broadcast message?",async()=>{
+    showProcessing("Deleting…");
+    try{
+      await apiPost({action:"adminDeleteBroadcast",adminPassword:ADMIN_PASSWORD,broadcastId:b.id});
+      broadcasts.splice(idx,1);
+      renderBroadcastHistory();
+      hideProcessing("Broadcast deleted.");
+    }catch(e){hideProcessing();toast(e.message,"error");}
+  });
+}
+
+async function saveBroadcast(){
+  const msg = el("broadcast-msg").value.trim();
+  if(!msg){showAlert("broadcast-compose-result","Please enter a message."); return;}
+  const editIdx = el("broadcast-msg").dataset.editIdx;
+  showProcessing("Posting Broadcast…");
+  try{
+    if(editIdx !== undefined && editIdx !== ""){
+      // Update existing
+      const b = broadcasts[parseInt(editIdx)];
+      await apiPost({action:"adminUpdateBroadcast",adminPassword:ADMIN_PASSWORD,
+        broadcastId:b.id, message:msg, active:true});
+      broadcasts[parseInt(editIdx)].message = msg;
+      broadcasts[parseInt(editIdx)].active = "TRUE";
+      delete el("broadcast-msg").dataset.editIdx;
+    } else {
+      // New broadcast
+      const res = await apiPost({action:"adminSetBroadcast",adminPassword:ADMIN_PASSWORD,message:msg,active:true});
+      broadcasts.push({id:res.broadcastId||("bc-"+Date.now()),message:msg,active:"TRUE",sentAt:new Date().toISOString()});
+    }
+    el("broadcast-msg").value="";
+    el("broadcast-compose-result").className="alert alert-hidden";
+    renderBroadcastHistory();
+    hideProcessing("Broadcast posted!");
+  }catch(e){hideProcessing();showAlert("broadcast-compose-result",e.message);}
 }
 
 // ── Reset Key ─────────────────────────────────────────────

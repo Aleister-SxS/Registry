@@ -32,10 +32,7 @@
   flex-direction: column;
   flex: 1;
 }
-.collapsible-body.open {
-  flex: 1;
-  overflow-y: auto;
-}
+/* collapsible open handled below */
 .collapsible-header {
   background: var(--surface2);
   border-bottom: 1px solid transparent;
@@ -67,7 +64,7 @@
 }
 .collapsible-header.open .collapsible-chevron { transform: rotate(180deg); }
 .collapsible-body { display: none; padding: 1.25rem; }
-.collapsible-body.open { display: block; }
+.collapsible-body.open { display: block !important; flex: none !important; overflow-y: auto; }
 
 /* ── Two column layout for management ───────────────────── */
 .mgmt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
@@ -705,7 +702,7 @@ function showProcessing(title="Processing…"){
   const ov=el("mgmt-processing");const ti=el("mgmt-processing-title");
   if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
 }
-function hideProcessing({el("mgmt-processing")?.classList.remove("active");}
+function hideProcessing(successMsg){ const ov=el("mgmt-processing"); if(ov)ov.classList.remove("active"); if(successMsg)toast(successMsg,"success",3500); }
 
 // ── Chat ──────────────────────────────────────────────────
 function chatStartPolling(teamId){
