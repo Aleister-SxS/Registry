@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Register / Log In — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2026061402" />
 <script src="js/app.js?v=2026061402"></script>
 <style>
   /* Local submit spinner — doesn't use the global overlay timer */
@@ -177,8 +177,23 @@
 
         <div class="form-section-label">Class</div>
         <div class="field-row">
-          <div class="field"><label>Current Class Tier <span style="color:var(--red);">*</span></label><select id="r-tier" required></select></div>
-          <div class="field"><label>Class</label><select id="r-class" disabled required></select></div>
+          <div class="field"><label>Current Class Tier <span style="color:var(--red);">*</span></label><select id="r-tier" required onchange="
+  var classes={T1:['Mage','Warrior'],T2:['Duelist','Knight','Sorcerer','Sage'],T3:['Berserker','Paladin','Archmage','Arcanist'],T4:['Conqueror','Guardian','Destroyer','Dominator'],T5:['Ravager','Templar','Magister','Prophet']};
+  var c=document.getElementById('r-class');
+  var tier=this.value;
+  if(!tier){c.innerHTML='<option value="">— Select Class —</option>';c.disabled=true;return;}
+  c.innerHTML='<option value="">— Select Class —</option>'+classes[tier].map(function(s){return'<option>'+s+'</option>';}).join('');
+  c.disabled=false;">
+              <option value="">— Select Tier —</option>
+              <option value="T1">T1</option>
+              <option value="T2">T2</option>
+              <option value="T3">T3</option>
+              <option value="T4">T4</option>
+              <option value="T5">T5</option>
+            </select></div>
+          <div class="field"><label>Class</label><select id="r-class" disabled>
+              <option value="">— Select Class —</option>
+            </select></div>
         </div>
 
         <div class="form-section-label">Stats</div>
@@ -238,7 +253,18 @@
 
         <div class="field">
           <label>Time Zone <span style="color:var(--red);">*</span></label>
-          <select id="r-timezone"><option value="">— Select Time Zone —</option></select>
+          <select id="r-timezone">
+            <option value="">— Select Time Zone —</option>
+            <option>UTC-12:00</option><option>UTC-11:00</option><option>UTC-10:00</option>
+            <option>UTC-09:00</option><option>UTC-08:00 (PST)</option><option>UTC-07:00 (MST)</option>
+            <option>UTC-06:00 (CST)</option><option>UTC-05:00 (EST)</option><option>UTC-04:00</option>
+            <option>UTC-03:00</option><option>UTC-02:00</option><option>UTC-01:00</option>
+            <option>UTC+00:00 (GMT)</option><option>UTC+01:00 (CET)</option><option>UTC+02:00</option>
+            <option>UTC+03:00</option><option>UTC+04:00</option><option>UTC+05:00</option>
+            <option>UTC+05:30 (IST)</option><option>UTC+06:00</option><option>UTC+07:00</option>
+            <option>UTC+08:00 (CST)</option><option>UTC+09:00 (JST)</option>
+            <option>UTC+10:00 (AEST)</option><option>UTC+11:00</option><option>UTC+12:00</option>
+          </select>
         </div>
 
         <div class="form-section-label">Settings</div>
@@ -300,6 +326,37 @@
 </div>
 
 <script>
+// ── Inline data (guaranteed available even if app.js cached) ──
+// These shadow the app.js definitions if app.js hasn't loaded yet
+if (typeof TIMEZONES === 'undefined') {
+const TIMEZONES = [
+  "UTC-12:00","UTC-11:00","UTC-10:00","UTC-09:00","UTC-08:00 (PST)",
+  "UTC-07:00 (MST)","UTC-06:00 (CST)","UTC-05:00 (EST)","UTC-04:00",
+  "UTC-03:00","UTC-02:00","UTC-01:00","UTC+00:00 (GMT)","UTC+01:00 (CET)",
+  "UTC+02:00","UTC+03:00","UTC+04:00","UTC+05:00","UTC+05:30 (IST)",
+  "UTC+06:00","UTC+07:00","UTC+08:00 (CST)","UTC+09:00 (JST)",
+  "UTC+10:00 (AEST)","UTC+11:00","UTC+12:00",
+];
+}
+if (typeof LANGUAGES === 'undefined') {
+const LANGUAGES = [
+  "English","Spanish","Portuguese","French","German","Italian","Dutch",
+  "Russian","Polish","Turkish","Arabic","Hindi","Bengali","Japanese",
+  "Korean","Chinese (Simplified)","Chinese (Traditional)","Vietnamese",
+  "Thai","Indonesian","Malay","Filipino","Swedish","Norwegian","Danish",
+  "Finnish","Czech","Slovak","Romanian","Hungarian","Greek","Other",
+];
+}
+if (typeof CLASS_TREE === 'undefined') {
+const CLASS_TREE = {
+  T1: { label: "T1", subclasses: ["Mage","Warrior"] },
+  T2: { label: "T2", subclasses: ["Duelist","Knight","Sorcerer","Sage"] },
+  T3: { label: "T3", subclasses: ["Berserker","Paladin","Archmage","Arcanist"] },
+  T4: { label: "T4", subclasses: ["Conqueror","Guardian","Destroyer","Dominator"] },
+  T5: { label: "T5", subclasses: ["Ravager","Templar","Magister","Prophet"] },
+};
+}
+
 // ── Tag-input component ───────────────────────────────────
 const tagInputState = {};
 
@@ -457,6 +514,33 @@ function switchTab(tab) {
 }
 
 // ── Page init ─────────────────────────────────────────────
+// ── Inline helpers (fallback if app.js not loaded) ─────────
+function _populateSelect(selId, options, placeholder) {
+  var s = document.getElementById(selId);
+  if (!s) return;
+  s.innerHTML = '<option value="">' + (placeholder || '— Select —') + '</option>' +
+    options.map(function(o) {
+      return '<option value="' + o + '">' + o + '</option>';
+    }).join('');
+}
+function _buildClassSelector(tierSelId, subSelId) {
+  var tierSel = document.getElementById(tierSelId);
+  var subSel  = document.getElementById(subSelId);
+  if (!tierSel || !subSel) return;
+  var tree = (typeof CLASS_TREE !== 'undefined') ? CLASS_TREE : {};
+  tierSel.innerHTML = '<option value="">— Select Tier —</option>' +
+    Object.keys(tree).map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+  tierSel.onchange = function() {
+    var tier = tierSel.value;
+    if (!tier) { subSel.innerHTML = '<option value="">— Select Class —</option>'; subSel.disabled = true; return; }
+    var subs = tree[tier] ? tree[tier].subclasses : [];
+    subSel.innerHTML = '<option value="">— Select Class —</option>' +
+      subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+    subSel.disabled = false;
+  };
+  subSel.disabled = true;
+}
+
 function initPage() {
   try {
     if (typeof TIMEZONES === 'undefined' || typeof LANGUAGES === 'undefined') {
@@ -464,8 +548,10 @@ function initPage() {
       setTimeout(initPage, 50);
       return;
     }
-    populateSelect("r-timezone", TIMEZONES, "— Select Time Zone —");
-    buildClassSelector("r-tier", "r-class");
+    var ps = (typeof populateSelect === 'function') ? populateSelect : _populateSelect;
+    ps("r-timezone", TIMEZONES, "— Select Time Zone —");
+    var bcs = (typeof buildClassSelector === 'function') ? buildClassSelector : _buildClassSelector;
+    bcs("r-tier", "r-class");
     tagInputInit("r-languages", LANGUAGES);
     tagInputInit("r-preflang", LANGUAGES);
 

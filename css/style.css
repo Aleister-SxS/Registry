@@ -228,7 +228,7 @@ textarea{
   color-scheme: dark;
   caret-color: #e8edf5;
 }
-/* Selects: styled but NO width:100% — that breaks native dropdown popup positioning */
+/* Selects: max-width:100% so they fill container but don't force a layout width */
 select{
   background:var(--bg);border:1px solid var(--border2);
   border-radius:7px;padding:9px 12px;color:var(--text);font-size:0.88rem;outline:none;
@@ -237,6 +237,8 @@ select{
   color: #e8edf5 !important;
   color-scheme: dark;
   cursor:pointer;
+  max-width:100%;
+  display:block;
 }
 /* Kill browser autofill bright white */
 input:-webkit-autofill,input:-webkit-autofill:hover,
@@ -249,10 +251,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--blue);
   box-shadow:0 0 0 3px rgba(79,142,247,0.12);}
 input::placeholder,textarea::placeholder{color:var(--text3);}
 textarea{resize:vertical;min-height:80px;}
-.field select, .form-card select, .field-row select {
-  width: 100%;
-  box-sizing: border-box;
-}
 select option{background:var(--bg2);color:var(--text);}
 select[multiple]{background:var(--bg);color:var(--text);padding:4px;}
 select[multiple] option{background:var(--bg);color:var(--text);padding:5px 8px;border-radius:4px;}
