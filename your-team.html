@@ -820,11 +820,6 @@ async function chatTranslate(msgId, text) {
   }
 }
 </script>
-<!-- Processing overlay -->
-<div class="processing-overlay" id="mgmt-processing" style="z-index:500;">
-  <div class="processing-spinner" style="width:44px;height:44px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
-  <div class="processing-title" id="mgmt-processing-title">Processing…</div>
-  <div class="processing-sub">Please wait and stay on this page.</div>
-</div>
+<!-- Processing handled by global overlay in app.js -->
 </body>
 </html>

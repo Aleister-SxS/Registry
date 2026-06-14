@@ -399,21 +399,20 @@ function renderBuildDisplay() {
 async function toggleLFT(checked) {
   const session = getSession();
   if (!session) return;
-  showProcessing("Updating Looking for Team…");
   const maxTeams = Number(settings.maxMemberTeams) || 3;
   if (checked && (profileMember.teamIds||[]).length >= maxTeams) {
-    // Revert toggle
     el("lft-toggle").checked = false;
-    toast("You've reached your team limit. Leave a team before enabling LFT.", "amber");
+    toast("You&#39;ve reached your team limit. Leave a team before enabling LFT.", "amber");
     return;
   }
+  showProcessing("Updating Looking for Team…");
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
       lookingForTeam: checked });
     profileMember.lookingForTeam = checked ? "TRUE" : "FALSE";
-    toast(checked ? "Now visible to captains!" : "Removed from LFT listings.");
     renderProfile();
-  } catch(e) { toast(e.message,"error"); }
+    hideProcessing(checked ? "Now visible to captains!" : "Removed from LFT listings.");
+  } catch(e) { hideProcessing(); toast(e.message,"error"); }
 }
 
 async function toggleLFC(checked) {
@@ -688,7 +687,7 @@ async function doSaveProfile() {
       playstyle, discordId:discId, discordName:discName, timezone:tz,
       languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain });
     Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,
-      description:desc||"I&#39;m a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
+      description:desc||"I'm a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
       languages,prefLanguage:prefLang,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
     const s = getSession();
@@ -757,7 +756,7 @@ async function confirmFantomon() {
   } catch(e) { hideProcessing(); toast(e.message,"error"); }
 }
 
-// Processing handled by global showProcessing/hideProcessing in app.js
+// showProcessing / hideProcessing from app.js global
 
 function validateEpTag(input) {
   const val = String(input.value).replace(/\D/g,"");
