@@ -13,8 +13,14 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   .reg-overlay-title { font-size:1rem;font-weight:600;color:#e8edf5; }
   .reg-overlay-sub { font-size:0.82rem;color:#8b98b5; }
-  /* All form fields — uniform dark appearance matching Player ID field */
-  input, select, textarea {
+  /* Uniform field appearance — matches Player ID style */
+  .form-card input[type="text"],
+  .form-card input[type="number"],
+  .form-card input[type="password"],
+  .form-card input[type="email"],
+  .form-card input:not([type]),
+  .form-card textarea,
+  .form-card select {
     color: #e8edf5 !important;
     -webkit-text-fill-color: #e8edf5 !important;
     background: var(--surface2) !important;
@@ -26,19 +32,36 @@
     box-sizing: border-box !important;
     transition: border-color 0.15s, box-shadow 0.15s !important;
   }
-  input:focus, select:focus, textarea:focus {
+  .form-card input:focus,
+  .form-card textarea:focus,
+  .form-card select:focus {
     border-color: var(--blue) !important;
     box-shadow: 0 0 0 3px rgba(79,142,247,0.12) !important;
     outline: none !important;
   }
-  input::placeholder, textarea::placeholder {
+  .form-card input::placeholder,
+  .form-card textarea::placeholder {
     color: var(--text3) !important;
     -webkit-text-fill-color: var(--text3) !important;
   }
-  input:-webkit-autofill, input:-webkit-autofill:hover,
-  input:-webkit-autofill:focus, input:-webkit-autofill:active {
+  .form-card input:-webkit-autofill,
+  .form-card input:-webkit-autofill:hover,
+  .form-card input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 1000px var(--surface2) inset !important;
     -webkit-text-fill-color: #e8edf5 !important;
+  }
+  /* Tag input search fields */
+  .tag-input-search {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 6px !important;
+    width: 100% !important;
+  }
+  .tag-input-search::placeholder {
+    color: var(--text3) !important;
+    -webkit-text-fill-color: var(--text3) !important;
   }
 </style>
 <!-- panel display controlled via JS directly -->
@@ -164,10 +187,6 @@
         </div>
 
         <div class="form-section-label">Playstyle</div>
-        <div class="field">
-          <label>Describe Your Playstyle</label>
-          <textarea id="r-bio" placeholder="Tell teams about your approach — how you play, what you're good at…"></textarea>
-        </div>
         <div class="field">
           <label>Describe Yourself</label>
           <textarea id="r-desc" placeholder="A bit about you — your history, goals, what you're looking for in a team…"></textarea>
@@ -526,7 +545,7 @@ async function doRegister() {
   try {
     const res = await apiPost({
       action: "registerMember", name, gamertag: tag, tier, class: cls,
-      power, level, bio: "", description: desc, playstyle,
+      power, level, description: desc, playstyle,
       discordId: discId, discordName: discName, timezone: tz,
       languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain, lookingForCaptainRole: wantCaptain,
       avatarUrl: selectedAvatarUrl,
