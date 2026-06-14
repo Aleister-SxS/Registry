@@ -13,14 +13,13 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   .reg-overlay-title { font-size:1rem;font-weight:600;color:#e8edf5; }
   .reg-overlay-sub { font-size:0.82rem;color:#8b98b5; }
-  /* Uniform field appearance — matches Player ID style */
+  /* Text inputs and textareas — full custom styling */
   .form-card input[type="text"],
   .form-card input[type="number"],
   .form-card input[type="password"],
   .form-card input[type="email"],
   .form-card input:not([type]),
-  .form-card textarea,
-  .form-card select {
+  .form-card textarea {
     color: #e8edf5 !important;
     -webkit-text-fill-color: #e8edf5 !important;
     background: var(--surface2) !important;
@@ -31,6 +30,15 @@
     width: 100% !important;
     box-sizing: border-box !important;
     transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+  /* Selects — only color/background, never override sizing (breaks native dropdown) */
+  .form-card select {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: var(--surface2) !important;
+    border: 1px solid var(--border3) !important;
+    border-radius: 7px !important;
+    font-size: 0.88rem !important;
   }
   .form-card input:focus,
   .form-card textarea:focus,
