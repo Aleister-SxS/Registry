@@ -54,7 +54,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2026061401"></script>
 <script>onReady(() => buildNav(""));</script>
 <main>
 <div class="form-wrap">
@@ -100,7 +100,7 @@
         </select>
       </div>
       <div class="field">
-        <label>Team Description <span class="optional">(optional — defaults to "Join up and let's win big!" if left blank)</span></label>
+        <label>Team Description <span class="optional">(optional — defaults to "Join up and let&#39;s win big!" if left blank)</span></label>
         <textarea id="ct-desc" placeholder="Tell potential members about your team's goals, schedule, vibe…"></textarea>
       </div>
       <div class="field-row">
@@ -227,7 +227,7 @@ async function doCreateTeam() {
   const name        = el("ct-name").value.trim();
   const playstyle   = el("ct-playstyle").value;
   const rawDesc     = el("ct-desc").value.trim();
-  const desc        = rawDesc || "Join up and let's win big!";
+  const desc        = rawDesc || "Join up and let&#39;s win big!";
   const minPower    = parsePower(el("ct-power").value);
   const minLevel    = el("ct-level").value.trim();
   const reqDiscord  = el("ct-discord").checked;

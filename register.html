@@ -24,13 +24,10 @@
     -webkit-text-fill-color: var(--text3) !important;
   }
 </style>
-<style>
-  .panel { display: none; }
-  .panel.active { display: block; }
-</style>
+<!-- panel display controlled via JS directly -->
 </head>
 <body>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2026061401"></script>
 <script>onReady(() => buildNav("register.html"));</script>
 
 <main>
@@ -43,7 +40,7 @@
   </div>
 
   <!-- ── LOGGED IN STATE ──────────────────────────────── -->
-  <div class="panel" id="logged-in-state">
+  <div id="logged-in-state" style="display:none;">
     <div class="form-card">
       <div class="form-title" id="welcome-msg">Welcome back!</div>
       <p class="form-subtitle">You are currently logged in.</p>
@@ -64,7 +61,7 @@
     </div>
 
     <!-- LOGIN PANEL -->
-    <div class="panel active" id="panel-login">
+    <div id="panel-login" style="display:block;">
       <div class="form-card">
         <div class="form-title">Welcome back</div>
         <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you first registered.</div>
@@ -91,7 +88,7 @@
     </div>
 
     <!-- REGISTER PANEL -->
-    <div class="panel" id="panel-register">
+    <div id="panel-register" style="display:none;">
       <div class="form-card">
         <div class="form-title">Create Your Profile</div>
         <div class="form-subtitle">
@@ -398,17 +395,17 @@ function switchTab(tab) {
   const registerPanel = document.getElementById("panel-register");
   const tabLogin      = document.getElementById("tab-login");
   const tabRegister   = document.getElementById("tab-register");
-
+  if (!loginPanel || !registerPanel) return;
   if (tab === "login") {
-    loginPanel.classList.add("active");
-    registerPanel.classList.remove("active");
-    tabLogin.classList.add("active");
-    tabRegister.classList.remove("active");
+    loginPanel.style.display    = "block";
+    registerPanel.style.display = "none";
+    if(tabLogin)    { tabLogin.classList.add("active");    }
+    if(tabRegister) { tabRegister.classList.remove("active"); }
   } else {
-    registerPanel.classList.add("active");
-    loginPanel.classList.remove("active");
-    tabRegister.classList.add("active");
-    tabLogin.classList.remove("active");
+    registerPanel.style.display = "block";
+    loginPanel.style.display    = "none";
+    if(tabRegister) { tabRegister.classList.add("active");  }
+    if(tabLogin)    { tabLogin.classList.remove("active");  }
   }
 }
 
@@ -423,7 +420,7 @@ onReady(() => {
   if (session) {
     document.getElementById("hero-block").style.display    = "none";
     document.getElementById("auth-state").style.display    = "none";
-    document.getElementById("logged-in-state").classList.add("active");
+    document.getElementById("logged-in-state").style.display = "block";
     document.getElementById("welcome-msg").textContent = `Welcome back, ${session.name || session.gamertag}!`;
     document.getElementById("view-profile-btn").href   = `profile.html?id=${session.id}`;
   }
@@ -442,7 +439,7 @@ async function doLogin() {
     toast("Welcome back, " + (m.name || m.gamertag) + "!");
     document.getElementById("hero-block").style.display    = "none";
     document.getElementById("auth-state").style.display    = "none";
-    document.getElementById("logged-in-state").classList.add("active");
+    document.getElementById("logged-in-state").style.display = "block";
     document.getElementById("welcome-msg").textContent = `Welcome back, ${m.name || m.gamertag}!`;
     document.getElementById("view-profile-btn").href   = `profile.html?id=${m.id}`;
   } catch(e) {
