@@ -6,6 +6,13 @@
 <title>Register / Log In — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 <style>
+  /* Local submit spinner — doesn't use the global overlay timer */
+  .reg-overlay { display:none;position:fixed;inset:0;background:rgba(11,13,18,0.88);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem; }
+  .reg-overlay.active { display:flex; }
+  .reg-spin { width:44px;height:44px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .reg-overlay-title { font-size:1rem;font-weight:600;color:#e8edf5; }
+  .reg-overlay-sub { font-size:0.82rem;color:#8b98b5; }
   /* Force white text in all registration form inputs */
   input, select, textarea {
     color: #e8edf5 !important;
@@ -242,6 +249,11 @@
 
 </div>
 </main>
+<div class="reg-overlay" id="reg-overlay">
+  <div class="reg-spin"></div>
+  <div class="reg-overlay-title" id="reg-overlay-title">Processing…</div>
+  <div class="reg-overlay-sub">Please stay on this page.</div>
+</div>
 
 <script>
 // ── Tag-input component ───────────────────────────────────
@@ -368,6 +380,18 @@ function startSuccessCountdown() {
   }, 1000);
 }
 
+// ── Local processing overlay (avoids global 2s timer on public page) ───────
+function regShowProcessing(title) {
+  const ov = document.getElementById("reg-overlay");
+  const ti = document.getElementById("reg-overlay-title");
+  if (ov) ov.classList.add("active");
+  if (ti) ti.textContent = title || "Processing…";
+}
+function regHideProcessing() {
+  const ov = document.getElementById("reg-overlay");
+  if (ov) ov.classList.remove("active");
+}
+
 // ── Tab switcher ──────────────────────────────────────────
 function switchTab(tab) {
   const loginPanel    = document.getElementById("panel-login");
@@ -462,7 +486,7 @@ async function doRegister() {
   if (!tz) { showAlert("reg-error", "Please select your Time Zone."); return; }
   if (!prefLang.length) { showAlert("reg-error", "Please select at least one Preferred Language."); return; }
   // Check for duplicate Player ID
-  showProcessing("Checking Player ID…");
+  regShowProcessing("Checking Player ID…");
   let allExisting = [];
   try {
     const check = await apiGet({ action:"getAll" });
@@ -470,15 +494,15 @@ async function doRegister() {
   } catch(e) {}
   const duplicate = allExisting.find(m => String(m.gamertag) === String(tag));
   if (duplicate) {
-    hideProcessing();
+    regHideProcessing();
     showAlert("reg-error", `Player ID ${tag} is already registered. Please log in instead. If you&#39;re having issues, contact an admin on Discord or in-game.`);
     return;
   }
-  showProcessing("Creating your profile…");
+  regShowProcessing("Creating your profile…");
 
   const btn = document.getElementById("reg-btn");
   btn.disabled = true;
-  try { showProcessing("Creating your profile…");
+  try {
     const res = await apiPost({
       action: "registerMember", name, gamertag: tag, tier, class: cls,
       power, level, bio: "", description: desc, playstyle,
@@ -497,11 +521,11 @@ async function doRegister() {
     // Start 10-second countdown before links are enabled
     startSuccessCountdown();
   } catch(e) {
-    hideProcessing();
+    regHideProcessing();
     showAlert("reg-error", e.message);
   } finally {
     btn.disabled = false;
-    hideProcessing();
+    regHideProcessing();
   }
 }
 
