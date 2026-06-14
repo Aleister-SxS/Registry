@@ -56,8 +56,10 @@
   <!-- ── AUTH STATE ────────────────────────────────────── -->
   <div id="auth-state">
     <div class="auth-tabs">
-      <button id="tab-login"    class="auth-tab active"  onclick="switchTab('login')">Log In</button>
-      <button id="tab-register" class="auth-tab"         onclick="switchTab('register')">Create Profile</button>
+      <button id="tab-login" class="auth-tab active"
+  onclick="document.getElementById('panel-login').style.display='block';document.getElementById('panel-register').style.display='none';this.classList.add('active');document.getElementById('tab-register').classList.remove('active');">Log In</button>
+      <button id="tab-register" class="auth-tab"
+  onclick="document.getElementById('panel-register').style.display='block';document.getElementById('panel-login').style.display='none';this.classList.add('active');document.getElementById('tab-login').classList.remove('active');">Create Profile</button>
     </div>
 
     <!-- LOGIN PANEL -->
@@ -82,7 +84,8 @@
         <hr class="divider" />
         <p class="text-sm text-muted" style="text-align:center;">
           Haven't made an account?
-          <button class="btn btn-ghost btn-sm" onclick="switchTab('register')" style="margin-left:6px;">Register here →</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:6px;"
+  onclick="document.getElementById('panel-register').style.display='block';document.getElementById('panel-login').style.display='none';document.getElementById('tab-register').classList.add('active');document.getElementById('tab-login').classList.remove('active');">Register here →</button>
         </p>
       </div>
     </div>
