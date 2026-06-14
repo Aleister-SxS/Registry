@@ -3,6 +3,9 @@
    ============================================================ */
 
 // ── Config ────────────────────────────────────────────────
+// Set this to the date you last deployed to GitHub Pages
+const DEPLOY_DATE = "Set your deploy date here";
+
 const API_URL = "https://script.google.com/macros/s/AKfycbwK6orjm0KV2Kw9oOesh26WEI1pTUkXtwBQVFhAZ56bfZ47tf3bIa1w9d_9QOKv6_kI/exec";
 
 // ── Class data ────────────────────────────────────────────
@@ -293,8 +296,24 @@ function buildNav(activePage, opts = {}) {
     </div>
   `;
 
+  const footerHtml = `
+    <footer style="margin-top:auto;background:var(--bg2);border-top:1px solid var(--border);
+      padding:0.875rem 2rem;text-align:center;font-size:0.72rem;color:var(--text3);
+      font-family:var(--mono);letter-spacing:0.03em;line-height:1.6;">
+      Last updated <strong style="color:var(--text2);">${DEPLOY_DATE}</strong> &nbsp;·&nbsp;
+      Please report any issues to <strong style="color:var(--text2);">Aleister</strong> on Discord or in-game.
+    </footer>`;
+
   const navEl = document.querySelector("body");
   navEl.insertAdjacentHTML("afterbegin", navHtml);
+  // Insert footer before closing body
+  document.body.insertAdjacentHTML("beforeend", footerHtml);
+  // Make body flex-column so footer sticks to bottom
+  document.body.style.display = "flex";
+  document.body.style.flexDirection = "column";
+  document.body.style.minHeight = "100vh";
+  const mainEl = document.querySelector("main");
+  if (mainEl) mainEl.style.flex = "1";
 }
 
 // ── Cascading class selector ──────────────────────────────
@@ -468,8 +487,8 @@ function buildAvatarPicker(onSelect) {
   const html = `
     <div class="modal-overlay" id="avatar-picker-modal">
       <div class="modal" style="max-width:520px;">
-        <div class="modal-title">Choose Your Avatar</div>
-        <div class="modal-body">Select a Fantomon portrait to use as your profile picture.</div>
+        <div class="modal-title" style="margin-bottom:1rem;">Choose Your Avatar</div>
+        
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">
           ${AVATAR_PRESETS.map(p => `
             <div onclick="window._avatarPickerSelect('${p.id}')"
@@ -530,16 +549,34 @@ function confirmAvatarPick() {
 // ── Translation via MyMemory (free, no key needed) ───────
 async function translateText(text, targetLang) {
   const targetCode = getLangCode(targetLang);
-  // MyMemory free API — 5,000 chars/day, no account needed
-  // Uses en as source since most guild chat will be in English;
-  // if target is English, translate from auto-detected via xx pair
-  const srcCode = targetCode === "en" ? "zh-CN" : "en";
+  // Step 1: detect source language using MyMemory with a broad pair
+  // We try en first, then check if the detected source differs
+  let srcCode = "en";
+  try {
+    // Use the langdetect endpoint via a dummy en|xx call and read detected source
+    const detectUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0,80))}&langpair=en|${targetCode}`;
+    const dr = await fetch(detectUrl);
+    const dd = await dr.json();
+    // MyMemory returns the detected source in matches[0].source
+    if (dd.matches && dd.matches.length > 0 && dd.matches[0].source) {
+      const detected = dd.matches[0].source.toLowerCase().split("-")[0];
+      if (detected && detected !== targetCode && detected.length === 2) {
+        srcCode = detected;
+      }
+    }
+  } catch(e) { /* fall back to en */ }
+
+  // Step 2: if source equals target, nothing to translate
+  if (srcCode === targetCode) {
+    return null; // signal: already in target language
+  }
+
+  // Step 3: translate
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcCode}|${targetCode}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error("Translation service unavailable. Try again shortly.");
   const d = await r.json();
   if (!d.responseData) throw new Error("Translation failed — please try again.");
-  // responseStatus 200 or 429 (rate limit)
   if (d.responseStatus === 429) throw new Error("Translation limit reached for today. Try again tomorrow.");
   return d.responseData.translatedText;
 }

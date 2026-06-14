@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin — Team Registry</title>
+<title>Admin — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
@@ -41,7 +41,10 @@
   <div id="atab-teams">
     <div class="flex-between mb-md">
       <span class="section-title">All Teams</span>
-      <input class="search-input" id="admin-team-search" placeholder="Search…" oninput="renderAdminTeams()" />
+      <div class="flex gap-sm">
+        <button class="btn btn-amber btn-sm" onclick="cleanDuplicates()">🧹 Clean Duplicates</button>
+        <input class="search-input" id="admin-team-search" placeholder="Search…" oninput="renderAdminTeams()" />
+      </div>
     </div>
     <div id="admin-teams-table"></div>
   </div>
@@ -267,6 +270,18 @@ async function doKeyLookup(){
     el("kl-result-key").textContent=res.captainKey;
     el("kl-result").style.display="block";
   }catch(e){showAlert("kl-error",e.message);}
+}
+async function cleanDuplicates(){
+  confirm_("Clean Duplicate Teams","This will remove any duplicate teams (same name + captain). This cannot be undone.",async()=>{
+    try{
+      const res=await apiPost({action:"adminDeleteDuplicates",adminPassword:ADMIN_PASSWORD});
+      if(res.count===0){toast("No duplicates found.","info");}
+      else{toast(`Removed ${res.count} duplicate(s): ${res.deleted.join(", ")}`,"success");}
+      const d=await apiGet({action:"getAll"});
+      allTeams=d.teams||[];allMembers=d.members||[];
+      renderAdminTeams();
+    }catch(e){toast(e.message,"error");}
+  });
 }
 function copyAdminKey(){
   navigator.clipboard.writeText(el("kl-result-key").textContent).then(()=>toast("Key copied!")).catch(()=>{});

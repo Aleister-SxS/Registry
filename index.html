@@ -97,6 +97,10 @@
           <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="Support" onchange="renderTeams()" /> Has Support slot</label>
           <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="DPS" onchange="renderTeams()" /> Has DPS slot</label>
 
+          <div class="filter-group-label">Preferences</div>
+          <label class="filter-check"><input type="checkbox" data-filter="discord" data-value="true" onchange="renderTeams()" /> Discord Recommended</label>
+          <label class="filter-check"><input type="checkbox" data-filter="lookingForCaptain" data-value="true" onchange="renderTeams()" /> Looking for a Captain</label>
+
           <div class="filter-group-label">Language Preference</div>
           <div style="padding:4px 8px;">
             <div class="tag-input-wrap" id="lang-filter-wrap" style="background:var(--bg);">
@@ -108,11 +112,6 @@
               </div>
             </div>
           </div>
-
-          <div class="filter-group-label">Preferences</div>
-          <label class="filter-check"><input type="checkbox" data-filter="discord" data-value="true" onchange="renderTeams()" /> Discord Recommended</label>
-          <label class="filter-check"><input type="checkbox" data-filter="lookingForCaptain" data-value="true" onchange="renderTeams()" /> Looking for a Captain</label>
-
           <div style="padding: 8px 8px 4px;">
             <button class="btn btn-ghost btn-xs w-full" onclick="clearFilters()">Clear All Filters</button>
           </div>

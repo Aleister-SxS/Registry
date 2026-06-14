@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Guild Members — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  .filter-dropdown-wrap{position:relative;}
+  .filter-dropdown-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text2);font-size:0.8rem;padding:6px 14px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s;}
+  .filter-dropdown-btn:hover{border-color:var(--border3);color:var(--text);}
+  .filter-dropdown-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);min-width:220px;z-index:50;padding:0.5rem;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  .filter-dropdown-menu.open{display:block;}
+  .filter-group-label{font-family:var(--mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px 3px;margin-top:4px;}
+  .filter-check{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;font-size:0.82rem;color:var(--text2);transition:background 0.1s;user-select:none;}
+  .filter-check:hover{background:var(--surface2);color:var(--text);}
+  .filter-check input[type="checkbox"]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+  .active-filters{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+  .active-filter-chip{font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--blue-dim);border:1px solid var(--blue-mid);color:var(--blue-bright);display:flex;align-items:center;gap:4px;}
+  .active-filter-chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:0.7rem;padding:0;opacity:0.7;line-height:1;}
+  .active-filter-chip button:hover{opacity:1;}
+</style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -14,21 +29,31 @@
     <span class="section-title">Guild Members</span>
     <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
       <input class="search-input" id="player-search" placeholder="Search members…" oninput="renderPlayers()" />
+      <div class="filter-dropdown-wrap">
+        <button class="filter-dropdown-btn" onclick="togglePlayerFilters()">🔽 Filters <span id="player-filter-count"></span></button>
+        <div class="filter-dropdown-menu" id="player-filter-menu">
+          <div class="filter-group-label">Status</div>
+          <label class="filter-check"><input type="checkbox" data-pf="lft" onchange="renderPlayers()" /> Looking for Team</label>
+          <label class="filter-check"><input type="checkbox" data-pf="wantcaptain" onchange="renderPlayers()" /> Wants to Captain</label>
+          <div class="filter-group-label">Role</div>
+          <label class="filter-check"><input type="checkbox" data-pf="captain" onchange="renderPlayers()" /> Team Captains</label>
+          <div class="filter-group-label">Playstyle</div>
+          <label class="filter-check"><input type="checkbox" data-pf="Casual" onchange="renderPlayers()" /> Casual</label>
+          <label class="filter-check"><input type="checkbox" data-pf="Competitive" onchange="renderPlayers()" /> Competitive</label>
+          <div style="padding:8px 8px 4px;">
+            <button class="btn btn-ghost btn-xs w-full" onclick="clearPlayerFilters()">Clear All Filters</button>
+          </div>
+        </div>
+      </div>
       <span class="count-badge" id="player-count">—</span>
     </div>
   </div>
-  <div class="filter-bar">
-    <button class="filter-btn active" onclick="setFilter(this,'all')">All Members</button>
-    <button class="filter-btn" onclick="setFilter(this,'lft')">Looking for Team</button>
-    <button class="filter-btn" onclick="setFilter(this,'captain')">Team Captains</button>
-    <button class="filter-btn" onclick="setFilter(this,'wantcaptain')">Looking to Captain</button>
-    <button class="filter-btn" onclick="setFilter(this,'Casual')">Casual</button>
-    <button class="filter-btn" onclick="setFilter(this,'Competitive')">Competitive</button>
-  </div>
+  <div id="active-player-filters" class="active-filters mb-md"></div>
+
   <div id="loading" class="loading"><span class="spinner"></span></div>
   <div class="cards-grid" id="players-grid" style="display:none;"></div>
   <div id="players-empty" class="empty" style="display:none;">
-    <div class="empty-icon">👾</div><p>No members found.</p>
+    <div class="empty-icon">👾</div><p>No members match your filters.</p>
   </div>
 </main>
 
@@ -36,7 +61,7 @@
 <div class="modal-overlay" id="invite-modal">
   <div class="modal">
     <div class="modal-title">Invite <span id="inv-target-name"></span></div>
-    <div class="modal-body">Confirm your credentials to send a team invite to this player.</div>
+    <div class="modal-body">Send a team invite to this player.</div>
     <div class="field"><label>Your Player ID</label><input id="inv-tag" /></div>
     <div class="field mt-sm"><label>Secret Key</label><input id="inv-key" type="password" placeholder="••••••••" /></div>
     <div id="inv-error" class="alert alert-error alert-hidden mt-sm"></div>
@@ -48,136 +73,129 @@
 </div>
 
 <script>
-let allMembers = [], allTeams = [], allRequests = [], settings = {};
-let playstyleFilter = "all";
-let inviteTargetId = null;
+let allMembers=[], allTeams=[], allRequests=[], settings={};
+let inviteTargetId=null;
+
+document.addEventListener("click", e => {
+  const wrap = document.querySelector(".filter-dropdown-wrap");
+  if (wrap && !wrap.contains(e.target)) document.getElementById("player-filter-menu")?.classList.remove("open");
+});
+
+function togglePlayerFilters() { document.getElementById("player-filter-menu").classList.toggle("open"); }
+
+function getPlayerFilters() {
+  const active = [];
+  document.querySelectorAll("#player-filter-menu input[type=checkbox]:checked").forEach(cb => active.push(cb.dataset.pf));
+  return active;
+}
+
+function clearPlayerFilters() {
+  document.querySelectorAll("#player-filter-menu input[type=checkbox]").forEach(cb => cb.checked = false);
+  renderPlayers();
+}
+
+const PF_LABELS = { lft:"Looking for Team", wantcaptain:"Wants to Captain", captain:"Team Captains", Casual:"Casual", Competitive:"Competitive" };
+
+function updatePlayerFilterBadge(active) {
+  const badge = el("player-filter-count");
+  if (badge) badge.textContent = active.length > 0 ? `(${active.length})` : "";
+  const row = el("active-player-filters");
+  if (!row) return;
+  row.innerHTML = active.map(f => `<div class="active-filter-chip">${PF_LABELS[f]||f}
+    <button onclick="removePlayerFilter('${f}')">✕</button></div>`).join("");
+}
+
+function removePlayerFilter(f) {
+  const cb = document.querySelector(`#player-filter-menu input[data-pf="${f}"]`);
+  if (cb) { cb.checked = false; renderPlayers(); }
+}
 
 onReady(async () => {
   try {
     const d = await apiGet({ action:"getAll" });
-    allMembers  = d.members  || [];
-    allTeams    = d.teams    || [];
-    allRequests = d.requests || [];
-    settings    = d.settings || {};
-  } catch(e) {
-    allMembers = [];
-  }
+    allMembers=d.members||[]; allTeams=d.teams||[]; allRequests=d.requests||[]; settings=d.settings||{};
+  } catch(e) { allMembers=[]; }
   hide(el("loading"));
   renderPlayers();
 });
 
-function setFilter(btn, f) {
-  playstyleFilter = f;
-  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  renderPlayers();
-}
-
 function renderPlayers() {
-  const grid    = el("players-grid");
-  const emptyEl = el("players-empty");
-  const search  = (el("player-search").value||"").toLowerCase();
-  const session = getSession();
-  const maxTeams = Number(settings.maxMemberTeams) || 3;
-  const captainTeam = session ? allTeams.find(t=>t.captainId===session.id) : null;
+  const grid=el("players-grid"), emptyEl=el("players-empty");
+  const search=(el("player-search").value||"").toLowerCase();
+  const active=getPlayerFilters();
+  updatePlayerFilterBadge(active);
+  const session=getSession();
+  const maxTeams=Number(settings.maxMemberTeams)||3;
+  const captainTeam=session?allTeams.find(t=>t.captainId===session.id):null;
 
-  // Show ALL members (including self), filtered by tab
-  const members = allMembers.filter(m => {
-    if (playstyleFilter === "lft"     && String(m.lookingForTeam).toUpperCase() !== "TRUE") return false;
-    if (playstyleFilter === "captain" && String(m.isCaptain).toUpperCase() !== "TRUE") return false;
-    if (playstyleFilter === "wantcaptain" && String(m.lookingForCaptainRole).toUpperCase() !== "TRUE") return false;
-    if (playstyleFilter === "Casual"  && m.playstyle !== "Casual") return false;
-    if (playstyleFilter === "Competitive" && m.playstyle !== "Competitive") return false;
-    if (search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
+  const members=allMembers.filter(m=>{
+    if(active.includes("lft") && String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
+    if(active.includes("wantcaptain") && String(m.lookingForCaptainRole).toUpperCase()!=="TRUE") return false;
+    if(active.includes("captain") && String(m.isCaptain).toUpperCase()!=="TRUE") return false;
+    if(active.includes("Casual") && m.playstyle!=="Casual") return false;
+    if(active.includes("Competitive") && m.playstyle!=="Competitive") return false;
+    if(search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
     return true;
   });
 
-  el("player-count").textContent = `${members.length} member${members.length!==1?"s":""}`;
+  el("player-count").textContent=`${members.length} member${members.length!==1?"s":""}`;
 
-  if (!members.length) {
-    grid.style.display="none"; emptyEl.style.display="block"; return;
-  }
-  emptyEl.style.display="none"; grid.style.display="grid";
+  if(!members.length){grid.style.display="none";emptyEl.style.display="block";return;}
+  emptyEl.style.display="none";grid.style.display="grid";
 
-  grid.innerHTML = members.map(m => {
-    const isLFT    = String(m.lookingForTeam).toUpperCase() === "TRUE";
-    const teamCount= (m.teamIds||[]).length;
-    const atLimit  = teamCount >= maxTeams;
-    const isMe     = session && session.id === m.id;
-    const alreadyInvited = session && allRequests.find(r=>
-      r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&
-      captainTeam&&r.teamId===captainTeam.id
-    );
+  grid.innerHTML=members.map(m=>{
+    const isLFT=String(m.lookingForTeam).toUpperCase()==="TRUE";
+    const isWC=String(m.lookingForCaptainRole).toUpperCase()==="TRUE";
+    const teamCount=(Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).length;
+    const atLimit=teamCount>=maxTeams;
+    const isMe=session&&session.id===m.id;
+    const alreadyInvited=session&&captainTeam&&allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&r.teamId===captainTeam.id);
+    const captainedTeams=allTeams.filter(t=>t.captainId===m.id);
 
-    // Status indicator
-    let statusBadge = "";
-    if (atLimit) {
-      statusBadge = `<span class="badge badge-full"><span class="badge-dot"></span>Unavailable</span>`;
-    } else if (isLFT) {
-      statusBadge = `<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>`;
-    }
+    let statusBadge="";
+    if(atLimit) statusBadge=`<span class="badge badge-full"><span class="badge-dot"></span>Unavailable</span>`;
+    else if(isLFT) statusBadge=`<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>`;
 
     return `<div class="player-card" onclick="location.href='profile.html?id=${m.id}'">
       <div class="player-top">
         ${m.avatarUrl
-          ? `<img src="${esc(m.avatarUrl)}" alt="${esc(m.name)}"
-              style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);flex-shrink:0;"
-              onerror="this.style.display='none'" />`
-          : `<div class="avatar avatar-md">${initials(m.name)}</div>`
-        }
+          ?`<img src="${esc(m.avatarUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);flex-shrink:0;" onerror="this.style.display='none'" />`
+          :`<div class="avatar avatar-md">${initials(m.name)}</div>`}
         <div style="min-width:0;">
-          <div class="player-name">${esc(m.name)}${isMe?" <span style='font-size:0.65rem;color:var(--blue-bright);'>(You)</span>":""}</div>
+          <div class="player-name">${esc(m.name)}${isMe?` <span style="font-size:0.65rem;color:var(--blue-bright);">(You)</span>`:""}</div>
           <div class="player-id">${esc(m.gamertag||"")}</div>
         </div>
       </div>
-      ${m.bio ? `<div class="player-bio">${esc(m.bio)}</div>` : ""}
+      ${m.bio?`<div class="player-bio">${esc(m.bio)}</div>`:""}
       <div class="tags-row mb-sm">
-        ${m.tier&&m.class ? `<span class="tag tag-class">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>` : ""}
-        ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
-        ${m.power ? `<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>` : ""}
-        ${m.level ? `<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>` : ""}
-        ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
+        ${m.tier&&m.class?`<span class="tag tag-class">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
+        ${m.playstyle?`<span class="badge badge-${m.playstyle==="Competitive"?"competitive":"casual"}">${esc(m.playstyle)}</span>`:""}
+        ${m.power?`<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>`:""}
+        ${m.level?`<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>`:""}
+        ${m.prefLanguage?`<span class="tag">🌐 ${esc(m.prefLanguage)}</span>`:""}
         ${statusBadge}
-        ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? `<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>` : ""}
+        ${isWC?`<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>`:""}
       </div>
-      ${String(m.isCaptain).toUpperCase()==="TRUE" ? (() => {
-        const captainedTeams = allTeams.filter(t=>t.captainId===m.id);
-        return captainedTeams.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;">
-          <span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;">⚜️ CAPTAINING</span>
-          ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();"
-            style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
-        </div>` : "";
-      })() : ""}
-      ${captainTeam && !isMe && !atLimit && isLFT && !alreadyInvited
-        ? `<button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`
-        : alreadyInvited
-          ? `<div class="text-xs text-muted" style="text-align:center;">Invite pending…</div>`
-          : ""}
+      ${captainedTeams.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;">
+        <span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;">⚜️ CAPTAINING</span>
+        ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();"
+          style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
+      </div>`:""}
+      ${captainTeam&&!isMe&&!atLimit&&isLFT&&!alreadyInvited
+        ?`<button class="btn btn-primary btn-sm w-full" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`
+        :alreadyInvited?`<div class="text-xs text-muted" style="text-align:center;">Invite pending…</div>`:""}
     </div>`;
   }).join("");
 }
 
-function openInviteModal(memberId, memberName) {
-  inviteTargetId = memberId;
-  el("inv-target-name").textContent = memberName;
-  el("inv-tag").value = getSession()?.gamertag || "";
-  el("inv-key").value = "";
+function openInviteModal(memberId,memberName){inviteTargetId=memberId;el("inv-target-name").textContent=memberName;el("inv-tag").value=getSession()?.gamertag||"";el("inv-key").value="";clearAlert("inv-error");el("invite-modal").classList.add("open");}
+function closeInviteModal(){el("invite-modal").classList.remove("open");}
+async function doSendInvite(){
+  const tag=el("inv-tag").value.trim(),key=el("inv-key").value.trim();
   clearAlert("inv-error");
-  el("invite-modal").classList.add("open");
-}
-function closeInviteModal() { el("invite-modal").classList.remove("open"); }
-
-async function doSendInvite() {
-  const tag = el("inv-tag").value.trim();
-  const key = el("inv-key").value.trim();
-  clearAlert("inv-error");
-  if (!tag||!key) { showAlert("inv-error","Enter your credentials."); return; }
-  try {
-    await apiPost({ action:"sendInvite", gamertag:tag, captainKey:key, toMemberId:inviteTargetId });
-    closeInviteModal();
-    toast("Invite sent!");
-    renderPlayers();
-  } catch(e) { showAlert("inv-error",e.message); }
+  if(!tag||!key){showAlert("inv-error","Enter your credentials.");return;}
+  try{await apiPost({action:"sendInvite",gamertag:tag,captainKey:key,toMemberId:inviteTargetId});closeInviteModal();toast("Invite sent!");renderPlayers();}
+  catch(e){showAlert("inv-error",e.message);}
 }
 </script>
 </body>

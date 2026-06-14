@@ -223,8 +223,9 @@ select,textarea{
   width:100%;background:var(--bg);border:1px solid var(--border2);
   border-radius:7px;padding:9px 12px;color:var(--text);font-size:0.88rem;outline:none;
   transition:border-color 0.15s,box-shadow 0.15s;
-  -webkit-text-fill-color:var(--text);
+  -webkit-text-fill-color:var(--text) !important;
   color-scheme:dark;
+  caret-color:var(--text);
 }
 /* Kill browser autofill bright white */
 input:-webkit-autofill,input:-webkit-autofill:hover,
@@ -529,3 +530,17 @@ input:checked+.slider::before{transform:translateX(18px);}
 @media(max-width:480px){
   .cards-grid{grid-template-columns:1fr;}
 }
+
+/* ── Processing overlay (shared) ────────────────────────── */
+.processing-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(11,13,18,0.88); z-index: 999;
+  flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+}
+.processing-overlay.active { display: flex; }
+.processing-spinner {
+  width: 44px; height: 44px; border: 3px solid var(--border2);
+  border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+.processing-title { font-size: 1rem; font-weight: 600; color: var(--text); }
+.processing-sub   { font-size: 0.82rem; color: var(--text2); }

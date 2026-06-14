@@ -28,6 +28,13 @@
   border-radius: var(--radius-lg);
   margin-bottom: 0.75rem;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.collapsible-body.open {
+  flex: 1;
+  overflow-y: auto;
 }
 .collapsible-header {
   background: var(--surface2);
@@ -343,10 +350,10 @@ function renderMgmt(teamId){
       </div>
     </div>` : ""}
 
-    <div class="mgmt-grid">
-      <!-- LEFT: Roster + Formation -->
-      <div>
-        <!-- Roster -->
+    <!-- Roster + Formation side by side, equal height -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;align-items:stretch;" id="roster-fg-grid-${teamId}">
+      <!-- LEFT: Roster -->
+      <div style="display:flex;flex-direction:column;">
         ${collapsibleSection("roster-"+teamId, "👥 Roster", `
           <div class="roster-list">
             ${members.map(m=>{
@@ -376,8 +383,9 @@ function renderMgmt(teamId){
               </div>`).join("")}
           </div>
         `, true)}
-
-        <!-- Battle Formation -->
+      </div>
+      <!-- RIGHT: Formation -->
+      <div style="display:flex;flex-direction:column;">
         ${collapsibleSection("fg-"+teamId, "⚔️ Battle Formation", `
           <div>
             ${isCaptain&&members.length?`
@@ -399,10 +407,11 @@ function renderMgmt(teamId){
           </div>
         `, true)}
       </div>
+    </div>
 
-      <!-- RIGHT: Team Builds -->
-      <div>
-        ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
+    <!-- Team Builds — full width -->
+    <div>
+      ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
           ${members.map(m=>{
             const build=m.teamBuild||{techniques:[],charms:[]};
             const techs=Array.isArray(build.techniques)?build.techniques:[];
@@ -436,15 +445,18 @@ function renderMgmt(teamId){
             </div>`;
           }).join("")}
         `, true)}
-      </div>
     </div>
 
-    <!-- Team Chat (full width, below grid) -->
+    <!-- Team Chat — full width -->
     ${collapsibleSection("chat-"+teamId, "💬 Team Chat", `
       <div class="chat-panel" id="chat-panel-${teamId}" style="height:400px;border:none;border-radius:0;margin-bottom:0;">
         <div class="chat-header" style="background:transparent;border-bottom:1px solid var(--border);">
           <span class="chat-refresh-info" id="chat-refresh-label-${teamId}">Auto-refreshes every 15s</span>
           <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
+        </div>
+        <div id="chat-disclaimer-${teamId}" style="background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:8px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear for your team. Thank you for your patience!</span>
+          <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;" title="Dismiss">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages-${teamId}">
           <div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>Loading…</div></div>
@@ -772,9 +784,9 @@ async function chatTranslate(msgId, text) {
   if (btn) btn.textContent = "⏳";
   try {
     const translated = await translateText(text, prefLang);
-    // Don't show if same as original
-    if (translated.trim().toLowerCase() === text.trim().toLowerCase()) {
-      toast("Already in " + prefLang, "info"); if(btn)btn.textContent="🌐"; return;
+    // null means already in target language
+    if (translated === null) {
+      toast("Message appears to already be in " + prefLang, "info"); if(btn)btn.textContent="🌐"; return;
     }
     const div = document.createElement("div");
     div.className = "chat-translation";

@@ -16,6 +16,13 @@
   <div id="profile-content"></div>
 </main>
 
+<!-- Processing overlay -->
+<div class="processing-overlay" id="profile-processing">
+  <div class="processing-spinner"></div>
+  <div class="processing-title" id="profile-processing-title">Saving…</div>
+  <div class="processing-sub">Please wait and stay on this page.</div>
+</div>
+
 <!-- Edit profile modal -->
 <div class="modal-overlay" id="edit-modal" style="z-index:400;">
   <div class="modal" style="max-width:600px;">
@@ -227,8 +234,18 @@ ${isOwn ? `
         ${m.discordId || languages.length ? `
         <div class="card mb-md">
           <div class="section-title mb-sm">Communication</div>
-          ${m.discordId ? `<div class="text-sm mb-sm">💬 <strong>Discord:</strong> ${esc(m.discordId)}${m.discordName?" ("+esc(m.discordName)+")":""}</div>` : ""}
-          ${languages.length ? `<div class="text-sm">🗣️ <strong>Languages:</strong> ${languages.map(l=>esc(l)).join(", ")}</div>` : ""}
+          ${m.discordId ? `
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:6px;">
+              <div style="font-size:0.68rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">💬 Discord</div>
+              <div class="text-sm">${esc(m.discordId)}${m.discordName?` <span style="color:var(--text3);">(${esc(m.discordName)})</span>`:""}</div>
+            </div>` : ""}
+          ${languages.length ? `
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;">
+              <div style="font-size:0.68rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">🗣️ Languages</div>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                ${languages.map(l=>`<span style="font-size:0.75rem;padding:2px 10px;border-radius:4px;background:var(--blue-dim);border:1px solid var(--blue-mid);color:var(--blue-bright);">${esc(l)}</span>`).join("")}
+              </div>
+            </div>` : ""}
         </div>` : ""}
 
         <div class="card mb-md">
@@ -288,14 +305,35 @@ ${isOwn ? `
         </div>` : ""}
       </div>
 
-      <!-- PVP Build -->
-      <div>
+      <!-- Right column: PVP Build + Fantomon -->
+      <div style="display:flex;flex-direction:column;gap:1rem;">
         <div class="card">
           <div class="flex-between mb-md">
             <div class="section-title">PVP Build</div>
             ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openBuildModal()">Edit Build</button>` : ""}
           </div>
           <div id="build-display"></div>
+        </div>
+
+        <!-- Fantomon PVP companion -->
+        <div class="card">
+          <div class="flex-between mb-md">
+            <div class="section-title">PVP Fantomon</div>
+            ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openFantomonPicker()">Change</button>` : ""}
+          </div>
+          ${m.pvpFantomon ? `
+            <div style="display:flex;align-items:center;gap:12px;">
+              <img src="${esc(AVATAR_PRESETS.find(p=>p.id===m.pvpFantomon)?.url||'')}"
+                style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
+                onerror="this.style.display='none'" />
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">${esc(AVATAR_PRESETS.find(p=>p.id===m.pvpFantomon)?.label||m.pvpFantomon)}</div>
+                <div class="text-xs text-muted">Active PVP Fantomon</div>
+              </div>
+            </div>
+          ` : `<div class="empty" style="padding:1rem;"><p class="text-sm">No Fantomon selected yet.</p>
+            ${isOwn ? `<button class="btn btn-ghost btn-sm mt-sm" onclick="openFantomonPicker()">Choose Fantomon</button>` : ""}
+          </div>`}
         </div>
       </div>
     </div>
@@ -359,13 +397,13 @@ async function toggleLFT(checked) {
 async function toggleLFC(checked) {
   const session = getSession();
   if (!session) return;
+  showProcessing("Updating Captain Preference…");
   try {
-    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
-      lookingForCaptainRole: checked });
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, lookingForCaptainRole: checked });
     profileMember.lookingForCaptainRole = checked ? "TRUE" : "FALSE";
     toast(checked ? "Marked as open to captaining!" : "Captain preference removed.");
     renderProfile();
-  } catch(e) { toast(e.message,"error"); }
+  } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
 }
 
 // ── Avatar ────────────────────────────────────────────────
@@ -498,18 +536,17 @@ function bmSelectSkill(skillId) {
 async function saveBuildFromModal() {
   const session = getSession();
   if (!session) return;
-  const build = {
-    techniques: bmState.techniques.filter(Boolean),
-    charms:     bmState.charms.filter(Boolean),
-  };
-  try {
-    await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey,
-      pvpBuild: JSON.stringify(build) });
-    profileMember.pvpBuild = build;
+  const build = { techniques: bmState.techniques.filter(Boolean), charms: bmState.charms.filter(Boolean) };
+  confirm_("Save PVP Build", "Confirm saving your build to your profile?", async () => {
     closeBuildModal();
-    renderBuildDisplay();
-    toast("Build saved!");
-  } catch(e) { toast(e.message,"error"); }
+    showProcessing("Saving PVP Build…");
+    try {
+      await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey, pvpBuild: JSON.stringify(build) });
+      profileMember.pvpBuild = build;
+      renderBuildDisplay();
+      toast("Build saved!");
+    } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
+  }, false);
 }
 
 // ── Edit profile modal ────────────────────────────────────
@@ -643,6 +680,71 @@ async function doSaveProfile() {
     openEditModal();
     showAlert("edit-error", e.message);
   }
+}
+
+function openFantomonPicker() {
+  // Build a simple modal for fantomon selection
+  const existing = el("fantomon-picker-modal");
+  if (existing) existing.remove();
+
+  const html = `<div class="modal-overlay open" id="fantomon-picker-modal" style="z-index:450;">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-title">Choose Your PVP Fantomon</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem;" id="fantomon-grid">
+        ${AVATAR_PRESETS.map(p=>`
+          <div onclick="selectFantomon('${p.id}')" id="fp-${p.id}"
+            style="cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);
+              padding:10px;text-align:center;transition:border-color 0.15s;
+              ${profileMember.pvpFantomon===p.id?'border-color:var(--blue);background:var(--blue-dim);':''}">
+            <img src="${p.url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;" />
+          </div>`).join("")}
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="el('fantomon-picker-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" id="fp-confirm" onclick="confirmFantomon()" disabled>Select</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+  window._selectedFantomon = profileMember.pvpFantomon || null;
+}
+
+function selectFantomon(id) {
+  window._selectedFantomon = id;
+  document.querySelectorAll("#fantomon-grid > div").forEach(d => {
+    d.style.borderColor = "var(--border)";
+    d.style.background  = "var(--surface)";
+  });
+  const sel = el("fp-" + id);
+  if (sel) { sel.style.borderColor = "var(--blue)"; sel.style.background = "var(--blue-dim)"; }
+  const btn = el("fp-confirm");
+  if (btn) btn.disabled = false;
+}
+
+async function confirmFantomon() {
+  const id = window._selectedFantomon;
+  if (!id) return;
+  const session = getSession();
+  if (!session) return;
+  el("fantomon-picker-modal").remove();
+  showProcessing("Saving Fantomon…");
+  try {
+    await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, pvpFantomon:id });
+    profileMember.pvpFantomon = id;
+    renderProfile();
+    toast("PVP Fantomon updated!");
+  } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
+}
+
+function showProcessing(title="Processing…") {
+  const ov = el("profile-processing");
+  const ti = el("profile-processing-title");
+  if (ov) ov.classList.add("active");
+  if (ti) ti.textContent = title;
+}
+function hideProcessing() {
+  const ov = el("profile-processing");
+  if (ov) ov.classList.remove("active");
 }
 
 function renderError(msg) {
