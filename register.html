@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Register / Log In — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
+<script src="js/app.js?v=2026061402"></script>
 <style>
   /* Local submit spinner — doesn't use the global overlay timer */
   .reg-overlay { display:none;position:fixed;inset:0;background:rgba(11,13,18,0.88);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem; }
@@ -71,7 +72,6 @@
 <!-- panel display controlled via JS directly -->
 </head>
 <body>
-<script src="js/app.js?v=2026061401"></script>
 <script>onReady(() => buildNav("register.html"));</script>
 
 <main>
@@ -457,21 +457,31 @@ function switchTab(tab) {
 }
 
 // ── Page init ─────────────────────────────────────────────
-onReady(() => {
-  populateSelect("r-timezone", TIMEZONES, "— Select Time Zone —");
-  buildClassSelector("r-tier", "r-class");
-  tagInputInit("r-languages", LANGUAGES);
-  tagInputInit("r-preflang", LANGUAGES);
+function initPage() {
+  try {
+    if (typeof TIMEZONES === 'undefined' || typeof LANGUAGES === 'undefined') {
+      // app.js not ready yet, retry
+      setTimeout(initPage, 50);
+      return;
+    }
+    populateSelect("r-timezone", TIMEZONES, "— Select Time Zone —");
+    buildClassSelector("r-tier", "r-class");
+    tagInputInit("r-languages", LANGUAGES);
+    tagInputInit("r-preflang", LANGUAGES);
 
-  const session = getSession();
-  if (session) {
-    document.getElementById("hero-block").style.display    = "none";
-    document.getElementById("auth-state").style.display    = "none";
-    document.getElementById("logged-in-state").style.display = "block";
-    document.getElementById("welcome-msg").textContent = `Welcome back, ${session.name || session.gamertag}!`;
-    document.getElementById("view-profile-btn").href   = `profile.html?id=${session.id}`;
+    const session = getSession();
+    if (session) {
+      document.getElementById("hero-block").style.display    = "none";
+      document.getElementById("auth-state").style.display    = "none";
+      document.getElementById("logged-in-state").style.display = "block";
+      document.getElementById("welcome-msg").textContent = \`Welcome back, \${session.name || session.gamertag}!\`;
+      document.getElementById("view-profile-btn").href   = \`profile.html?id=\${session.id}\`;
+    }
+  } catch(e) {
+    console.error('initPage error:', e);
   }
-});
+}
+onReady(initPage);
 
 // ── Auth actions ──────────────────────────────────────────
 async function doLogin() {
