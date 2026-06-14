@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Team Status — Berserk Guild</title>
+<title>Your Invites — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 <style>
 .status-block {
@@ -57,7 +57,7 @@
 <script src="js/app.js"></script>
 <script>onReady(() => buildNav("status.html"));</script>
 <main>
-  <div style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;">Team Status</div>
+  <div style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;">Your Invites</div>
 
   <div id="status-loading" class="loading"><span class="spinner"></span></div>
 
@@ -75,15 +75,6 @@
   </div>
 
   <div id="status-content" style="display:none;">
-
-    <!-- Current Teams -->
-    <div class="status-block">
-      <div class="status-block-header">
-        <span class="status-block-title">🛡️ Current Teams</span>
-        <span id="teams-count" class="count-badge"></span>
-      </div>
-      <div class="status-block-body" id="sc-teams"></div>
-    </div>
 
     <!-- Incoming invites -->
     <div class="status-block">

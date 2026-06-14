@@ -210,7 +210,7 @@ function buildNav(activePage, opts = {}) {
   const pages = [
     { href: "index.html",       label: "Team Registry",    requiresAuth: true },
     { href: "players.html",     label: "Guild Members",    requiresAuth: true },
-    { href: "status.html",      label: "Team Status",      requiresAuth: true },
+    { href: "status.html",      label: "Your Invites",     requiresAuth: true },
     { href: "your-team.html",   label: "Your Teams",       requiresAuth: true },
   ];
 
@@ -298,10 +298,13 @@ function buildNav(activePage, opts = {}) {
 
   const footerHtml = `
     <footer style="margin-top:auto;background:var(--bg2);border-top:1px solid var(--border);
-      padding:0.875rem 2rem;text-align:center;font-size:0.72rem;color:var(--text3);
-      font-family:var(--mono);letter-spacing:0.03em;line-height:1.6;">
-      Last updated <strong style="color:var(--text2);">${DEPLOY_DATE}</strong> &nbsp;·&nbsp;
-      Please report any issues to <strong style="color:var(--text2);">Aleister</strong> on Discord or in-game.
+      padding:0.875rem 2rem;font-size:0.72rem;color:var(--text3);
+      font-family:var(--mono);letter-spacing:0.03em;line-height:1.6;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+      <span>Last updated <strong style="color:var(--text2);">${DEPLOY_DATE}</strong> &nbsp;·&nbsp;
+      Please report any issues to <strong style="color:var(--text2);">Aleister</strong> on Discord or in-game.</span>
+      <a href="admin.html" style="color:var(--text3);font-size:0.65rem;opacity:0.5;transition:opacity 0.15s;"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">Admin</a>
     </footer>`;
 
   const navEl = document.querySelector("body");

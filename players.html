@@ -40,6 +40,17 @@
           <div class="filter-group-label">Playstyle</div>
           <label class="filter-check"><input type="checkbox" data-pf="Casual" onchange="renderPlayers()" /> Casual</label>
           <label class="filter-check"><input type="checkbox" data-pf="Competitive" onchange="renderPlayers()" /> Competitive</label>
+          <div class="filter-group-label">Language Preference</div>
+          <div style="padding:4px 8px;">
+            <div class="tag-input-wrap" id="plang-filter-wrap" style="background:var(--bg);">
+              <div class="tag-input-tags" id="plang-filter-tags"></div>
+              <div class="tag-input-dropdown-wrap">
+                <input class="tag-input-search" id="plang-filter-search" placeholder="Search languages…"
+                  autocomplete="off" oninput="plangFilterSearch()" onfocus="plangFilterOpen()" />
+                <div class="tag-dropdown" id="plang-filter-dropdown"></div>
+              </div>
+            </div>
+          </div>
           <div style="padding:8px 8px 4px;">
             <button class="btn btn-ghost btn-xs w-full" onclick="clearPlayerFilters()">Clear All Filters</button>
           </div>
@@ -91,6 +102,8 @@ function getPlayerFilters() {
 
 function clearPlayerFilters() {
   document.querySelectorAll("#player-filter-menu input[type=checkbox]").forEach(cb => cb.checked = false);
+  _plangSelected.length=0;
+  el("plang-filter-tags").innerHTML="";
   renderPlayers();
 }
 
@@ -134,6 +147,10 @@ function renderPlayers() {
     if(active.includes("captain") && String(m.isCaptain).toUpperCase()!=="TRUE") return false;
     if(active.includes("Casual") && m.playstyle!=="Casual") return false;
     if(active.includes("Competitive") && m.playstyle!=="Competitive") return false;
+    if(_plangSelected.length){
+      const ml=(m.prefLanguage||"").toLowerCase();
+      if(!_plangSelected.some(l=>ml===l.toLowerCase())) return false;
+    }
     if(search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
     return true;
   });
@@ -167,17 +184,36 @@ function renderPlayers() {
         </div>
       </div>
       ${m.bio?`<div class="player-bio">${esc(m.bio)}</div>`:""}
-      <div class="tags-row mb-sm">
-        ${m.tier&&m.class?`<span class="tag tag-class">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
-        ${m.playstyle?`<span class="badge badge-${m.playstyle==="Competitive"?"competitive":"casual"}">${esc(m.playstyle)}</span>`:""}
-        ${m.power?`<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>`:""}
-        ${m.level?`<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>`:""}
-        ${m.prefLanguage?`<span class="tag">🌐 ${esc(m.prefLanguage)}</span>`:""}
-        ${statusBadge}
-        ${isWC?`<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>`:""}
+      <div style="display:flex;flex-direction:column;gap:0;margin-bottom:0.6rem;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        ${m.tier&&m.class?`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Class</span>
+          <span class="tag tag-class" style="font-size:0.7rem;">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>
+        </div>`:""}
+        ${m.power||m.level?`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Power / Level</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${m.power?`<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>`:""}
+            ${m.level?`<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>`:""}
+          </div>
+        </div>`:""}
+        ${m.playstyle?`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Playstyle</span>
+          <span class="badge badge-${m.playstyle==="Competitive"?"competitive":"casual"}">${esc(m.playstyle)}</span>
+        </div>`:""}
+        ${m.prefLanguage?`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--border);background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Language</span>
+          <span style="font-size:0.78rem;color:var(--text2);">${esc(m.prefLanguage)}</span>
+        </div>`:""}
+        <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface2);">
+          <span style="font-size:0.68rem;color:var(--text3);width:90px;flex-shrink:0;">Status</span>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            ${statusBadge||"<span style='font-size:0.72rem;color:var(--text3);'>—</span>"}
+            ${isWC?`<span class="badge badge-amber" style="font-size:0.66rem;">⚜️ Wants to Captain</span>`:""}
+          </div>
+        </div>
       </div>
       ${captainedTeams.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center;">
-        <span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.04em;">⚜️ CAPTAINING</span>
+        <span style="font-size:0.65rem;color:var(--amber);font-family:var(--mono);letter-spacing:0.06em;font-weight:600;">⚜️ CAPTAINING</span>
         ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();"
           style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
       </div>`:""}
@@ -186,6 +222,28 @@ function renderPlayers() {
         :alreadyInvited?`<div class="text-xs text-muted" style="text-align:center;">Invite pending…</div>`:""}
     </div>`;
   }).join("");
+}
+
+// ── Language filter ──────────────────────────────────────
+const _plangSelected = [];
+document.addEventListener("click", e2 => {
+  const wrap = el("plang-filter-wrap");
+  if (wrap && !wrap.contains(e2.target)) el("plang-filter-dropdown")?.classList.remove("open");
+});
+function plangFilterOpen(){plangFilterRenderDD();el("plang-filter-dropdown").classList.add("open");}
+function plangFilterSearch(){plangFilterRenderDD();el("plang-filter-dropdown").classList.add("open");}
+function plangFilterToggle(lang){
+  const idx=_plangSelected.indexOf(lang);
+  if(idx>=0)_plangSelected.splice(idx,1);else _plangSelected.push(lang);
+  el("plang-filter-search").value="";
+  el("plang-filter-tags").innerHTML=_plangSelected.map(l=>`<span class="tag-chip">${esc(l)}<button class="tag-chip-x" onclick="plangFilterToggle('${esc(l)}')">✕</button></span>`).join("");
+  plangFilterRenderDD();renderPlayers();
+}
+function plangFilterRenderDD(){
+  const q=(el("plang-filter-search")?.value||"").toLowerCase();
+  const filtered=LANGUAGES.filter(l=>!_plangSelected.includes(l)&&(!q||l.toLowerCase().includes(q)));
+  const dd=el("plang-filter-dropdown");if(!dd)return;
+  dd.innerHTML=filtered.length?filtered.map(l=>`<div class="tag-dropdown-item" onclick="plangFilterToggle('${esc(l)}')">${esc(l)}</div>`).join(""):`<div class="tag-dropdown-empty">No results</div>`;
 }
 
 function openInviteModal(memberId,memberName){inviteTargetId=memberId;el("inv-target-name").textContent=memberName;el("inv-tag").value=getSession()?.gamertag||"";el("inv-key").value="";clearAlert("inv-error");el("invite-modal").classList.add("open");}

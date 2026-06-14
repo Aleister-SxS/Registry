@@ -455,7 +455,7 @@ function renderMgmt(teamId){
           <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
         </div>
         <div id="chat-disclaimer-${teamId}" style="background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:8px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear for your team. Thank you for your patience!</span>
+          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear. Chat may be monitored for moderation purposes.</span>
           <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;" title="Dismiss">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages-${teamId}">
@@ -554,10 +554,12 @@ function fgCellClick(teamId,cellIndex){
 
 async function fgSave(teamId){
   const state=fgState[teamId];
+  showMgmtProcessing("Saving Formation…");
   try{
     await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(state.positions)});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
+  finally{hideMgmtProcessing();}
 }
 
 // ── Team build modal ──────────────────────────────────────
@@ -631,11 +633,16 @@ function tbmSelectSkill(skillId){
 }
 async function saveTbm(){
   const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean)};
-  try{
-    await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId:tbmState.teamId,build:JSON.stringify(build)});
-    const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
-    closeTbm();if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
-  }catch(e){toast(e.message,"error");}
+  confirm_("Save Team Build","Confirm saving your build to the team strategy board?",async()=>{
+    closeTbm();
+    showMgmtProcessing("Saving Team Build…");
+    try{
+      await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId:tbmState.teamId,build:JSON.stringify(build)});
+      const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
+      if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
+    }catch(e){toast(e.message,"error");}
+    finally{hideMgmtProcessing();}
+  },false);
 }
 
 // ── Roster actions ────────────────────────────────────────
@@ -665,12 +672,14 @@ function confirmLeave(teamId,teamName){
   });
 }
 async function toggleTeamLFC(teamId, checked) {
+  showMgmtProcessing("Updating Captain Preference…");
   try {
     await apiPost({action:"updateTeamLFC",captainId:session.id,captainKey:session.captainKey,teamId,lookingForCaptain:checked});
     const t = allTeams.find(x=>x.id===teamId);
     if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
     toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
   } catch(e) { toast(e.message,"error"); }
+  finally { hideMgmtProcessing(); }
 }
 
 function confirmKick(teamId,memberId,memberName){
@@ -682,6 +691,12 @@ function confirmKick(teamId,memberId,memberName){
     }catch(e){toast(e.message,"error");}
   });
 }
+
+function showMgmtProcessing(title="Processing…"){
+  const ov=el("mgmt-processing");const ti=el("mgmt-processing-title");
+  if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
+}
+function hideMgmtProcessing(){el("mgmt-processing")?.classList.remove("active");}
 
 // ── Chat ──────────────────────────────────────────────────
 function chatStartPolling(teamId){
@@ -799,5 +814,11 @@ async function chatTranslate(msgId, text) {
   }
 }
 </script>
+<!-- Processing overlay -->
+<div class="processing-overlay" id="mgmt-processing" style="z-index:500;">
+  <div class="processing-spinner" style="width:44px;height:44px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+  <div class="processing-title" id="mgmt-processing-title">Processing…</div>
+  <div class="processing-sub">Please wait and stay on this page.</div>
+</div>
 </body>
 </html>

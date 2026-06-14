@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Team Profile — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css"/>
+<style>
+  .req-row-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.79rem;}
+  .req-row-item:last-child{border-bottom:none;}
+  .req-row-label{color:var(--text3);width:130px;flex-shrink:0;font-size:0.73rem;}
+  /* Processing overlay */
+  .processing-overlay{display:none;position:fixed;inset:0;background:rgba(11,13,18,0.88);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+  .processing-overlay.active{display:flex;}
+  .processing-spinner{width:44px;height:44px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .processing-title{font-size:1rem;font-weight:600;color:var(--text);}
+  .processing-sub{font-size:0.82rem;color:var(--text2);}
+</style>
 </head>
 <body>
 <script src="js/app.js"></script>
@@ -13,10 +25,57 @@
   <div id="loading" class="loading"><span class="spinner"></span></div>
   <div id="content" style="display:none;"></div>
 </main>
+
+<!-- Edit team modal (captain only) -->
+<div class="modal-overlay" id="edit-team-modal" style="z-index:400;">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">Edit Team Info</div>
+    <div class="field"><label>Team Name</label><input id="et-name" /></div>
+    <div class="field mt-sm"><label>Team Description</label><textarea id="et-desc"></textarea></div>
+    <div class="field mt-sm"><label>Team Playstyle</label>
+      <select id="et-playstyle">
+        <option value="">— Select —</option>
+        <option value="Casual">Casual</option>
+        <option value="Competitive">Competitive</option>
+      </select>
+    </div>
+    <div class="field-row mt-sm">
+      <div class="field"><label>Min Power Rating</label><input id="et-power" placeholder="e.g. 1.5m" /></div>
+      <div class="field"><label>Min Character Level</label><input id="et-level" type="number" /></div>
+    </div>
+    <div class="field mt-sm"><label>Preferred Language</label><select id="et-lang"></select></div>
+    <div class="field mt-sm">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Discord Recommended</div></div>
+        <label class="toggle"><input type="checkbox" id="et-discord" /><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="field mt-sm">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Open to a New Captain</div><div class="toggle-sublabel">Mark team as seeking a captain</div></div>
+        <label class="toggle"><input type="checkbox" id="et-want-captain" /><span class="slider"></span></label>
+      </div>
+    </div>
+    <div id="et-error" class="alert alert-error alert-hidden mt-sm"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditTeam()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmEditTeam()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Processing overlay -->
+<div class="processing-overlay" id="team-processing">
+  <div class="processing-spinner"></div>
+  <div class="processing-title" id="team-processing-title">Saving…</div>
+  <div class="processing-sub">Please wait.</div>
+</div>
+
 <script>
 let team=null, allMembers=[], allTeams=[], settings={};
 
 onReady(async()=>{
+  populateSelect("et-lang", LANGUAGES, "— No preference —");
   const id=new URLSearchParams(location.search).get("id");
   if(!id){renderError("No team ID.");return;}
   try{
@@ -26,10 +85,10 @@ onReady(async()=>{
   }catch(e){
     team={id:"t1",name:"Shadow Protocol",captainId:"m1",captainName:"Alex Chen",status:"open",memberCount:2,
       composition:["Tank","DPS","DPS","Support"],description:"Competitive daily scrims.",
-      minPower:1800000,minLevel:50,playstyle:"Competitive",requiresDiscord:"TRUE",prefLanguage:"English"};
+      minPower:1800000,minLevel:50,playstyle:"Competitive",requiresDiscord:"TRUE",prefLanguage:"English",lookingForCaptain:"FALSE"};
     allMembers=[
-      {id:"m1",name:"Alex Chen",gamertag:"ShadowAce#1234",teamIds:["t1"],class:"Duelist",tier:"T2",power:2100000,level:60},
-      {id:"m4",name:"Taylor Kim",gamertag:"TK_Radiant#777",teamIds:["t1"],class:"Knight",tier:"T2",power:1900000,level:55},
+      {id:"m1",name:"Alex Chen",gamertag:"1234",teamIds:["t1"],class:"Duelist",tier:"T2",power:2100000,level:60,avatarUrl:""},
+      {id:"m4",name:"Taylor Kim",gamertag:"5678",teamIds:["t1"],class:"Knight",tier:"T2",power:1900000,level:55,avatarUrl:""},
     ];
   }
   if(!team){renderError("Team not found.");return;}
@@ -39,40 +98,79 @@ onReady(async()=>{
 
 function renderTeam(){
   const session=getSession();
-  const members=allMembers.filter(m=>(m.teamIds||[]).includes(team.id));
+  const members=allMembers.filter(m=>{
+    const ids=Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean);
+    return ids.includes(team.id);
+  });
   const isMember=session&&members.some(m=>m.id===session.id);
+  const isCaptain=session&&team.captainId===session.id;
   const maxSize=Number(settings.maxTeamSize)||4;
   const isFull=members.length>=maxSize||team.status==="full";
   const status=team.status==="closed"?"closed":isFull?"full":"open";
-  const alreadyReq=session&&false;
+  const isOpenToAll=!Number(team.minPower)&&!Number(team.minLevel);
+  const comp=Array.isArray(team.composition)?team.composition:(team.composition||"").split(",").filter(Boolean);
+
+  // Captain info
+  const capMember=allMembers.find(m=>m.id===team.captainId);
+  const capAv=capMember?.avatarUrl
+    ?`<img src="${esc(capMember.avatarUrl)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
+    :`<div style="width:20px;height:20px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:var(--amber);">${(team.captainName||"?")[0]}</div>`;
+  const capClass=capMember?.class?` · ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}`:"";
 
   el("content").innerHTML=`
+    <!-- Page header -->
     <div class="flex-between mb-lg flex-wrap gap-sm">
       <div>
         <div style="font-size:1.4rem;font-weight:700;">${esc(team.name)}</div>
-        <div class="text-sm text-muted">Captain: <a href="profile.html?id=${team.captainId}">${esc(team.captainName||"—")}</a></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+          <span style="font-size:0.62rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;">⚜️ Team Captain</span>
+          ${capAv}
+          <a href="profile.html?id=${team.captainId}" style="font-size:0.82rem;color:var(--amber);font-weight:600;">${esc(team.captainName||"—")}${capClass}</a>
+        </div>
       </div>
       <div class="flex gap-xs flex-wrap" style="align-items:center;">
         <span class="badge badge-${status}"><span class="badge-dot"></span>${status==="open"?"Recruiting":status==="full"?"Full":"Closed"}</span>
-        ${!isMember&&status==="open"?`<button class="btn btn-primary" onclick="openJoinModal()">Request to Join</button>`:""}
+        ${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber">⚜️ Seeking Captain</span>`:""}
+        ${!isMember&&status==="open"?`<button class="btn btn-primary" onclick="openJoinModal()">+ Request to Join</button>`:""}
         ${isMember?`<a href="your-team.html" class="btn btn-ghost">Team Management →</a>`:""}
       </div>
     </div>
 
     <div class="two-col" style="align-items:start;">
       <div>
-        <!-- Info card -->
+        <!-- Team Info card -->
         <div class="card mb-md">
-          <div class="section-title mb-sm">Team Info</div>
-          ${team.description?`<p class="text-sm text-muted mb-sm">${esc(team.description)}</p>`:""}
-          <div class="comp-row">${renderComposition(team.composition)}</div>
-          <div class="req-row">
-            ${team.minPower?`<span class="req-pill">⚡ ${formatPower(team.minPower)}+ Power</span>`:""}
-            ${team.minLevel?`<span class="req-pill">🎯 Level ${team.minLevel}+</span>`:""}
-            ${team.playstyle?`<span class="badge badge-${team.playstyle==='Competitive'?'competitive':'casual'}">${esc(team.playstyle)}</span>`:""}
-            ${team.requiresDiscord==="TRUE"?`<span class="req-pill">💬 Discord required</span>`:""}
-            ${team.prefLanguage?`<span class="req-pill">🌐 ${esc(team.prefLanguage)}</span>`:""}
-            ${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber">Seeking Captain</span>`:""}
+          <div class="flex-between mb-md">
+            <div class="section-title">Team Info</div>
+            ${isCaptain?`<button class="btn btn-ghost btn-sm" onclick="openEditTeam()">Edit Info</button>`:""}
+          </div>
+
+          ${comp.length?`<div class="comp-row mb-md">${comp.map(r=>`<span class="comp-pill comp-${r.toLowerCase()}">${r}</span>`).join("")}</div>`:""}
+          ${team.description?`<p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin-bottom:0.875rem;">${esc(team.description)}</p>`:""}
+
+          <div>
+            <div class="req-row-item">
+              <span class="req-row-label">Requirements to Join</span>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                ${isOpenToAll?`<span class="badge badge-open" style="font-size:0.68rem;">✓ Open to All</span>`:`${team.minPower?`<span class="req-pill">⚡ ${formatPower(team.minPower)}+</span>`:""}${team.minLevel?`<span class="req-pill">🎯 Lv.${team.minLevel}+</span>`:""}`}
+              </div>
+            </div>
+            <div class="req-row-item">
+              <span class="req-row-label">Playstyle</span>
+              ${team.playstyle?`<span class="badge badge-${team.playstyle==="Competitive"?"competitive":"casual"}">${esc(team.playstyle)}</span>`:`<span style="color:var(--text3);">Not specified</span>`}
+            </div>
+            <div class="req-row-item">
+              <span class="req-row-label">Language</span>
+              <span style="color:var(--text2);">${esc(team.prefLanguage||"Any Language")}</span>
+            </div>
+            <div class="req-row-item">
+              <span class="req-row-label">Discord</span>
+              <span style="color:var(--text2);">${team.requiresDiscord==="TRUE"?"💬 Recommended":"Not required"}</span>
+            </div>
+            <div class="req-row-item">
+              <span class="req-row-label">Seeking Captain</span>
+              <span style="color:var(--text2);">${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber" style="font-size:0.68rem;">⚜️ Yes</span>`:"No"}</span>
+            </div>
           </div>
         </div>
 
@@ -83,43 +181,39 @@ function renderTeam(){
             ${members.map(m=>`<div class="roster-row">
               <div class="roster-info">
                 <a href="profile.html?id=${m.id}">
-                  ${m.avatarUrl
-                    ? `<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
-                    : `<div class="avatar avatar-sm">${initials(m.name)}</div>`}
+                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`:`<div class="avatar avatar-sm">${initials(m.name)}</div>`}
                 </a>
                 <div>
                   <div class="flex-center gap-xs">
                     <a href="profile.html?id=${m.id}" class="font-semibold text-sm">${esc(m.name)}</a>
-                    ${m.id===team.captainId?`<span class="badge badge-captain">Captain</span>`:""}
+                    ${m.id===team.captainId?`<span class="badge badge-captain">⚜️ Captain</span>`:""}
                   </div>
-                  <div class="roster-meta">${esc(m.gamertag)}${m.class?" · "+esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):""}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
+                  <div class="roster-meta">${m.class?esc(CLASS_ICONS[m.class]||"")+" "+esc(m.class):""}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
                 </div>
               </div>
             </div>`).join("")}
-            ${Array.from({length:maxSize-members.length},()=>`<div class="roster-row" style="opacity:0.4;border-style:dashed;">
-              <div class="roster-info"><div class="pip pip-empty"></div><span class="text-xs text-muted">Open slot</span></div>
+            ${Array.from({length:maxSize-members.length},()=>`<div class="roster-row" style="opacity:0.45;border-style:dashed;">
+              <div class="roster-info"><div class="pip pip-empty"></div><span class="text-xs" style="color:var(--blue-bright);">Open Slot — Request to join →</span></div>
             </div>`).join("")}
           </div>
         </div>
       </div>
 
-      <!-- Members' playstyle summary -->
+      <!-- Member profiles -->
       <div>
         <div class="card">
           <div class="section-title mb-sm">Member Profiles</div>
-          ${members.map(m=>`<div class="player-card mb-sm" style="cursor:default;">
-            <div class="player-top">
-              ${m.avatarUrl
-                ? `<img src="${esc(m.avatarUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
-                : `<div class="avatar avatar-md">${initials(m.name)}</div>`}
+          ${members.map(m=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.5rem;">
+            <div class="player-top mb-sm">
+              ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`:`<div class="avatar avatar-md">${initials(m.name)}</div>`}
               <div>
-                <div class="player-name">${esc(m.name)}</div>
-                <div class="player-id">${esc(m.gamertag)}</div>
+                <div class="player-name">${esc(m.name)}${m.id===team.captainId?` <span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}</div>
+                <div class="player-id">${esc(m.gamertag||"")}</div>
               </div>
             </div>
             <div class="tags-row mb-sm">
               ${m.class?`<span class="tag tag-class">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
-              ${m.playstyle?`<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>`:""}
+              ${m.playstyle?`<span class="badge badge-${m.playstyle==="Competitive"?"competitive":"casual"}">${esc(m.playstyle)}</span>`:""}
               ${m.power?`<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>`:""}
               ${m.level?`<span class="tag tag-level">🎯 Lv.${esc(String(m.level))}</span>`:""}
             </div>
@@ -131,17 +225,78 @@ function renderTeam(){
   `;
 }
 
+// ── Join modal ─────────────────────────────────────────────
 function openJoinModal(){
   const session=getSession();
-  const tag=session?.gamertag||"";
-  const key=prompt(`Enter your Secret Key to request to join ${team.name}:`);
-  if(!key)return;
-  const playerTag=tag||prompt("Enter your Player ID:");
-  if(!playerTag)return;
-  apiPost({action:"joinRequest",gamertag:playerTag,captainKey:key,teamId:team.id})
-    .then(()=>{ toast("Join request sent!"); renderTeam(); })
-    .catch(e=>toast(e.message,"error"));
+  if(!session){location.href="register.html";return;}
+  confirm_(`Request to Join ${team.name}`,"Send a join request to the team captain? They'll accept or decline.",async()=>{
+    showTeamProcessing("Sending Join Request…");
+    try{
+      await apiPost({action:"joinRequest",memberId:session.id,captainKey:session.captainKey,teamId:team.id});
+      toast("Join request sent!");renderTeam();
+    }catch(e){toast(e.message,"error");}
+    finally{hideTeamProcessing();}
+  },false);
 }
+
+// ── Edit team ──────────────────────────────────────────────
+function openEditTeam(){
+  el("et-name").value=team.name||"";
+  el("et-desc").value=team.description||"";
+  el("et-playstyle").value=team.playstyle||"";
+  el("et-power").value=team.minPower?formatPower(team.minPower):"";
+  el("et-level").value=team.minLevel||"";
+  el("et-lang").value=team.prefLanguage||"";
+  el("et-discord").checked=team.requiresDiscord==="TRUE";
+  el("et-want-captain").checked=team.lookingForCaptain==="TRUE";
+  clearAlert("et-error");
+  el("edit-team-modal").classList.add("open");
+}
+function closeEditTeam(){el("edit-team-modal").classList.remove("open");}
+
+function confirmEditTeam(){
+  confirm_("Save Team Changes","Update this team's information?",doEditTeam,false);
+}
+
+async function doEditTeam(){
+  const session=getSession();
+  if(!session)return;
+  closeEditTeam();
+  clearAlert("et-error");
+  const name=el("et-name").value.trim();
+  if(!name){toast("Team name required.","error");return;}
+  showTeamProcessing("Saving Team Info…");
+  try{
+    await apiPost({
+      action:"captainEditTeam",
+      captainId:session.id,captainKey:session.captainKey,teamId:team.id,
+      name, description:el("et-desc").value.trim()||"Join up and let's win big!",
+      playstyle:el("et-playstyle").value,
+      minPower:parsePower(el("et-power").value),
+      minLevel:el("et-level").value.trim(),
+      requiresDiscord:el("et-discord").checked,
+      lookingForCaptain:el("et-want-captain").checked,
+      prefLanguage:el("et-lang").value||"Any Language",
+    });
+    Object.assign(team,{
+      name,description:el("et-desc").value.trim()||"Join up and let's win big!",
+      playstyle:el("et-playstyle").value,
+      minPower:parsePower(el("et-power").value)||0,
+      minLevel:el("et-level").value.trim(),
+      requiresDiscord:el("et-discord").checked?"TRUE":"FALSE",
+      lookingForCaptain:el("et-want-captain").checked?"TRUE":"FALSE",
+      prefLanguage:el("et-lang").value||"Any Language",
+    });
+    renderTeam();toast("Team info updated!");
+  }catch(e){toast(e.message,"error");}
+  finally{hideTeamProcessing();}
+}
+
+function showTeamProcessing(title="Saving…"){
+  const ov=el("team-processing");const ti=el("team-processing-title");
+  if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
+}
+function hideTeamProcessing(){el("team-processing")?.classList.remove("active");}
 
 function renderError(msg){
   hide(el("loading"));show(el("content"));
