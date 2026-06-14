@@ -7,7 +7,11 @@
 <link rel="stylesheet" href="css/style.css" />
 <style>
 .status-block{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:1.25rem;overflow:hidden;}
-.status-block-header{background:var(--surface2);border-bottom:1px solid var(--border2);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:8px;}
+.status-block-header{background:var(--surface2);border-bottom:1px solid var(--border2);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.status-block-header:hover{background:var(--surface3);}
+.status-chevron{color:var(--text3);font-size:0.75rem;margin-left:auto;transition:transform 0.2s;}
+.status-block.collapsed .status-chevron{transform:rotate(-90deg);}
+.status-block.collapsed .status-block-body{display:none;}
 .status-block-title{font-family:var(--mono);font-size:0.72rem;color:var(--blue-bright);text-transform:uppercase;letter-spacing:0.1em;font-weight:700;flex:1;}
 .status-block-body{padding:1rem 1.25rem;}
 .status-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.875rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:0.5rem;}
@@ -44,10 +48,11 @@
   <div id="status-content" style="display:none;">
 
     <!-- Team Invites -->
-    <div class="status-block">
-      <div class="status-block-header">
+    <div class="status-block" id="invites-block">
+      <div class="status-block-header" onclick="toggleStatusBlock('invites-block')">
         <span class="status-block-title">📨 Team Invites</span>
         <span id="inv-badge" class="badge badge-pending" style="display:none;"></span>
+        <span class="status-chevron">▼</span>
       </div>
       <div class="status-block-body" id="sc-invites"></div>
     </div>
@@ -75,6 +80,11 @@
 
 <script>
 let allTeams=[],allMembers=[],allRequests=[],settings={};
+
+function toggleStatusBlock(id){
+  const block=document.getElementById(id);
+  if(block)block.classList.toggle("collapsed");
+}
 let statusMember=null;
 
 onReady(async()=>{

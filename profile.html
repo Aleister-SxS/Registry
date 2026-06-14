@@ -53,8 +53,7 @@
       <div class="field"><label>Power Rating</label><input id="ep-power" placeholder="e.g. 180k" /></div>
       <div class="field"><label>Character Level</label><input id="ep-level" type="number" /></div>
     </div>
-    <div class="field"><label>Describe Your Playstyle</label><textarea id="ep-bio"></textarea></div>
-    <div class="field"><label>Describe Yourself</label><textarea id="ep-desc"></textarea></div>
+    <div class="field"><label>Describe Yourself <span class="optional">(optional)</span></label><textarea id="ep-desc"></textarea></div>
     <div class="field"><label>Playstyle Preference</label>
       <select id="ep-playstyle">
         <option value="">— Select —</option>
@@ -79,12 +78,7 @@
       </div>
     </div>
     <div class="field"><label>Preferred Language</label><select id="ep-pref-lang"></select></div>
-    <div class="field">
-      <div class="toggle-row">
-        <div><div class="toggle-label">Looking for a team</div></div>
-        <label class="toggle"><input type="checkbox" id="ep-lfg" /><span class="slider"></span></label>
-      </div>
-    </div>
+
 
     <div id="edit-error" class="alert alert-error alert-hidden mt-sm"></div>
     <div class="modal-actions">
@@ -147,13 +141,17 @@ onReady(async () => {
     if (profileMember && typeof profileMember.pvpBuild === "string" && profileMember.pvpBuild) {
       try { profileMember.pvpBuild = JSON.parse(profileMember.pvpBuild); } catch { profileMember.pvpBuild = {techniques:[],charms:[]}; }
     }
-    // Sync avatarUrl into session if viewing own profile
+    // Sync avatarUrl and pvpFantomon into session if viewing own profile
     const session = getSession();
-    if (session && profileMember && session.id === profileMember.id && profileMember.avatarUrl) {
-      if (session.avatarUrl !== profileMember.avatarUrl) {
-        session.avatarUrl = profileMember.avatarUrl;
-        setSession(session);
+    if (session && profileMember && session.id === profileMember.id) {
+      let changed = false;
+      if (profileMember.avatarUrl && session.avatarUrl !== profileMember.avatarUrl) {
+        session.avatarUrl = profileMember.avatarUrl; changed = true;
       }
+      if (profileMember.pvpFantomon && session.pvpFantomon !== profileMember.pvpFantomon) {
+        session.pvpFantomon = profileMember.pvpFantomon; changed = true;
+      }
+      if (changed) setSession(session);
     }
   } catch(e) {
     profileMember = demoMember();
@@ -222,6 +220,7 @@ function renderProfile() {
         <div class="tags-row mb-sm">
           ${m.power ? `<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>` : ""}
           ${m.level ? `<span class="tag tag-level">🎯 Level ${esc(String(m.level))}</span>` : ""}
+          ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
           ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
           ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
         </div>
@@ -637,7 +636,6 @@ function openEditModal() {
   el("ep-discord-name").value = m.discordName || "";
   el("ep-timezone").value     = m.timezone || "";
   el("ep-pref-lang").value    = m.prefLanguage || "";
-  el("ep-lfg").checked        = String(m.lookingForTeam).toUpperCase() === "TRUE";
   epTagSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
   if (m.tier) {
     el("ep-tier").value = m.tier;
@@ -664,24 +662,23 @@ async function doSaveProfile() {
   const cls       = el("ep-class").value;
   const power     = parsePower(el("ep-power").value);
   const level     = el("ep-level").value.trim();
-  const bio       = el("ep-bio").value.trim();
   const desc      = el("ep-desc").value.trim();
   const playstyle = el("ep-playstyle").value;
   const discId    = el("ep-discord-id").value.trim();
   const discName  = el("ep-discord-name").value.trim();
   const tz        = el("ep-timezone").value;
   const prefLang  = el("ep-pref-lang").value;
-  const lfg       = el("ep-lfg").checked;
+  const lfg = profileMember.lookingForTeam === "TRUE"; // controlled by toggle on profile
   const isCaptain = profileMember.isCaptain; // preserve existing value, not editable here
   const languages = epTagGet("ep-languages").join(",");
   if (!name) { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
-      name, gamertag:tag, tier, class:cls, power, level, bio, description:desc,
+      name, gamertag:tag, tier, class:cls, power, level, bio:"", description:desc,
       playstyle, discordId:discId, discordName:discName, timezone:tz,
       languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain });
     Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,
-      description:desc,playstyle,discordId:discId,discordName:discName,timezone:tz,
+      description:desc||"I&#39;m a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
       languages,prefLanguage:prefLang,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
     const s = getSession();

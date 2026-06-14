@@ -6,6 +6,18 @@
 <title>Register / Log In — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css" />
 <style>
+  /* Force white text in all registration form inputs */
+  input, select, textarea {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: var(--bg) !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--text3) !important;
+    -webkit-text-fill-color: var(--text3) !important;
+  }
+</style>
+<style>
   .panel { display: none; }
   .panel.active { display: block; }
 </style>
@@ -95,8 +107,8 @@
         <div class="field-row">
           <div class="field"><label>In-Game Name</label><input id="r-name" placeholder="Your name" /></div>
           <div class="field">
-            <label>Player ID <span class="optional">(your in-game Player ID)</span></label>
-            <input id="r-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" />
+            <label>Player ID <span style="color:var(--red);">*</span> <span class="optional">(your in-game Player ID)</span></label>
+            <input id="r-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" required />
           </div>
         </div>
 
@@ -204,10 +216,13 @@
       <div class="alert alert-amber mt-md">
         ⚠️ Store this key somewhere safe — a password manager or notes app. It cannot be recovered without contacting an admin.
       </div>
+      <div id="countdown-notice" style="background:var(--amber-dim);border:1px solid var(--amber-mid);border-radius:7px;padding:10px 14px;font-size:0.82rem;color:var(--amber);text-align:center;margin-bottom:0.75rem;">
+        ⏱️ Please copy your Secret Key before leaving. Links will be available in <strong id="countdown-num">10</strong> seconds.
+      </div>
       <div class="flex gap-sm flex-wrap mt-md">
         <button class="btn btn-primary" onclick="copyKey()">Copy Key</button>
-        <a href="index.html" class="btn btn-ghost">Browse Teams →</a>
-        <a id="goto-profile" href="#" class="btn btn-ghost">View Profile →</a>
+        <a href="index.html" id="link-browse" class="btn btn-ghost" style="pointer-events:none;opacity:0.4;" aria-disabled="true">Browse Teams →</a>
+        <a id="goto-profile" href="#" class="btn btn-ghost" style="pointer-events:none;opacity:0.4;" aria-disabled="true">View Profile →</a>
       </div>
     </div>
   </div>
@@ -292,6 +307,26 @@ function onAvatarSelected(url) {
   preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
 }
 
+// ── Success countdown ─────────────────────────────────────
+function startSuccessCountdown() {
+  let secs = 10;
+  const numEl = document.getElementById("countdown-num");
+  const notice = document.getElementById("countdown-notice");
+  const links = ["link-browse","goto-profile"];
+  const timer = setInterval(() => {
+    secs--;
+    if (numEl) numEl.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(timer);
+      if (notice) notice.style.display = "none";
+      links.forEach(id => {
+        const a = document.getElementById(id);
+        if (a) { a.style.pointerEvents=""; a.style.opacity=""; a.removeAttribute("aria-disabled"); }
+      });
+    }
+  }, 1000);
+}
+
 // ── Tab switcher ──────────────────────────────────────────
 function switchTab(tab) {
   const loginPanel    = document.getElementById("panel-login");
@@ -358,8 +393,7 @@ async function doRegister() {
   const cls       = document.getElementById("r-class").value;
   const power     = parsePower(document.getElementById("r-power").value);
   const level     = document.getElementById("r-level").value.trim();
-  const bio       = document.getElementById("r-bio").value.trim();
-  const desc      = document.getElementById("r-desc").value.trim();
+  const desc      = document.getElementById("r-desc").value.trim() || "I&#39;m a pretty cool person - ready to join in!";
   const playstyle = document.getElementById("r-playstyle").value;
   const discId    = document.getElementById("r-discord-id").value.trim();
   const discName  = document.getElementById("r-discord-name").value.trim();
@@ -373,13 +407,27 @@ async function doRegister() {
   if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
   if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
   if (!prefLang.length) { showAlert("reg-error", "Please select at least one Preferred Language."); return; }
+  // Check for duplicate Player ID
+  showProcessing("Checking Player ID…");
+  let allExisting = [];
+  try {
+    const check = await apiGet({ action:"getAll" });
+    allExisting = check.members || [];
+  } catch(e) {}
+  const duplicate = allExisting.find(m => String(m.gamertag) === String(tag));
+  if (duplicate) {
+    hideProcessing();
+    showAlert("reg-error", `Player ID ${tag} is already registered. Please log in instead. If you&#39;re having issues, contact an admin on Discord or in-game.`);
+    return;
+  }
+  showProcessing("Creating your profile…");
 
   const btn = document.getElementById("reg-btn");
   btn.disabled = true;
-  try {
+  try { showProcessing("Creating your profile…");
     const res = await apiPost({
       action: "registerMember", name, gamertag: tag, tier, class: cls,
-      power, level, bio, description: desc, playstyle,
+      power, level, bio: "", description: desc, playstyle,
       discordId: discId, discordName: discName, timezone: tz,
       languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain, lookingForCaptainRole: wantCaptain,
       avatarUrl: selectedAvatarUrl,
@@ -392,10 +440,14 @@ async function doRegister() {
     document.getElementById("out-tag").textContent = m.gamertag;
     document.getElementById("out-key").textContent = m.captainKey;
     document.getElementById("goto-profile").href   = `profile.html?id=${m.id}`;
+    // Start 10-second countdown before links are enabled
+    startSuccessCountdown();
   } catch(e) {
+    hideProcessing();
     showAlert("reg-error", e.message);
   } finally {
     btn.disabled = false;
+    hideProcessing();
   }
 }
 
