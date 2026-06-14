@@ -175,14 +175,25 @@ function renderStatus(){
     reqEl.innerHTML=`<div class="status-empty"><div class="status-empty-icon">📤</div>No pending join requests.</div>`;
   }
 
-  // ── Captain: Incoming Join Requests ──
+  // ── Captain section: always visible ──
   const capTeams=allTeams.filter(t=>t.captainId===m.id);
-  const capSection=el("captain-section");
-  if(capTeams.length){
-    show(capSection);
+  const jrqBadge=el("jrq-badge");
+  const jrqEl=el("sc-joinreqs");
+
+  if(!capTeams.length){
+    // Not a captain — show helpful message
+    hide(jrqBadge);
+    jrqEl.innerHTML=`<div class="status-empty" style="padding:1.5rem;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;opacity:0.4;">⚜️</div>
+      <div style="font-size:0.88rem;color:var(--text2);margin-bottom:0.75rem;">You are not currently a captain of any team.</div>
+      <div style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem;">Want to become a captain?</div>
+      <div class="flex gap-sm" style="justify-content:center;flex-wrap:wrap;">
+        <a href="index.html" class="btn btn-ghost btn-sm">🔍 Find a Team Seeking a Captain</a>
+        <a href="create-team.html" class="btn btn-primary btn-sm">⚔️ Start Your Own Team</a>
+      </div>
+    </div>`;
+  } else {
     const capReqs=allRequests.filter(r=>r.type==="join"&&capTeams.map(t=>t.id).includes(r.teamId)&&r.status==="pending");
-    const jrqBadge=el("jrq-badge");
-    const jrqEl=el("sc-joinreqs");
     if(capReqs.length){
       jrqBadge.textContent=capReqs.length;show(jrqBadge);
       jrqEl.innerHTML=capReqs.map(r=>{
@@ -208,7 +219,7 @@ function renderStatus(){
       hide(jrqBadge);
       jrqEl.innerHTML=`<div class="status-empty"><div class="status-empty-icon">⚜️</div>No pending join requests to your teams.</div>`;
     }
-  }else{hide(capSection);}
+  }
 }
 
 async function respondInvite(reqId,decision){

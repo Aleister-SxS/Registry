@@ -699,10 +699,26 @@ function confirmKick(teamId,memberId,memberName){
 }
 
 function showProcessing(title="Processing…"){
-  const ov=el("mgmt-processing");const ti=el("mgmt-processing-title");
-  if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
+  // Use global overlay from app.js
+  let ov = document.getElementById("global-processing-overlay");
+  if (!ov) {
+    ov = document.createElement("div");
+    ov.id = "global-processing-overlay";
+    ov.style.cssText = "display:none;position:fixed;inset:0;background:rgba(11,13,18,0.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem;";
+    ov.innerHTML = `<div style="width:48px;height:48px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+      <div id="gpo-title" style="font-size:1rem;font-weight:600;color:#e8edf5;"></div>
+      <div style="font-size:0.82rem;color:#8b98b5;">Please wait and stay on this page.</div>`;
+    document.body.appendChild(ov);
+  }
+  const ti = ov.querySelector("#gpo-title");
+  if (ti) ti.textContent = title;
+  ov.style.display = "flex";
 }
-function hideProcessing(successMsg){ const ov=el("mgmt-processing"); if(ov)ov.classList.remove("active"); if(successMsg)toast(successMsg,"success",3500); }
+function hideProcessing(successMsg){
+  const ov = document.getElementById("global-processing-overlay");
+  if (ov) ov.style.display = "none";
+  if (successMsg) toast(successMsg, "success", 3500);
+}
 
 // ── Chat ──────────────────────────────────────────────────
 function chatStartPolling(teamId){

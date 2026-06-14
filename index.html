@@ -263,6 +263,8 @@ function removeFilter(f, v) {
 }
 
 onReady(async () => {
+  // Redirect to login if not authenticated
+  if (!getSession()) { window.location.replace('register.html'); return; }
   try {
     const d = await apiGet({ action:"getAll" });
     allTeams   = d.teams   || [];

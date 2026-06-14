@@ -239,6 +239,12 @@ function closeConfirmModal() {
 // ── Nav builder ───────────────────────────────────────────
 function buildNav(activePage, opts = {}) {
   const session = getSession();
+  // Redirect unauthenticated users away from protected pages
+  const alwaysPublic = ['register.html', 'admin.html', 'team.html', ''];
+  if (!session && !alwaysPublic.includes(activePage)) {
+    window.location.replace('register.html');
+    return;
+  }
   const pages = [
     { href: "index.html",       label: "Team Registry",    requiresAuth: true },
     { href: "players.html",     label: "Guild Members",    requiresAuth: true },

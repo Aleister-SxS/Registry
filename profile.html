@@ -42,9 +42,9 @@
   <div class="modal" style="max-width:600px;">
     <div class="modal-title">Edit Profile</div>
     <div class="field-row">
-      <div class="field"><label>In-Game Name</label><input id="ep-name" /></div>
+      <div class="field"><label>In-Game Name <span style="color:var(--red);">*</span></label><input id="ep-name" /></div>
       <div class="field">
-          <label>Player ID <span class="optional">(12-digit number — find in your in-game profile)</span></label>
+          <label>Player ID <span style="color:var(--red);">*</span> <span class="optional">(12-digit number — find in your in-game profile)</span></label>
           <input id="ep-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417"
             maxlength="12" oninput="validateEpTag(this)" />
           <div id="ep-tag-hint" style="font-size:0.72rem;margin-top:3px;color:var(--text3);">
@@ -58,7 +58,7 @@
     </div>
     <div class="field-row">
       <div class="field"><label>Power Rating</label><input id="ep-power" placeholder="e.g. 180k" /></div>
-      <div class="field"><label>Character Level</label><input id="ep-level" type="number" /></div>
+      <div class="field"><label>Character Level <span style="color:var(--red);">*</span></label><input id="ep-level" type="number" /></div>
     </div>
     <div class="field"><label>Describe Yourself <span class="optional">(optional)</span></label><textarea id="ep-desc"></textarea></div>
     <div class="field"><label>Playstyle Preference</label>
@@ -72,7 +72,7 @@
       <div class="field"><label>Discord ID</label><input id="ep-discord-id" /></div>
       <div class="field"><label>Discord Display Name</label><input id="ep-discord-name" /></div>
     </div>
-    <div class="field"><label>Time Zone</label><select id="ep-timezone"></select></div>
+    <div class="field"><label>Time Zone <span style="color:var(--red);">*</span></label><select id="ep-timezone"></select></div>
     <div class="field">
       <label>Languages Spoken <span class="optional">(up to 3)</span></label>
       <div class="tag-input-wrap" id="ep-languages-wrap">
@@ -84,7 +84,7 @@
         </div>
       </div>
     </div>
-    <div class="field"><label>Preferred Language</label><select id="ep-pref-lang"></select></div>
+    <div class="field"><label>Preferred Language <span style="color:var(--red);">*</span></label><select id="ep-pref-lang"></select></div>
 
 
     <div id="edit-error" class="alert alert-error alert-hidden mt-sm"></div>
@@ -677,7 +677,14 @@ async function doSaveProfile() {
   const lfg = profileMember.lookingForTeam === "TRUE"; // controlled by toggle on profile
   const isCaptain = profileMember.isCaptain; // preserve existing value, not editable here
   const languages = epTagGet("ep-languages").join(",");
-  if (!name) { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
+  if (!name)    { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
+  if (!tag || String(tag).length !== 12) { openEditModal(); showAlert("edit-error","Player ID must be exactly 12 digits."); return; }
+  if (!tier)    { openEditModal(); showAlert("edit-error","Class Tier is required."); return; }
+  if (!cls)     { openEditModal(); showAlert("edit-error","Class is required."); return; }
+  if (!power)   { openEditModal(); showAlert("edit-error","Power Rating is required."); return; }
+  if (!level)   { openEditModal(); showAlert("edit-error","Character Level is required."); return; }
+  if (!tz)      { openEditModal(); showAlert("edit-error","Time Zone is required."); return; }
+  if (!prefLang){ openEditModal(); showAlert("edit-error","Preferred Language is required."); return; }
   if (tag && (String(tag).length !== 12 || !/^\d{12}$/.test(String(tag)))) {
     openEditModal(); showAlert("edit-error","Player ID must be exactly 12 digits."); return;
   }
@@ -686,7 +693,7 @@ async function doSaveProfile() {
       name, gamertag:tag, tier, class:cls, power, level, bio:"", description:desc,
       playstyle, discordId:discId, discordName:discName, timezone:tz,
       languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain });
-    Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,bio,
+    Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,
       description:desc||"I'm a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
       languages,prefLanguage:prefLang,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
