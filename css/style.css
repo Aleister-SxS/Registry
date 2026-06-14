@@ -223,9 +223,10 @@ select,textarea{
   width:100%;background:var(--bg);border:1px solid var(--border2);
   border-radius:7px;padding:9px 12px;color:var(--text);font-size:0.88rem;outline:none;
   transition:border-color 0.15s,box-shadow 0.15s;
-  -webkit-text-fill-color:var(--text) !important;
-  color-scheme:dark;
-  caret-color:var(--text);
+  -webkit-text-fill-color: #e8edf5 !important;
+  color: #e8edf5 !important;
+  color-scheme: dark;
+  caret-color: #e8edf5;
 }
 /* Kill browser autofill bright white */
 input:-webkit-autofill,input:-webkit-autofill:hover,
@@ -544,3 +545,10 @@ input:checked+.slider::before{transform:translateX(18px);}
 }
 .processing-title { font-size: 1rem; font-weight: 600; color: var(--text); }
 .processing-sub   { font-size: 0.82rem; color: var(--text2); }
+
+/* Ensure all form inputs always show white text */
+input, select, textarea,
+input[type="text"], input[type="number"], input[type="password"] {
+  color: #e8edf5 !important;
+  -webkit-text-fill-color: #e8edf5 !important;
+}

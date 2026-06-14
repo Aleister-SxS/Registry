@@ -27,12 +27,62 @@
 </main>
 
 <!-- Edit team modal (captain only) -->
+<style>
+  /* Force readable text in all modal inputs */
+  #edit-team-modal input,
+  #edit-team-modal select,
+  #edit-team-modal textarea {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background: var(--bg) !important;
+    border-color: var(--border2) !important;
+  }
+  #edit-team-modal input::placeholder,
+  #edit-team-modal textarea::placeholder { color: var(--text3) !important; }
+  .et-comp-btn {
+    display:flex;align-items:center;gap:7px;
+    background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text2);padding:8px 16px;border-radius:7px;
+    cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;
+  }
+  .et-comp-btn:hover{border-color:var(--border3);color:var(--text);}
+  .et-comp-btn.sel-tank{background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue-bright);}
+  .et-comp-btn.sel-support{background:var(--green-dim);border-color:var(--green-mid);color:var(--green);}
+  .et-comp-btn.sel-dps{background:var(--red-dim);border-color:var(--red-mid);color:var(--red);}
+  .et-comp-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .et-comp-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;font-size:0.78rem;font-weight:600;border:1px solid;}
+  .et-comp-chip.tank{background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue-bright);}
+  .et-comp-chip.support{background:var(--green-dim);border-color:var(--green-mid);color:var(--green);}
+  .et-comp-chip.dps{background:var(--red-dim);border-color:var(--red-mid);color:var(--red);}
+  .et-chip-x{background:none;border:none;cursor:pointer;color:inherit;opacity:0.6;font-size:0.75rem;padding:0 2px;}
+  .et-chip-x:hover{opacity:1;}
+</style>
 <div class="modal-overlay" id="edit-team-modal" style="z-index:400;">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-title">Edit Team Info</div>
-    <div class="field"><label>Team Name</label><input id="et-name" /></div>
-    <div class="field mt-sm"><label>Team Description</label><textarea id="et-desc"></textarea></div>
-    <div class="field mt-sm"><label>Team Playstyle</label>
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title" style="margin-bottom:1.25rem;">Edit Team Info</div>
+
+    <div class="field">
+      <label>Team Name</label>
+      <input id="et-name" placeholder="Team name" />
+    </div>
+    <div class="field mt-sm">
+      <label>Team Description</label>
+      <textarea id="et-desc" placeholder="Tell members about your team…"></textarea>
+    </div>
+
+    <div class="field mt-sm">
+      <label>Ideal Composition <span class="optional">(up to 4 roles)</span></label>
+      <div class="flex gap-sm flex-wrap mb-sm">
+        <button type="button" class="et-comp-btn" id="et-btn-tank"    onclick="etCompAdd('Tank')"   >🛡️ Tank</button>
+        <button type="button" class="et-comp-btn" id="et-btn-support" onclick="etCompAdd('Support')" >➕ Support</button>
+        <button type="button" class="et-comp-btn" id="et-btn-dps"     onclick="etCompAdd('DPS')"    >⚔️ DPS</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;min-height:34px;" id="et-comp-slots"></div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:4px;" id="et-comp-count">0 / 4 roles</div>
+    </div>
+
+    <div class="field mt-sm">
+      <label>Team Playstyle</label>
       <select id="et-playstyle">
         <option value="">— Select —</option>
         <option value="Casual">Casual</option>
@@ -41,7 +91,7 @@
     </div>
     <div class="field-row mt-sm">
       <div class="field"><label>Min Power Rating</label><input id="et-power" placeholder="e.g. 1.5m" /></div>
-      <div class="field"><label>Min Character Level</label><input id="et-level" type="number" /></div>
+      <div class="field"><label>Min Character Level</label><input id="et-level" type="number" placeholder="e.g. 40" /></div>
     </div>
     <div class="field mt-sm"><label>Preferred Language</label><select id="et-lang"></select></div>
     <div class="field mt-sm">
@@ -240,6 +290,31 @@ function openJoinModal(){
 }
 
 // ── Edit team ──────────────────────────────────────────────
+// ── Composition editor for Edit Team ─────────────────────
+const etComp = [];
+const ET_ROLE_ICONS  = {Tank:"🛡️",Support:"➕",DPS:"⚔️"};
+const ET_ROLE_CLASS  = {Tank:"tank",Support:"support",DPS:"dps"};
+const ET_ROLE_BTN    = {Tank:"et-btn-tank",Support:"et-btn-support",DPS:"et-btn-dps"};
+const ET_BTN_CLS     = {Tank:"sel-tank",Support:"sel-support",DPS:"sel-dps"};
+
+function etCompAdd(role){
+  if(etComp.length>=4)return;
+  etComp.push(role);etCompRender();
+}
+function etCompRemove(i){etComp.splice(i,1);etCompRender();}
+function etCompRender(){
+  const count=etComp.length;
+  el("et-comp-count").textContent=`${count} / 4 roles`;
+  ["tank","support","dps"].forEach(r=>{
+    const btn=el("et-btn-"+r);if(btn)btn.disabled=count>=4;
+  });
+  el("et-comp-slots").innerHTML=etComp.map((role,i)=>
+    `<div class="et-comp-chip ${ET_ROLE_CLASS[role]}">${ET_ROLE_ICONS[role]} ${role}
+      <button class="et-chip-x" onclick="etCompRemove(${i})">✕</button>
+    </div>`
+  ).join("");
+}
+
 function openEditTeam(){
   el("et-name").value=team.name||"";
   el("et-desc").value=team.description||"";
@@ -249,6 +324,11 @@ function openEditTeam(){
   el("et-lang").value=team.prefLanguage||"";
   el("et-discord").checked=team.requiresDiscord==="TRUE";
   el("et-want-captain").checked=team.lookingForCaptain==="TRUE";
+  // Load existing composition
+  etComp.length=0;
+  const comp=Array.isArray(team.composition)?team.composition:(team.composition||"").split(",").filter(Boolean);
+  comp.forEach(r=>{if(etComp.length<4)etComp.push(r);});
+  etCompRender();
   clearAlert("et-error");
   el("edit-team-modal").classList.add("open");
 }
@@ -277,6 +357,7 @@ async function doEditTeam(){
       requiresDiscord:el("et-discord").checked,
       lookingForCaptain:el("et-want-captain").checked,
       prefLanguage:el("et-lang").value||"Any Language",
+      composition:[...etComp],
     });
     Object.assign(team,{
       name,description:el("et-desc").value.trim()||"Join up and let's win big!",
@@ -286,6 +367,7 @@ async function doEditTeam(){
       requiresDiscord:el("et-discord").checked?"TRUE":"FALSE",
       lookingForCaptain:el("et-want-captain").checked?"TRUE":"FALSE",
       prefLanguage:el("et-lang").value||"Any Language",
+      composition:[...etComp],
     });
     renderTeam();toast("Team info updated!");
   }catch(e){toast(e.message,"error");}
