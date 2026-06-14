@@ -280,12 +280,12 @@ function openJoinModal(){
   const session=getSession();
   if(!session){location.href="register.html";return;}
   confirm_(`Request to Join ${team.name}`,"Send a join request to the team captain? They'll accept or decline.",async()=>{
-    showTeamProcessing("Sending Join Request…");
+    showProcessing("Sending Join Request…");
     try{
       await apiPost({action:"joinRequest",memberId:session.id,captainKey:session.captainKey,teamId:team.id});
-      toast("Join request sent!");renderTeam();
-    }catch(e){toast(e.message,"error");}
-    finally{hideTeamProcessing();}
+      renderTeam();
+      hideProcessing("Join request sent!");
+    }catch(e){hideProcessing();toast(e.message,"error");}
   },false);
 }
 
@@ -345,7 +345,7 @@ async function doEditTeam(){
   clearAlert("et-error");
   const name=el("et-name").value.trim();
   if(!name){toast("Team name required.","error");return;}
-  showTeamProcessing("Saving Team Info…");
+  showProcessing("Saving Team Info…");
   try{
     await apiPost({
       action:"captainEditTeam",
@@ -369,16 +369,16 @@ async function doEditTeam(){
       prefLanguage:el("et-lang").value||"Any Language",
       composition:[...etComp],
     });
-    renderTeam();toast("Team info updated!");
-  }catch(e){toast(e.message,"error");}
-  finally{hideTeamProcessing();}
+    renderTeam();
+    hideProcessing("Team info updated!");
+  }catch(e){hideProcessing();toast(e.message,"error");}
 }
 
-function showTeamProcessing(title="Saving…"){
+function showProcessing(title="Saving…"){
   const ov=el("team-processing");const ti=el("team-processing-title");
   if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
 }
-function hideTeamProcessing(){el("team-processing")?.classList.remove("active");}
+function hideProcessing(){el("team-processing")?.classList.remove("active");}
 
 function renderError(msg){
   hide(el("loading"));show(el("content"));

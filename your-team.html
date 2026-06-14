@@ -218,6 +218,7 @@ function renderLanding(){
   const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
   const myTeams=allTeams.filter(t=>(me.teamIds||[]).includes(t.id));
   const maxSize=Number(settings.maxTeamSize)||4;
+  const maxMemberTeams=Number(settings.maxMemberTeams)||3;
 
   if(!myTeams.length){
     el("teams-landing").innerHTML=`<div class="empty">
@@ -233,7 +234,15 @@ function renderLanding(){
 
   el("teams-landing").innerHTML=`
     <div class="flex-between mb-lg flex-wrap gap-sm">
-      <div style="font-size:1.1rem;font-weight:700;">Your Teams <span style="color:var(--text3);font-size:0.8rem;font-weight:400;">(${myTeams.length})</span></div>
+      <div>
+        <div style="font-size:1.1rem;font-weight:700;">Your Teams</div>
+        <div style="font-size:0.8rem;margin-top:4px;">
+          ${myTeams.length < maxMemberTeams
+            ? `<span style="color:var(--text2);">${myTeams.length} / ${maxMemberTeams} teams joined</span>`
+            : `<span style="color:var(--red);font-weight:600;">⚠️ Team limit reached (${myTeams.length}/${maxMemberTeams}) — leave a team to join another</span>`
+          }
+        </div>
+      </div>
       <a href="create-team.html" class="btn btn-ghost btn-sm">+ Create a Team</a>
     </div>
     ${myTeams.map(t=>{
@@ -287,7 +296,7 @@ function renderLanding(){
         <div class="flex-between">
           <div style="display:flex;gap:5px;align-items:center;">
             ${lineupIcons}
-            <span class="text-xs text-muted" style="margin-left:4px;">${members.length}/${maxSize}</span>
+            
           </div>
           <div class="flex gap-xs">
             <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team Profile</a>
@@ -455,7 +464,7 @@ function renderMgmt(teamId){
           <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
         </div>
         <div id="chat-disclaimer-${teamId}" style="background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:8px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear. Chat may be monitored for moderation purposes.</span>
+          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear. Chat may be monitored for moderation. Translation services may not function properly — this is a work in progress.</span>
           <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;" title="Dismiss">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages-${teamId}">
@@ -554,12 +563,12 @@ function fgCellClick(teamId,cellIndex){
 
 async function fgSave(teamId){
   const state=fgState[teamId];
-  showMgmtProcessing("Saving Formation…");
+  showProcessing("Saving Formation…");
   try{
     await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(state.positions)});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
-  finally{hideMgmtProcessing();}
+  finally{hideProcessing(;}
 }
 
 // ── Team build modal ──────────────────────────────────────
@@ -635,13 +644,13 @@ async function saveTbm(){
   const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean)};
   confirm_("Save Team Build","Confirm saving your build to the team strategy board?",async()=>{
     closeTbm();
-    showMgmtProcessing("Saving Team Build…");
+    showProcessing("Saving Team Build…");
     try{
       await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId:tbmState.teamId,build:JSON.stringify(build)});
       const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
       if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
     }catch(e){toast(e.message,"error");}
-    finally{hideMgmtProcessing();}
+    finally{hideProcessing(;}
   },false);
 }
 
@@ -672,14 +681,14 @@ function confirmLeave(teamId,teamName){
   });
 }
 async function toggleTeamLFC(teamId, checked) {
-  showMgmtProcessing("Updating Captain Preference…");
+  showProcessing("Updating Captain Preference…");
   try {
     await apiPost({action:"updateTeamLFC",captainId:session.id,captainKey:session.captainKey,teamId,lookingForCaptain:checked});
     const t = allTeams.find(x=>x.id===teamId);
     if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
     toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
   } catch(e) { toast(e.message,"error"); }
-  finally { hideMgmtProcessing(); }
+  finally { hideProcessing(; }
 }
 
 function confirmKick(teamId,memberId,memberName){
@@ -692,11 +701,11 @@ function confirmKick(teamId,memberId,memberName){
   });
 }
 
-function showMgmtProcessing(title="Processing…"){
+function showProcessing(title="Processing…"){
   const ov=el("mgmt-processing");const ti=el("mgmt-processing-title");
   if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
 }
-function hideMgmtProcessing(){el("mgmt-processing")?.classList.remove("active");}
+function hideProcessing({el("mgmt-processing")?.classList.remove("active");}
 
 // ── Chat ──────────────────────────────────────────────────
 function chatStartPolling(teamId){

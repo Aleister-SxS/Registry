@@ -237,7 +237,7 @@ async function doCreateTeam() {
 
   if (!name) { showAlert("ct-error","Team name is required."); return; }
 
-  el("submit-overlay").classList.add("active");
+  showProcessing("Creating Your Team…");
   try {
     const res = await apiPost({
       action:"createTeam",
@@ -246,13 +246,14 @@ async function doCreateTeam() {
       requiresDiscord:reqDiscord, lookingForCaptain:needCaptain,
       prefLanguage:prefLang, composition:[...compSelected],
     });
+    hideProcessing("Team created successfully!");
     hide(el("create-form"));
     show(el("create-success"));
     el("new-team-name-display").textContent = name;
     el("btn-view-team").href = `team.html?id=${res.teamId}`;
     el("btn-team-mgmt").href = `your-team.html`;
   } catch(e) {
-    el("submit-overlay").classList.remove("active");
+    hideProcessing();
     showAlert("ct-error", e.message);
   }
 }

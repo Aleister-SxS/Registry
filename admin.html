@@ -252,6 +252,7 @@ function openEditTeam(teamId){
 function closeEditTeamModal(){el("edit-team-modal").classList.remove("open");}
 
 async function saveTeamEdit(){
+  showProcessing("Saving Team…");
   if(!editingTeamId)return;
   clearAlert("et-error");
   try{
@@ -259,8 +260,8 @@ async function saveTeamEdit(){
       name:el("et-name").value.trim(),description:el("et-desc").value.trim(),status:el("et-status").value});
     const t=allTeams.find(x=>x.id===editingTeamId);
     if(t){t.name=el("et-name").value.trim();t.description=el("et-desc").value.trim();t.status=el("et-status").value;}
-    closeEditTeamModal();renderAdminTeams();toast("Team updated!");
-  }catch(e){showAlert("et-error",e.message);}
+    closeEditTeamModal();renderAdminTeams();hideProcessing("Team updated!");
+  }catch(e){hideProcessing();showAlert("et-error",e.message);}
 }
 
 function confirmDeleteTeam(teamId,teamName){
@@ -275,18 +276,19 @@ function confirmDeleteTeam(teamId,teamName){
 }
 
 async function saveSettings(){
+  showProcessing("Saving Settings…");
   const maxTeamSize=Number(el("s-max-team-size").value)||4;
   const maxMemberTeams=Number(el("s-max-member-teams").value)||3;
   const maxCaptainTeams=Number(el("s-max-captain-teams").value)||3;
   try{
     await apiPost({action:"updateSettings",adminPassword:ADMIN_PASSWORD,maxTeamSize,maxMemberTeams,maxCaptainTeams});
     settings={maxTeamSize,maxMemberTeams,maxCaptainTeams};
-    showAlert("settings-msg","Settings saved!","success");
-    setTimeout(()=>clearAlert("settings-msg"),3000);
-  }catch(e){showAlert("settings-msg",e.message);}
+    hideProcessing("Settings saved!");
+  }catch(e){hideProcessing();showAlert("settings-msg",e.message);}
 }
 
 async function doKeyLookup(){
+  showProcessing("Looking up key…");
   const tag=el("kl-tag").value.trim();
   clearAlert("kl-error");el("kl-result").style.display="none";
   if(!tag){showAlert("kl-error","Enter a Player ID.");return;}
@@ -295,7 +297,8 @@ async function doKeyLookup(){
     el("kl-result-tag").textContent=res.gamertag;
     el("kl-result-key").textContent=res.captainKey;
     el("kl-result").style.display="block";
-  }catch(e){showAlert("kl-error",e.message);}
+    hideProcessing("Key found!");
+  }catch(e){hideProcessing();showAlert("kl-error",e.message);}
 }
 async function cleanDuplicates(){
   confirm_("Clean Duplicate Teams","This will remove any duplicate teams (same name + captain). This cannot be undone.",async()=>{

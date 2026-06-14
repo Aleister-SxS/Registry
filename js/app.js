@@ -157,7 +157,39 @@ function clearAlert(id) {
 
 // ── Toast ─────────────────────────────────────────────────
 let toastTimer = null;
-function toast(msg, type = "success", duration = 3000) {
+let _processingTimer = null;
+let _processingStart = 0;
+
+// Global processing overlay — auto-creates if not present on the page
+function showProcessing(title = "Processing…", sub = "Please wait and stay on this page.") {
+  let ov = document.getElementById("global-processing-overlay");
+  if (!ov) {
+    ov = document.createElement("div");
+    ov.id = "global-processing-overlay";
+    ov.style.cssText = "display:none;position:fixed;inset:0;background:rgba(11,13,18,0.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem;";
+    ov.innerHTML = `<div style="width:48px;height:48px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+      <div id="gpo-title" style="font-size:1rem;font-weight:600;color:#e8edf5;"></div>
+      <div id="gpo-sub" style="font-size:0.82rem;color:#8b98b5;"></div>`;
+    document.body.appendChild(ov);
+  }
+  ov.querySelector("#gpo-title").textContent = title;
+  ov.querySelector("#gpo-sub").textContent   = sub;
+  ov.style.display = "flex";
+  _processingStart = Date.now();
+}
+
+function hideProcessing(successMsg, successType = "success") {
+  const elapsed = Date.now() - _processingStart;
+  const minHold = 2000; // 2 second minimum
+  const delay   = Math.max(0, minHold - elapsed);
+  clearTimeout(_processingTimer);
+  _processingTimer = setTimeout(() => {
+    const ov = document.getElementById("global-processing-overlay");
+    if (ov) ov.style.display = "none";
+    if (successMsg) toast(successMsg, successType, 3500);
+  }, delay);
+}
+function toast(msg, type = "success", duration = 3500) {
   let t = el("toast");
   if (!t) {
     t = document.createElement("div");
@@ -552,36 +584,20 @@ function confirmAvatarPick() {
 // ── Translation via MyMemory (free, no key needed) ───────
 async function translateText(text, targetLang) {
   const targetCode = getLangCode(targetLang);
-  // Step 1: detect source language using MyMemory with a broad pair
-  // We try en first, then check if the detected source differs
-  let srcCode = "en";
-  try {
-    // Use the langdetect endpoint via a dummy en|xx call and read detected source
-    const detectUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0,80))}&langpair=en|${targetCode}`;
-    const dr = await fetch(detectUrl);
-    const dd = await dr.json();
-    // MyMemory returns the detected source in matches[0].source
-    if (dd.matches && dd.matches.length > 0 && dd.matches[0].source) {
-      const detected = dd.matches[0].source.toLowerCase().split("-")[0];
-      if (detected && detected !== targetCode && detected.length === 2) {
-        srcCode = detected;
-      }
-    }
-  } catch(e) { /* fall back to en */ }
-
-  // Step 2: if source equals target, nothing to translate
-  if (srcCode === targetCode) {
-    return null; // signal: already in target language
-  }
-
-  // Step 3: translate
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcCode}|${targetCode}`;
+  // MyMemory: use xx|targetCode where xx is a catch-all wildcard
+  // Best approach: try es|en, de|en etc won't work without knowing source.
+  // Instead use the undocumented langpair=|targetCode (empty source = auto-detect server side)
+  // Fall back: translate to target regardless — if already in target, the text won't change
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=%7C${targetCode}&de=translation@berserkguild.com`;
   const r = await fetch(url);
   if (!r.ok) throw new Error("Translation service unavailable. Try again shortly.");
   const d = await r.json();
   if (!d.responseData) throw new Error("Translation failed — please try again.");
   if (d.responseStatus === 429) throw new Error("Translation limit reached for today. Try again tomorrow.");
-  return d.responseData.translatedText;
+  const result = d.responseData.translatedText;
+  // If result exactly matches input (case-insensitive), it's already in the target language
+  if (result.trim().toLowerCase() === text.trim().toLowerCase()) return null;
+  return result;
 }
 
 function getLangCode(langName) {

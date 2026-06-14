@@ -401,9 +401,9 @@ async function toggleLFC(checked) {
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, lookingForCaptainRole: checked });
     profileMember.lookingForCaptainRole = checked ? "TRUE" : "FALSE";
-    toast(checked ? "Marked as open to captaining!" : "Captain preference removed.");
     renderProfile();
-  } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
+    hideProcessing(checked ? "Marked as open to captaining!" : "Captain preference removed.");
+  } catch(e) { hideProcessing(); toast(e.message,"error"); }
 }
 
 // ── Avatar ────────────────────────────────────────────────
@@ -418,11 +418,10 @@ async function onAvatarSelected(url) {
     s.avatarUrl = url;
     setSession(s);
     renderProfile();
-    // Refresh nav to show new avatar
     document.querySelector("nav").remove();
     document.getElementById("confirm-modal").remove();
     buildNav("");
-    toast("Avatar updated!");
+    hideProcessing("Avatar updated!");
   } catch(e) { toast(e.message,"error"); }
 }
 
@@ -544,8 +543,8 @@ async function saveBuildFromModal() {
       await apiPost({ action:"updateBuild", memberId:session.id, captainKey:session.captainKey, pvpBuild: JSON.stringify(build) });
       profileMember.pvpBuild = build;
       renderBuildDisplay();
-      toast("Build saved!");
-    } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
+      hideProcessing("Build saved!");
+    } catch(e) { hideProcessing(); toast(e.message,"error"); }
   }, false);
 }
 
@@ -637,8 +636,7 @@ function openEditModal() {
 function closeEditModal() { el("edit-modal").classList.remove("open"); }
 
 function confirmSave() {
-  closeEditModal();
-  confirm_("Save Changes", "Are you sure you want to update your profile?", doSaveProfile, false);
+  confirm_("Save Changes", "Are you sure you want to update your profile?", () => { closeEditModal(); showProcessing("Saving Profile…"); doSaveProfile(); }, false);
 }
 
 async function doSaveProfile() {
@@ -675,8 +673,9 @@ async function doSaveProfile() {
     s.gamertag=tag; s.name=name; s.isCaptain=isCaptain;
     setSession(s);
     renderProfile();
-    toast("Profile updated!");
+    hideProcessing("Profile updated!");
   } catch(e) {
+    hideProcessing();
     openEditModal();
     showAlert("edit-error", e.message);
   }
@@ -732,20 +731,11 @@ async function confirmFantomon() {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, pvpFantomon:id });
     profileMember.pvpFantomon = id;
     renderProfile();
-    toast("PVP Fantomon updated!");
-  } catch(e) { toast(e.message,"error"); } finally { hideProcessing(); }
+    hideProcessing("PVP Fantomon updated!");
+  } catch(e) { hideProcessing(); toast(e.message,"error"); }
 }
 
-function showProcessing(title="Processing…") {
-  const ov = el("profile-processing");
-  const ti = el("profile-processing-title");
-  if (ov) ov.classList.add("active");
-  if (ti) ti.textContent = title;
-}
-function hideProcessing() {
-  const ov = el("profile-processing");
-  if (ov) ov.classList.remove("active");
-}
+// Processing handled by global showProcessing/hideProcessing in app.js
 
 function renderError(msg) {
   hide(el("loading"));

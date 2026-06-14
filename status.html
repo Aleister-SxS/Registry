@@ -202,29 +202,32 @@ function renderStatus(){
 }
 
 async function respondInvite(reqId,decision){
+  showProcessing(decision==="accept"?"Accepting Invite…":"Declining Invite…");
   const session=getSession();if(!session)return;
   try{
     await apiPost({action:"respondInvite",memberId:session.id,captainKey:session.captainKey,requestId:reqId,decision});
     const r=allRequests.find(x=>x.id===reqId);
     if(r){r.status=decision==="accept"?"accepted":"declined";
     if(decision==="accept"&&statusMember){statusMember.teamIds=[...(statusMember.teamIds||[]),r.teamId];}}
-    renderStatus();toast(decision==="accept"?"Joined team!":"Invite declined.");
-  }catch(e){toast(e.message,"error");}
+    renderStatus();hideProcessing(decision==="accept"?"Joined team!":"Invite declined.");
+  }catch(e){hideProcessing();toast(e.message,"error");}
 }
 async function respondJoin(reqId,decision){
+  showProcessing(decision==="accept"?"Accepting Request…":"Declining Request…");
   const session=getSession();if(!session)return;
   try{
     await apiPost({action:"respondJoinRequest",captainId:session.id,captainKey:session.captainKey,requestId:reqId,decision});
     const r=allRequests.find(x=>x.id===reqId);if(r)r.status=decision==="accept"?"accepted":"declined";
-    renderStatus();toast(decision==="accept"?"Member added!":"Request declined.");
+    renderStatus();hideProcessing(decision==="accept"?"Member added!":"Request declined.");
   }catch(e){toast(e.message,"error");}
 }
 async function cancelRequest(reqId){
+  showProcessing("Cancelling Request…");
   const session=getSession();if(!session)return;
   try{
     await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
     const idx=allRequests.findIndex(x=>x.id===reqId);if(idx>=0)allRequests.splice(idx,1);
-    renderStatus();toast("Request cancelled.");
+    renderStatus();hideProcessing("Request cancelled.");
   }catch(e){toast(e.message,"error");}
 }
 </script>
