@@ -31,14 +31,10 @@
     box-sizing: border-box !important;
     transition: border-color 0.15s, box-shadow 0.15s !important;
   }
-  /* Selects — only color/background, never override sizing (breaks native dropdown) */
+  /* Selects in register form — match dark appearance */
   .form-card select {
-    color: #e8edf5 !important;
-    -webkit-text-fill-color: #e8edf5 !important;
     background: var(--surface2) !important;
-    border: 1px solid var(--border3) !important;
-    border-radius: 7px !important;
-    font-size: 0.88rem !important;
+    border-color: var(--border3) !important;
   }
   .form-card input:focus,
   .form-card textarea:focus,
