@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>API Diagnostic</title>
+<script src="js/app.js?v=2026061403"></script>
+</head>
+<body style="background:#0b0d12;color:#e8edf5;font-family:monospace;padding:2rem;">
+<h2>API Diagnostic Test</h2>
+<div id="status">Starting...</div>
+<div id="result" style="margin-top:1rem;font-size:0.8rem;white-space:pre-wrap;"></div>
+
+<script>
+var t0 = Date.now();
+document.getElementById("status").textContent = "Calling apiGet...";
+
+apiGet({action:"getAll"}).then(function(d) {
+  var elapsed = Date.now() - t0;
+  document.getElementById("status").textContent = "SUCCESS in " + elapsed + "ms";
+  document.getElementById("result").textContent = 
+    "Members: " + d.members.length + "\n" +
+    "Teams: " + d.teams.length + "\n" +
+    "Requests: " + d.requests.length;
+}).catch(function(e) {
+  var elapsed = Date.now() - t0;
+  document.getElementById("status").textContent = "FAILED in " + elapsed + "ms: " + e.message;
+});
+
+setTimeout(function() {
+  if (document.getElementById("status").textContent === "Calling apiGet...") {
+    document.getElementById("status").textContent = "STILL WAITING after 5s...";
+  }
+}, 5000);
+setTimeout(function() {
+  if (document.getElementById("status").textContent.includes("WAITING")) {
+    document.getElementById("status").textContent = "TIMED OUT after 20s";
+  }
+}, 20000);
+</script>
+</body>
+</html>
