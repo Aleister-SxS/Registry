@@ -296,7 +296,7 @@ function buildNav(activePage, opts = {}) {
     : `<a href="register.html" class="mobile-nav-link">Log In / Register</a>`;
 
   const navHtml = `
-    <nav>
+    <nav id="site-nav">
       <a href="${session ? 'index.html' : 'register.html'}" class="nav-logo">
         <div class="dot"></div><span>BERSERK GUILD</span>
       </a>
@@ -335,7 +335,7 @@ function buildNav(activePage, opts = {}) {
   `;
 
   const footerHtml = `
-    <footer style="margin-top:auto;background:var(--bg2);border-top:1px solid var(--border);
+    <footer id="site-footer" style="margin-top:auto;background:var(--bg2);border-top:1px solid var(--border);
       padding:0.875rem 2rem;font-size:0.72rem;color:var(--text3);
       font-family:var(--mono);letter-spacing:0.03em;line-height:1.6;
       display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
@@ -345,10 +345,13 @@ function buildNav(activePage, opts = {}) {
         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">Admin</a>
     </footer>`;
 
-  const navEl = document.querySelector("body");
-  navEl.insertAdjacentHTML("afterbegin", navHtml);
-  // Insert footer before closing body
-  document.body.insertAdjacentHTML("beforeend", footerHtml);
+  // Guard: only inject nav/footer once — prevents duplication on repeated buildNav calls
+  if (!document.getElementById("site-nav")) {
+    document.body.insertAdjacentHTML("afterbegin", navHtml);
+  }
+  if (!document.getElementById("site-footer")) {
+    document.body.insertAdjacentHTML("beforeend", footerHtml);
+  }
   // Make body flex-column so footer sticks to bottom
   document.body.style.display = "flex";
   document.body.style.flexDirection = "column";
@@ -574,7 +577,7 @@ function openAvatarPicker(onSelect) {
 
 function closeAvatarPicker() {
   const m = document.getElementById("avatar-picker-modal");
-  if (m) m.classList.remove("open");
+  if (m) m.remove();
 }
 
 function confirmAvatarPick() {

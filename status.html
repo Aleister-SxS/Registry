@@ -67,7 +67,7 @@
     </div>
 
     <!-- Captain: Join Requests to Your Teams -->
-    <div class="status-block" id="captain-section" style="display:none;">
+    <div class="status-block" id="captain-section">
       <div class="status-block-header">
         <span class="status-block-title">⚜️ Join Requests to Your Team(s)</span>
         <span id="jrq-badge" class="badge badge-pending" style="display:none;"></span>
@@ -176,6 +176,8 @@ function renderStatus(){
   }
 
   // ── Captain section: always visible ──
+  const capSecEl = el("captain-section");
+  if (capSecEl) capSecEl.style.display = "block";
   const capTeams=allTeams.filter(t=>t.captainId===m.id);
   const jrqBadge=el("jrq-badge");
   const jrqEl=el("sc-joinreqs");

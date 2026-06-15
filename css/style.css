@@ -376,6 +376,41 @@ input:checked+.slider::before{transform:translateX(18px);}
 .search-input::placeholder{color:var(--text3);}
 
 /* ── Modals ──────────────────────────────────────────────── */
+/* ── Modal form field styling (matches register page) ──────── */
+.modal input[type="text"],
+.modal input[type="number"],
+.modal input[type="password"],
+.modal input:not([type]),
+.modal textarea,
+.modal select {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border3) !important;
+  border-radius: 7px !important;
+  padding: 9px 12px !important;
+  color: #e8edf5 !important;
+  -webkit-text-fill-color: #e8edf5 !important;
+  font-size: 0.88rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+.modal select {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.modal input:focus,
+.modal textarea:focus,
+.modal select:focus {
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 3px rgba(79,142,247,0.12) !important;
+  outline: none !important;
+}
+.modal input::placeholder,
+.modal textarea::placeholder {
+  color: var(--text3) !important;
+  -webkit-text-fill-color: var(--text3) !important;
+}
+
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);
   z-index:300;align-items:center;justify-content:center;padding:1rem;}
 .modal-overlay.open{display:flex;}
@@ -564,3 +599,13 @@ input[type="text"], input[type="number"], input[type="password"] {
   color: #e8edf5 !important;
   -webkit-text-fill-color: #e8edf5 !important;
 }
+
+
+/* ── Team Registry grid layout ──────────────────────────────── */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+@media(max-width:720px) { .teams-grid { grid-template-columns: 1fr; } }

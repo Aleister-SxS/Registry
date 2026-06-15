@@ -53,15 +53,15 @@
         </div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Class Tier</label><select id="ep-tier"></select></div>
-      <div class="field"><label>Class</label><select id="ep-class" disabled></select></div>
+      <div class="field"><label>Class Tier <span style="color:var(--red);">*</span></label><select id="ep-tier"></select></div>
+      <div class="field"><label>Class <span style="color:var(--red);">*</span></label><select id="ep-class" disabled></select></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>Power Rating</label><input id="ep-power" placeholder="e.g. 180k" /></div>
+      <div class="field"><label>Power Rating <span style="color:var(--red);">*</span></label><input id="ep-power" placeholder="e.g. 180k" /></div>
       <div class="field"><label>Character Level <span style="color:var(--red);">*</span></label><input id="ep-level" type="number" /></div>
     </div>
     <div class="field"><label>Describe Yourself <span class="optional">(optional)</span></label><textarea id="ep-desc"></textarea></div>
-    <div class="field"><label>Playstyle Preference</label>
+    <div class="field"><label>Playstyle Preference <span style="color:var(--red);">*</span></label>
       <select id="ep-playstyle">
         <option value="">— Select —</option>
         <option value="Casual">Casual</option>
@@ -74,17 +74,79 @@
     </div>
     <div class="field"><label>Time Zone <span style="color:var(--red);">*</span></label><select id="ep-timezone"></select></div>
     <div class="field">
-      <label>Languages Spoken <span class="optional">(up to 3)</span></label>
-      <div class="tag-input-wrap" id="ep-languages-wrap">
-        <div class="tag-input-tags" id="ep-languages-tags"></div>
-        <div class="tag-input-dropdown-wrap">
-          <input class="tag-input-search" id="ep-languages-search" placeholder="Search languages…" autocomplete="off"
-            oninput="epTagFilter('ep-languages')" onfocus="epTagOpen('ep-languages')" />
-          <div class="tag-dropdown" id="ep-languages-dropdown"></div>
-        </div>
-      </div>
+      <label>Languages Spoken <span style="color:var(--red);">*</span> <span class="optional">(up to 3)</span></label>
+      <select id="ep-languages-select" onchange="epChipAdd('ep-languages',this,3)" style="margin-bottom:6px;">
+        <option value="" selected>+ Add a language…</option>
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Italian">Italian</option>
+              <option value="Dutch">Dutch</option>
+              <option value="Russian">Russian</option>
+              <option value="Polish">Polish</option>
+              <option value="Turkish">Turkish</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Thai">Thai</option>
+              <option value="Vietnamese">Vietnamese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Malay">Malay</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Swedish">Swedish</option>
+              <option value="Norwegian">Norwegian</option>
+              <option value="Danish">Danish</option>
+              <option value="Finnish">Finnish</option>
+              <option value="Romanian">Romanian</option>
+              <option value="Czech">Czech</option>
+              <option value="Hungarian">Hungarian</option>
+              <option value="Greek">Greek</option>
+              <option value="Hebrew">Hebrew</option>
+              <option value="Filipino">Filipino</option>
+              <option value="Bengali">Bengali</option>
+      </select>
+      <div class="chip-tags" id="ep-languages-tags"></div>
     </div>
-    <div class="field"><label>Preferred Language <span style="color:var(--red);">*</span></label><select id="ep-pref-lang"></select></div>
+    <div class="field">
+      <label>Preferred Language <span style="color:var(--red);">*</span></label>
+      <select id="ep-pref-lang-select" onchange="epChipAdd('ep-pref-lang',this,3)" style="margin-bottom:6px;">
+        <option value="" selected>+ Add a language…</option>
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Italian">Italian</option>
+              <option value="Dutch">Dutch</option>
+              <option value="Russian">Russian</option>
+              <option value="Polish">Polish</option>
+              <option value="Turkish">Turkish</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Thai">Thai</option>
+              <option value="Vietnamese">Vietnamese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Malay">Malay</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Swedish">Swedish</option>
+              <option value="Norwegian">Norwegian</option>
+              <option value="Danish">Danish</option>
+              <option value="Finnish">Finnish</option>
+              <option value="Romanian">Romanian</option>
+              <option value="Czech">Czech</option>
+              <option value="Hungarian">Hungarian</option>
+              <option value="Greek">Greek</option>
+              <option value="Hebrew">Hebrew</option>
+              <option value="Filipino">Filipino</option>
+              <option value="Bengali">Bengali</option>
+      </select>
+      <div class="chip-tags" id="ep-pref-lang-tags"></div>
+    </div>
 
 
     <div id="edit-error" class="alert alert-error alert-hidden mt-sm"></div>
@@ -228,7 +290,6 @@ function renderProfile() {
           ${m.power ? `<span class="tag tag-power">⚡ ${formatPower(m.power)}</span>` : ""}
           ${m.level ? `<span class="tag tag-level">🎯 Level ${esc(String(m.level))}</span>` : ""}
           ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
-          ${m.timezone ? `<span class="tag">🕐 ${esc(m.timezone)}</span>` : ""}
           ${m.prefLanguage ? `<span class="tag">🌐 ${esc(m.prefLanguage)}</span>` : ""}
         </div>
         ${m.bio        ? `<div class="profile-bio mb-sm"><strong>Playstyle:</strong> ${esc(m.bio)}</div>` : ""}
@@ -307,7 +368,13 @@ ${isOwn ? `
                 <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Visit Team Page</a>
               </div>
             </div>`;
-          }).join("") : `<p class="text-sm text-muted">Not in any teams yet.</p>`}
+          }).join("") : `<div class="empty" style="padding:1rem 0;">
+              <p class="text-sm text-muted" style="margin-bottom:0.75rem;">Not in any teams yet.</p>
+              <div class="flex gap-sm flex-wrap">
+                <a href="index.html" class="btn btn-primary btn-sm">Find a Team</a>
+                <a href="create-team.html" class="btn btn-ghost btn-sm">Start Your Own</a>
+              </div>
+            </div>`}
         </div>
 
         ${m.isCaptain==="TRUE" ? `
@@ -428,9 +495,10 @@ async function toggleLFC(checked) {
 }
 
 // ── Avatar ────────────────────────────────────────────────
-async function onAvatarSelected(url) {
+async async function onAvatarSelected(url) {
   const session = getSession();
   if (!session) return;
+  showProcessing("Updating Avatar…");
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, avatarUrl:url });
     profileMember.avatarUrl = url;
@@ -439,9 +507,9 @@ async function onAvatarSelected(url) {
     s.avatarUrl = url;
     setSession(s);
     renderProfile();
-    document.querySelector("nav").remove();
-    document.getElementById("confirm-modal").remove();
-    buildNav("");
+    // Update nav avatar directly without rebuilding nav (prevents footer doubling)
+    const navAvatarImgs = document.querySelectorAll(".nav-avatar-img");
+    navAvatarImgs.forEach(img => { img.src = url; });
     hideProcessing("Avatar updated!");
   } catch(e) { toast(e.message,"error"); }
 }
@@ -573,6 +641,32 @@ async function saveBuildFromModal() {
 // ── Edit modal tag input ──────────────────────────────────
 const epTagState = {};
 
+// ── Edit modal chip-select (reuses DOM-safe pattern from register page) ───────────────
+let epChipState = {};
+function epChipAdd(id, select, max) {
+  var val = select.value; if (!val) return;
+  if (!epChipState[id]) epChipState[id] = [];
+  if (epChipState[id].indexOf(val) !== -1) { select.value=""; return; }
+  if (epChipState[id].length >= max) { select.value=""; return; }
+  epChipState[id].push(val); select.value=""; epChipRender(id);
+}
+function epChipRemove(id, val) {
+  if (!epChipState[id]) return;
+  epChipState[id] = epChipState[id].filter(function(v){return v!==val;}); epChipRender(id);
+}
+function epChipRender(id) {
+  var c = document.getElementById(id+"-tags"); if (!c) return; c.innerHTML="";
+  (epChipState[id]||[]).forEach(function(v) {
+    var span=document.createElement("span"); span.className="lang-tag";
+    span.appendChild(document.createTextNode(v+" "));
+    var btn=document.createElement("button"); btn.type="button"; btn.className="lang-tag-x"; btn.textContent="✕";
+    (function(ci,cv){btn.onclick=function(){epChipRemove(ci,cv);};}(id,v));
+    span.appendChild(btn); c.appendChild(span);
+  });
+}
+function epChipGet(id) { return epChipState[id]?epChipState[id].slice():[]; }
+function epChipSet(id, values) { epChipState[id]=Array.isArray(values)?values.slice():[]; epChipRender(id); }
+
 function epTagInit(id, options, maxItems=3) {
   epTagState[id] = { options, selected: [], maxItems };
   epTagRenderDropdown(id);
@@ -625,9 +719,8 @@ function epTagRenderDropdown(id) {
 
 function populateEditModal() {
   populateSelect("ep-timezone", TIMEZONES, "— Select —");
-  populateSelect("ep-pref-lang", LANGUAGES, "— Select —");
-  epTagInit("ep-languages", LANGUAGES, 3);
-  buildClassSelector("ep-tier","ep-class");
+  buildClassSelector("ep-tier", "ep-class");
+  // ep-languages and ep-pref-lang use chip selects (no init needed)
 }
 
 function openEditModal() {
@@ -641,8 +734,9 @@ function openEditModal() {
   el("ep-discord-id").value   = m.discordId || "";
   el("ep-discord-name").value = m.discordName || "";
   el("ep-timezone").value     = m.timezone || "";
-  el("ep-pref-lang").value    = m.prefLanguage || "";
-  epTagSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
+    // ep-pref-lang now populated via epChipSet above
+  epChipSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
+  epChipSet("ep-pref-lang", (m.prefLanguage||"").split(",").filter(Boolean));
   if (m.tier) {
     el("ep-tier").value = m.tier;
     el("ep-tier").dispatchEvent(new Event("change"));
@@ -673,10 +767,12 @@ async function doSaveProfile() {
   const discId    = el("ep-discord-id").value.trim();
   const discName  = el("ep-discord-name").value.trim();
   const tz        = el("ep-timezone").value;
-  const prefLang  = el("ep-pref-lang").value;
+  // prefLang now read via epChipGet above
   const lfg = profileMember.lookingForTeam === "TRUE"; // controlled by toggle on profile
   const isCaptain = profileMember.isCaptain; // preserve existing value, not editable here
-  const languages = epTagGet("ep-languages").join(",");
+  const languages = epChipGet("ep-languages").join(",");
+  const prefLangArr = epChipGet("ep-pref-lang");
+  const prefLangVal = prefLangArr.join(",");
   if (!name)    { openEditModal(); showAlert("edit-error","In-Game Name is required."); return; }
   if (!tag || String(tag).length !== 12) { openEditModal(); showAlert("edit-error","Player ID must be exactly 12 digits."); return; }
   if (!tier)    { openEditModal(); showAlert("edit-error","Class Tier is required."); return; }
@@ -684,7 +780,8 @@ async function doSaveProfile() {
   if (!power)   { openEditModal(); showAlert("edit-error","Power Rating is required."); return; }
   if (!level)   { openEditModal(); showAlert("edit-error","Character Level is required."); return; }
   if (!tz)      { openEditModal(); showAlert("edit-error","Time Zone is required."); return; }
-  if (!prefLang){ openEditModal(); showAlert("edit-error","Preferred Language is required."); return; }
+  if (!languages.length) { openEditModal(); showAlert("edit-error","Languages Spoken is required."); return; }
+  if (!prefLangArr.length) { openEditModal(); showAlert("edit-error","Preferred Language is required."); return; }
   if (tag && (String(tag).length !== 12 || !/^\d{12}$/.test(String(tag)))) {
     openEditModal(); showAlert("edit-error","Player ID must be exactly 12 digits."); return;
   }

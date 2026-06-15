@@ -199,8 +199,24 @@ onReady(async()=>{
     const d=await apiGet({action:"getAll"});
     allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
   }catch(e){ allTeams=[];allMembers=[]; }
-  hide(el("loading"));
-  renderLanding();
+  try{
+    hide(el("loading"));
+    renderLanding();
+  }catch(e){
+    console.error("your-team.html render error:", e);
+    hide(el("loading"));
+    const landing = el("teams-landing");
+    if (landing) {
+      landing.style.display = "block";
+      landing.innerHTML = `<div class="empty">
+        <div class="empty-icon">⚠️</div>
+        <p style="color:var(--red);font-weight:600;margin-bottom:0.5rem;">Page failed to load</p>
+        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:0.5rem;">\${e.message}</p>
+        <p style="font-size:0.7rem;color:var(--text3);word-break:break-all;">\${e.stack||""}</p>
+        <button class="btn btn-primary mt-md" onclick="location.reload()">Try Again</button>
+      </div>`;
+    }
+  }
 });
 
 // ── Landing ───────────────────────────────────────────────
@@ -211,6 +227,13 @@ function renderLanding(){
 
   hide(el("team-mgmt-view"));
   show(el("teams-landing"));
+
+  // Guard: if session is invalid, show message
+  if (!session || !session.id) {
+    el("teams-landing").innerHTML = `<div class="empty"><div class="empty-icon">🔒</div>
+      <p>Session expired. Please <a href="register.html">log in again</a>.</p></div>`;
+    return;
+  }
 
   const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
   const myTeams=allTeams.filter(t=>(me.teamIds||[]).includes(t.id));
