@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061406"/>
-<script src="js/app.js?v=2026061406"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061407"/>
+<script src="js/app.js?v=2026061407"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -247,7 +247,9 @@ function renderMgmt(teamId){
     <div class="flex-center gap-md mb-md flex-wrap" style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0.75rem 1.25rem;">
       <div class="toggle-row" style="flex:1;min-width:220px;background:transparent;border:none;padding:0;">
         <div>
-          <div class="toggle-label" style="font-size:0.82rem;">Looking for a Captain</div>
+          <div class="toggle-label" style="font-size:0.82rem;">Looking for a Captain 
+            <span id="lfc-badge-${teamId}" class="badge ${t.lookingForCaptain==="TRUE"?"badge-amber":"badge-ghost"}" style="font-size:0.6rem;margin-left:4px;">${t.lookingForCaptain==="TRUE"?"Seeking Captain":"Not Seeking Captain"}</span>
+          </div>
           <div class="toggle-sublabel">Mark this team as open to a new captain — visible as a filter in Team Registry</div>
         </div>
         <label class="toggle">
@@ -584,6 +586,12 @@ async function toggleTeamLFC(teamId, checked) {
     await apiPost({action:"updateTeamLFC",memberId:session.id,captainKey:session.captainKey,teamId,lookingForCaptain:checked});
     const t = allTeams.find(x=>x.id===teamId);
     if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
+    // Update the LFC badge if it exists in the DOM
+    const badge = el("lfc-badge-" + teamId);
+    if (badge) {
+      badge.textContent = checked ? "Seeking Captain" : "Not Seeking Captain";
+      badge.className = "badge " + (checked ? "badge-amber" : "badge-ghost");
+    }
     toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
   } catch(e) { toast(e.message,"error"); }
   finally { hideProcessing(); }
@@ -740,6 +748,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061406"></script>
+<script src="js/build-maker.js?v=2026061407"></script>
 </body>
 </html>

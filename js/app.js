@@ -611,19 +611,22 @@ function confirmAvatarPick() {
 
 // ── Translation via MyMemory (free, no key needed) ───────
 async function translateText(text, targetLang) {
-  const targetCode = getLangCode(targetLang);
-  // MyMemory: use xx|targetCode where xx is a catch-all wildcard
-  // Best approach: try es|en, de|en etc won't work without knowing source.
-  // Instead use the undocumented langpair=|targetCode (empty source = auto-detect server side)
-  // Fall back: translate to target regardless — if already in target, the text won't change
-  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=%7C${targetCode}&de=translation@berserkguild.com`;
+  // Take first language if comma-separated (e.g. "French,English,Spanish" → "French")
+  const firstLang = (targetLang || "English").split(",")[0].trim();
+  const targetCode = getLangCode(firstLang);
+  // MyMemory: autodetect|targetCode for source auto-detection
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${targetCode}`;
   const r = await fetch(url);
-  if (!r.ok) throw new Error("Translation service unavailable. Try again shortly.");
+  if (!r.ok) throw new Error("Translation service unavailable.");
   const d = await r.json();
-  if (!d.responseData) throw new Error("Translation failed — please try again.");
-  if (d.responseStatus === 429) throw new Error("Translation limit reached for today. Try again tomorrow.");
+  if (!d.responseData) throw new Error("Translation failed.");
+  if (d.responseStatus === 429) throw new Error("Translation limit reached for today.");
+  // Check for API error messages returned as text
   const result = d.responseData.translatedText;
-  // If result exactly matches input (case-insensitive), it's already in the target language
+  if (!result || result.toUpperCase().includes("INVALID LANGUAGE") || result.toUpperCase().includes("PLEASE SELECT")) {
+    throw new Error("Translation not available for this language pair.");
+  }
+  // If result matches input, already in target language
   if (result.trim().toLowerCase() === text.trim().toLowerCase()) return null;
   return result;
 }
