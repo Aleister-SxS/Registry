@@ -90,7 +90,7 @@
     width: 100%;
   }
   .chip-select-wrap select:focus { outline: none !important; }
-  .chip-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .chip-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; min-height: 0; }
   .lang-dd-item {
     padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: var(--text2);
   }
@@ -248,7 +248,1089 @@
           </div>
           <div class="field">
             <label>Class <span style="color:var(--red);">*</span></label>
-            <select id="r-class" required disabled>
+            <select id="r-class" required style="color:var(--text3);">
+              <option value="">— Select Tier First —</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section-label">Stats</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Power Rating <span style="color:var(--red);">*</span> <span class="optional">(e.g. 180k, 1.5m)</span></label>
+            <input id="r-power" placeholder="e.g. 180k" />
+          </div>
+          <div class="field"><label>Character Level <span style="color:var(--red);">*</span></label><input id="r-level" type="number" placeholder="e.g. 60" min="1" /></div>
+        </div>
+
+        <div class="form-section-label">Playstyle</div>
+        <div class="field">
+          <label>Describe Yourself</label>
+          <textarea id="r-desc" placeholder="A bit about you — your history, goals, what you're looking for in a team…"></textarea>
+        </div>
+        <div class="field">
+          <label>Playstyle Preference</label>
+          <select id="r-playstyle">
+            <option value="">— Select —</option>
+            <option value="Casual">Casual — Just Need a Team</option>
+            <option value="Competitive">Competitive — Aiming for Top 10</option>
+          </select>
+        </div>
+
+        <div class="form-section-label">Communication</div>
+        <div class="field-row">
+          <div class="field"><label>Discord ID <span class="optional">(optional)</span></label><input id="r-discord-id" placeholder="username#0000" /></div>
+          <div class="field"><label>Discord Display Name <span class="optional">(optional)</span></label><input id="r-discord-name" placeholder="YourDisplayName" /></div>
+        </div>
+
+        <div class="field">
+            <label>Languages Spoken <span class="optional">(up to 3)</span></label>
+            <select id="r-languages-select" onchange="chipAdd('r-languages',this,3)" style="margin-bottom:6px;">
+              <option value="" selected>+ Add a language…</option>
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Italian">Italian</option>
+              <option value="Dutch">Dutch</option>
+              <option value="Russian">Russian</option>
+              <option value="Polish">Polish</option>
+              <option value="Turkish">Turkish</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Thai">Thai</option>
+              <option value="Vietnamese">Vietnamese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Malay">Malay</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Swedish">Swedish</option>
+              <option value="Norwegian">Norwegian</option>
+              <option value="Danish">Danish</option>
+              <option value="Finnish">Finnish</option>
+              <option value="Romanian">Romanian</option>
+              <option value="Czech">Czech</option>
+              <option value="Hungarian">Hungarian</option>
+              <option value="Greek">Greek</option>
+              <option value="Hebrew">Hebrew</option>
+              <option value="Filipino">Filipino</option>
+              <option value="Bengali">Bengali</option>
+            </select>
+            <div class="chip-tags" id="r-languages-tags"></div>
+          </div>
+
+        <div class="field">
+            <label>Preferred Language <span style="color:var(--red);">*</span>(s)</label>
+            <select id="r-preflang-select" onchange="chipAdd('r-preflang',this,3)" style="margin-bottom:6px;">
+              <option value="" selected>+ Add a language…</option>
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Italian">Italian</option>
+              <option value="Dutch">Dutch</option>
+              <option value="Russian">Russian</option>
+              <option value="Polish">Polish</option>
+              <option value="Turkish">Turkish</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Thai">Thai</option>
+              <option value="Vietnamese">Vietnamese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Malay">Malay</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Swedish">Swedish</option>
+              <option value="Norwegian">Norwegian</option>
+              <option value="Danish">Danish</option>
+              <option value="Finnish">Finnish</option>
+              <option value="Romanian">Romanian</option>
+              <option value="Czech">Czech</option>
+              <option value="Hungarian">Hungarian</option>
+              <option value="Greek">Greek</option>
+              <option value="Hebrew">Hebrew</option>
+              <option value="Filipino">Filipino</option>
+              <option value="Bengali">Bengali</option>
+            </select>
+            <div class="chip-tags" id="r-preflang-tags"></div>
+          </div>
+
+        <div class="field">
+          <label>Time Zone <span style="color:var(--red);">*</span></label>
+          <select id="r-timezone">
+            <option value="">— Select Time Zone —</option>
+            <option>UTC-12:00</option><option>UTC-11:00</option><option>UTC-10:00</option>
+            <option>UTC-09:00</option><option>UTC-08:00 (PST)</option><option>UTC-07:00 (MST)</option>
+            <option>UTC-06:00 (CST)</option><option>UTC-05:00 (EST)</option><option>UTC-04:00</option>
+            <option>UTC-03:00</option><option>UTC-02:00</option><option>UTC-01:00</option>
+            <option>UTC+00:00 (GMT)</option><option>UTC+01:00 (CET)</option><option>UTC+02:00</option>
+            <option>UTC+03:00</option><option>UTC+04:00</option><option>UTC+05:00</option>
+            <option>UTC+05:30 (IST)</option><option>UTC+06:00</option><option>UTC+07:00</option>
+            <option>UTC+08:00 (CST)</option><option>UTC+09:00 (JST)</option>
+            <option>UTC+10:00 (AEST)</option><option>UTC+11:00</option><option>UTC+12:00</option>
+          </select>
+        </div>
+
+        <div class="form-section-label">Settings</div>
+        <div class="field">
+          <div class="toggle-row">
+            <div><div class="toggle-label">Looking for a team</div><div class="toggle-sublabel">Appear in the Players tab for captains to find you</div></div>
+            <label class="toggle"><input type="checkbox" id="r-lfg" checked /><span class="slider"></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Looking to Captain a Team</div>
+              <div class="toggle-sublabel">Show on your profile that you're open to captaining an existing team</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="r-want-captain" /><span class="slider"></span></label>
+          </div>
+        </div>
+
+        <div id="reg-error" class="alert alert-error alert-hidden mt-md"></div>
+        <button class="btn btn-primary btn-full mt-md" id="reg-btn" onclick="doRegister()">Create Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUCCESS STATE ────────────────────────────────── -->
+  <div class="panel" id="reg-success">
+    <div class="form-card">
+      <div class="alert alert-success">Profile created! Your Secret Key is below — save it now, you will not see it again.</div>
+      <div class="text-xs text-muted mt-md mb-sm">Your Player ID:</div>
+      <div class="key-box" id="out-tag" style="border-color:var(--blue-mid);color:var(--sky);"></div>
+      <div class="text-xs text-muted mt-md mb-sm">Secret Key:</div>
+      <div class="key-box" id="out-key"></div>
+      <div class="alert alert-amber mt-md">
+        ⚠️ Store this key somewhere safe — a password manager or notes app. It cannot be recovered without contacting an admin.
+      </div>
+      <div id="countdown-notice" style="background:var(--amber-dim);border:1px solid var(--amber-mid);border-radius:7px;padding:12px 16px;font-size:0.85rem;color:var(--amber);text-align:center;margin-bottom:0.75rem;">
+        ⏱️ Please copy your Secret Key before leaving.<br>
+        <div style="font-size:2rem;font-weight:700;font-family:var(--mono);margin:6px 0;" id="countdown-num">10</div>
+        <div style="font-size:0.72rem;opacity:0.8;">seconds until navigation unlocks</div>
+        <div style="background:var(--border);border-radius:4px;height:4px;margin-top:8px;overflow:hidden;">
+          <div id="countdown-bar" style="background:var(--amber);height:100%;width:100%;transition:width 1s linear;"></div>
+        </div>
+      </div>
+      <div class="flex gap-sm flex-wrap mt-md">
+        <button class="btn btn-primary" onclick="copyKey()">📋 Copy Key</button>
+        <a href="index.html" id="link-browse" class="btn btn-ghost" style="pointer-events:none;opacity:0.35;" aria-disabled="true">Browse Teams →</a>
+        <a id="goto-profile" href="#" class="btn btn-ghost" style="pointer-events:none;opacity:0.35;" aria-disabled="true">View Profile →</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+<div class="reg-overlay" id="reg-overlay">
+  <div class="reg-spin"></div>
+  <div class="reg-overlay-title" id="reg-overlay-title">Processing…</div>
+  <div class="reg-overlay-sub">Please stay on this page.</div>
+</div>
+
+<script>
+// ── Inline data (guaranteed available even if app.js cached) ──
+// These shadow the app.js definitions if app.js hasn't loaded yet
+if (typeof TIMEZONES === 'undefined') {
+const TIMEZONES = [
+  "UTC-12:00","UTC-11:00","UTC-10:00","UTC-09:00","UTC-08:00 (PST)",
+  "UTC-07:00 (MST)","UTC-06:00 (CST)","UTC-05:00 (EST)","UTC-04:00",
+  "UTC-03:00","UTC-02:00","UTC-01:00","UTC+00:00 (GMT)","UTC+01:00 (CET)",
+  "UTC+02:00","UTC+03:00","UTC+04:00","UTC+05:00","UTC+05:30 (IST)",
+  "UTC+06:00","UTC+07:00","UTC+08:00 (CST)","UTC+09:00 (JST)",
+  "UTC+10:00 (AEST)","UTC+11:00","UTC+12:00",
+];
+}
+if (typeof LANGUAGES === 'undefined') {
+const LANGUAGES = [
+  "English","Spanish","Portuguese","French","German","Italian","Dutch",
+  "Russian","Polish","Turkish","Arabic","Hindi","Bengali","Japanese",
+  "Korean","Chinese (Simplified)","Chinese (Traditional)","Vietnamese",
+  "Thai","Indonesian","Malay","Filipino","Swedish","Norwegian","Danish",
+  "Finnish","Czech","Slovak","Romanian","Hungarian","Greek","Other",
+];
+}
+if (typeof CLASS_TREE === 'undefined') {
+const CLASS_TREE = {
+  T1: { label: "T1", subclasses: ["Mage","Warrior"] },
+  T2: { label: "T2", subclasses: ["Duelist","Knight","Sorcerer","Sage"] },
+  T3: { label: "T3", subclasses: ["Berserker","Paladin","Archmage","Arcanist"] },
+  T4: { label: "T4", subclasses: ["Conqueror","Guardian","Destroyer","Dominator"] },
+  T5: { label: "T5", subclasses: ["Ravager","Templar","Magister","Prophet"] },
+};
+}
+
+// ── Tag-input component ───────────────────────────────────
+const tagInputState = {};
+
+function tagInputInit(id, options) {
+  tagInputState[id] = { options, selected: [] };
+  renderTagDropdown(id);
+  document.addEventListener("click", e => {
+    const wrap = document.getElementById(id + "-wrap");
+    if (wrap && !wrap.contains(e.target)) {
+      const dd = document.getElementById(id + "-dropdown");
+      if (dd) dd.classList.remove("open");
+    }
+  });
+}
+
+function tagInputOpen(id) {
+  renderTagDropdown(id);
+  document.getElementById(id + "-dropdown").classList.add("open");
+}
+
+function tagInputFilter(id) {
+  renderTagDropdown(id);
+  document.getElementById(id + "-dropdown").classList.add("open");
+}
+
+function tagInputToggle(id, value) {
+  const state = tagInputState[id];
+  const idx = state.selected.indexOf(value);
+  if (idx >= 0) state.selected.splice(idx, 1);
+  else state.selected.push(value);
+  renderTagChips(id);
+  renderTagDropdown(id);
+  document.getElementById(id + "-search").value = "";
+  document.getElementById(id + "-search").focus();
+}
+
+function tagInputRemove(id, value) {
+  const state = tagInputState[id];
+  state.selected = state.selected.filter(v => v !== value);
+  renderTagChips(id);
+  renderTagDropdown(id);
+}
+
+function tagInputGet(id) {
+  return tagInputState[id]?.selected || [];
+}
+
+function renderTagChips(id) {
+  const state = tagInputState[id];
+  document.getElementById(id + "-tags").innerHTML = state.selected.map(v =>
+    `<span class="tag-chip">${esc(v)}<button class="tag-chip-x" onclick="tagInputRemove('${id}','${esc(v)}')" title="Remove">✕</button></span>`
+  ).join("");
+}
+
+function renderTagDropdown(id) {
+  const state = tagInputState[id];
+  const q = (document.getElementById(id + "-search").value || "").toLowerCase();
+  const filtered = state.options.filter(o => !q || o.toLowerCase().includes(q));
+  const ddEl = document.getElementById(id + "-dropdown");
+  ddEl.innerHTML = filtered.length
+    ? filtered.map(o => {
+        const sel = state.selected.includes(o);
+        return `<div class="tag-dropdown-item ${sel ? "selected" : ""}" onclick="tagInputToggle('${id}','${esc(o)}')">${esc(o)}${sel ? " ✓" : ""}</div>`;
+      }).join("")
+    : `<div class="tag-dropdown-empty">No results</div>`;
+}
+
+// ── Avatar selection ──────────────────────────────────────
+let selectedAvatarUrl = "";
+
+// ── Inline avatar picker (no app.js dependency) ─────────────
+var FANTOMON_LIST = [
+  {id:"aegiswing",label:"Aegiswing"},{id:"nyxarchon",label:"Nyxarchon"},
+  {id:"mandragora",label:"Mandragora"},{id:"herbote",label:"Herbote"},
+  {id:"boaro",label:"Boaro"},{id:"armopi",label:"Armopi"},
+  {id:"falko",label:"Falko"},{id:"zeioletus",label:"Zeioletus"},
+  {id:"kels",label:"Kels"},{id:"tantum",label:"Tantum"},
+  {id:"fairy-test",label:"Fairy Test"},{id:"teny-test",label:"Teny Test"}
+];
+var _pickerSelected = null;
+
+function tryOpenAvatarPicker() {
+  // Remove any existing picker
+  var existing = document.getElementById("inline-avatar-modal");
+  if (existing) existing.remove();
+
+  var grid = FANTOMON_LIST.map(function(f) {
+    var url = "https://eog.gg/assets/sxs/fantomons/" + f.id + ".webp";
+    return '<div id="iap-' + f.id + '" onclick="iapSelect('' + f.id + '','' + url + '')" style="cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);padding:10px;text-align:center;transition:border-color 0.15s;">' +
+      '<img src="' + url + '" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.opacity=0.3" />' +
+      '<div style="font-size:0.72rem;color:var(--text2);">' + f.label + '</div></div>';
+  }).join("");
+
+  var html = '<div class="modal-overlay open" id="inline-avatar-modal" style="z-index:9998;">' +
+    '<div class="modal" style="max-width:520px;">' +
+    '<div class="modal-title" style="margin-bottom:1rem;">Choose Your Avatar</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' + grid + '</div>' +
+    '<div class="modal-actions">' +
+    '<button class="btn btn-ghost" onclick="iapCancel()">Cancel</button>' +
+    '<button class="btn btn-primary" id="iap-confirm" disabled onclick="iapConfirm()">Select</button>' +
+    '</div></div></div>';
+
+  document.body.insertAdjacentHTML("beforeend", html);
+  _pickerSelected = null;
+}
+
+function iapSelect(id, url) {
+  _pickerSelected = {id: id, url: url};
+  FANTOMON_LIST.forEach(function(f) {
+    var el = document.getElementById("iap-" + f.id);
+    if (el) el.style.borderColor = f.id === id ? "var(--blue)" : "var(--border)";
+  });
+  var btn = document.getElementById("iap-confirm");
+  if (btn) btn.disabled = false;
+}
+
+function iapCancel() {
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
+}
+function iapConfirm() {
+  if (!_pickerSelected) return;
+  onAvatarSelected(_pickerSelected.url);
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
+}
+function onAvatarSelected(url) {
+  selectedAvatarUrl = url;
+  const preview = document.getElementById("reg-avatar-preview");
+  preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+}
+
+// ── Player ID validation ─────────────────────────────────
+function validatePlayerID(input, hintId) {
+  const val = String(input.value).replace(/\D/g,"");
+  // Enforce max 12 digits
+  if (val.length > 12) input.value = val.slice(0,12);
+  const hint = document.getElementById(hintId);
+  if (!hint) return;
+  const len = String(input.value).length;
+  if (len === 0) {
+    hint.style.color = "var(--text3)";
+    hint.textContent = "Must be 12 digits. Find your Player ID in your in-game profile.";
+  } else if (len < 12) {
+    hint.style.color = "var(--amber)";
+    hint.textContent = `${len} / 12 digits entered — needs ${12 - len} more.`;
+  } else if (len === 12) {
+    hint.style.color = "var(--green)";
+    hint.textContent = "✓ Valid Player ID format.";
+  }
+}
+
+// ── Success countdown ─────────────────────────────────────
+function startSuccessCountdown() {
+  let secs = 10;
+  const numEl   = document.getElementById("countdown-num");
+  const bar     = document.getElementById("countdown-bar");
+  const notice  = document.getElementById("countdown-notice");
+  const links   = ["link-browse","goto-profile"];
+  // Animate bar immediately
+  if (bar) setTimeout(()=>{ bar.style.width="0%"; }, 50);
+  const timer = setInterval(() => {
+    secs--;
+    if (numEl) numEl.textContent = secs;
+    if (secs <= 0) {
+      clearInterval(timer);
+      if (notice) {
+        notice.style.background = "var(--green-dim)";
+        notice.style.borderColor = "var(--green-mid)";
+        notice.style.color = "var(--green)";
+        notice.innerHTML = "✓ Key saved? You can now navigate away.";
+      }
+      links.forEach(id => {
+        const a = document.getElementById(id);
+        if (a) { a.style.pointerEvents=""; a.style.opacity="1"; a.removeAttribute("aria-disabled"); }
+      });
+    }
+  }, 1000);
+}
+
+// ── Class tier/class selector ────────────────────────────────
+var CLASS_MAP = {
+  T1: ["Mage", "Warrior"],
+  T2: ["Duelist", "Knight", "Sorcerer", "Sage"],
+  T3: ["Berserker", "Paladin", "Archmage", "Arcanist"],
+  T4: ["Conqueror", "Guardian", "Destroyer", "Dominator"],
+  T5: ["Ravager", "Templar", "Magister", "Prophet"]
+};
+function onTierChange(tier) {
+  var cls = document.getElementById("r-class");
+  if (!cls) return;
+  if (!tier) {
+    cls.innerHTML = '<option value="">— Select Tier First —</option>';
+    cls.style.color = "var(--text3)";
+    return;
+  }
+  var options = CLASS_MAP[tier] || [];
+  cls.innerHTML = '<option value="">— Select Class —</option>' +
+    options.map(function(name) { return '<option value="' + name + '">' + name + '</option>'; }).join("");
+  cls.style.color = "";
+  cls.focus();
+}
+
+// ── Local processing overlay (avoids global 2s timer on public page) ───────
+function regShowProcessing(title) {
+  const ov = document.getElementById("reg-overlay");
+  const ti = document.getElementById("reg-overlay-title");
+  if (ov) ov.classList.add("active");
+  if (ti) ti.textContent = title || "Processing…";
+}
+function regHideProcessing() {
+  const ov = document.getElementById("reg-overlay");
+  if (ov) ov.classList.remove("active");
+}
+
+// ── Tab switcher ──────────────────────────────────────────
+function switchTab(tab) {
+  const loginPanel    = document.getElementById("panel-login");
+  const registerPanel = document.getElementById("panel-register");
+  const tabLogin      = document.getElementById("tab-login");
+  const tabRegister   = document.getElementById("tab-register");
+  if (!loginPanel || !registerPanel) return;
+  if (tab === "login") {
+    loginPanel.style.display    = "block";
+    registerPanel.style.display = "none";
+    if(tabLogin)    { tabLogin.classList.add("active");    }
+    if(tabRegister) { tabRegister.classList.remove("active"); }
+  } else {
+    registerPanel.style.display = "block";
+    loginPanel.style.display    = "none";
+    if(tabRegister) { tabRegister.classList.add("active");  }
+    if(tabLogin)    { tabLogin.classList.remove("active");  }
+  }
+}
+
+// ── Page init ─────────────────────────────────────────────
+// ── Chip-select component ───────────────────────────────────
+var chipState = {};
+
+function chipAdd(id, select, max) {
+  var val = select.value;
+  if (!val) return;
+  if (!chipState[id]) chipState[id] = [];
+  if (chipState[id].includes(val)) { select.value = ""; return; }
+  if (chipState[id].length >= max) {
+    select.value = "";
+    return;
+  }
+  chipState[id].push(val);
+  select.value = "";
+  chipRender(id);
+}
+
+function chipRemove(id, val) {
+  if (!chipState[id]) return;
+  chipState[id] = chipState[id].filter(function(v) { return v !== val; });
+  chipRender(id);
+}
+
+function chipRender(id) {
+  var el = document.getElementById(id + "-tags");
+  if (!el) return;
+  el.innerHTML = "";
+  (chipState[id] || []).forEach(function(v) {
+    var span = document.createElement("span");
+    span.className = "lang-tag";
+    var txt = document.createTextNode(v + " ");
+    span.appendChild(txt);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "lang-tag-x";
+    btn.textContent = "\u2715";
+    (function(capturedId, capturedV) {
+      btn.onclick = function() { chipRemove(capturedId, capturedV); };
+    })(id, v);
+    span.appendChild(btn);
+    el.appendChild(span);
+  });
+}
+
+function chipGetValues(id) {
+  return chipState[id] || [];
+}
+
+// ── Inline avatar picker ──────────────────────────────────
+var FANTOMON_LIST = [
+  {id:"aegiswing",label:"Aegiswing"},{id:"nyxarchon",label:"Nyxarchon"},
+  {id:"mandragora",label:"Mandragora"},{id:"herbote",label:"Herbote"},
+  {id:"boaro",label:"Boaro"},{id:"armopi",label:"Armopi"},
+  {id:"falko",label:"Falko"},{id:"zeioletus",label:"Zeioletus"},
+  {id:"kels",label:"Kels"},{id:"tantum",label:"Tantum"}
+];
+var _pickerSelected = null;
+
+function tryOpenAvatarPicker() {
+  var existing = document.getElementById("inline-avatar-modal");
+  if (existing) existing.remove();
+
+  var modal = document.createElement("div");
+  modal.className = "modal-overlay open";
+  modal.id = "inline-avatar-modal";
+  modal.style.zIndex = "9998";
+
+  var inner = document.createElement("div");
+  inner.className = "modal";
+  inner.style.maxWidth = "520px";
+
+  var title = document.createElement("div");
+  title.className = "modal-title";
+  title.style.marginBottom = "1rem";
+  title.textContent = "Choose Your Avatar";
+  inner.appendChild(title);
+
+  var grid = document.createElement("div");
+  grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;";
+
+  FANTOMON_LIST.forEach(function(f) {
+    var url = "https://eog.gg/assets/sxs/fantomons/" + f.id + ".webp";
+    var card = document.createElement("div");
+    card.id = "iap-" + f.id;
+    card.style.cssText = "cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);padding:10px;text-align:center;transition:border-color 0.15s;";
+    var img = document.createElement("img");
+    img.src = url;
+    img.style.cssText = "width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;";
+    img.onerror = function() { this.style.opacity = "0.3"; };
+    var lbl = document.createElement("div");
+    lbl.style.cssText = "font-size:0.72rem;color:var(--text2);";
+    lbl.textContent = f.label;
+    card.appendChild(img);
+    card.appendChild(lbl);
+    (function(capturedF, capturedUrl) {
+      card.onclick = function() { iapSelect(capturedF.id, capturedUrl); };
+    })(f, url);
+    grid.appendChild(card);
+  });
+  inner.appendChild(grid);
+
+  var actions = document.createElement("div");
+  actions.className = "modal-actions";
+  var cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn btn-ghost";
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.onclick = function() { modal.remove(); };
+  var confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn btn-primary";
+  confirmBtn.id = "iap-confirm";
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Select";
+  confirmBtn.onclick = iapConfirm;
+  actions.appendChild(cancelBtn);
+  actions.appendChild(confirmBtn);
+  inner.appendChild(actions);
+  modal.appendChild(inner);
+  document.body.appendChild(modal);
+  _pickerSelected = null;
+}
+
+function iapSelect(id, url) {
+  _pickerSelected = {id: id, url: url};
+  FANTOMON_LIST.forEach(function(f) {
+    var el = document.getElementById("iap-" + f.id);
+    if (el) el.style.borderColor = (f.id === id) ? "var(--blue)" : "var(--border)";
+  });
+  var btn = document.getElementById("iap-confirm");
+  if (btn) btn.disabled = false;
+}
+
+function iapCancel() {
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
+}
+
+function iapConfirm() {
+  if (!_pickerSelected) return;
+  onAvatarSelected(_pickerSelected.url);
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
+}
+// ── Self-contained language picker ───────────────────────────
+var LANG_LIST = ["English","Spanish","Portuguese","French","German","Italian",
+  "Dutch","Russian","Polish","Turkish","Arabic","Japanese","Korean","Chinese",
+  "Thai","Vietnamese","Indonesian","Malay","Hindi","Swedish","Norwegian","Danish",
+  "Finnish","Romanian","Czech","Hungarian","Greek","Hebrew","Filipino","Bengali"];
+var langState = {};
+
+function langInit(id, max) {
+  langState[id] = { selected: [], max: max };
+  // Close dropdown on outside click
+  document.addEventListener("click", function(e) {
+    var picker = document.getElementById(id + "-picker");
+    if (picker && !picker.contains(e.target)) {
+      var dd = document.getElementById(id + "-dd");
+      if (dd) dd.style.display = "none";
+    }
+  });
+}
+
+function langOpen(id) {
+  langRenderDD(id, "");
+  var dd = document.getElementById(id + "-dd");
+  if (dd) dd.style.display = "block";
+}
+
+function langSearch(id) {
+  var q = document.getElementById(id + "-search").value;
+  langRenderDD(id, q);
+  var dd = document.getElementById(id + "-dd");
+  if (dd) dd.style.display = "block";
+}
+
+function langRenderDD(id, q) {
+  var state = langState[id] || { selected: [], max: 3 };
+  var list = (typeof LANGUAGES !== "undefined" ? LANGUAGES : LANG_LIST);
+  var filtered = list.filter(function(l) {
+    return !state.selected.includes(l) && (!q || l.toLowerCase().includes(q.toLowerCase()));
+  });
+  var dd = document.getElementById(id + "-dd");
+  if (!dd) return;
+  if (!filtered.length) {
+    dd.innerHTML = "<div class='lang-dd-item' style='color:var(--text3);'>No results</div>";
+  } else {
+    dd.innerHTML = filtered.map(function(l) {
+      return "<div class='lang-dd-item' onclick="langToggle('" + id + "','" + l + "')">" + l + "</div>";
+    }).join("");
+  }
+}
+
+function langToggle(id, lang) {
+  var state = langState[id] || { selected: [], max: 3 };
+  langState[id] = state;
+  if (state.selected.includes(lang)) {
+    state.selected = state.selected.filter(function(l) { return l !== lang; });
+  } else {
+    if (state.selected.length >= state.max) return;
+    state.selected.push(lang);
+  }
+  var search = document.getElementById(id + "-search");
+  if (search) search.value = "";
+  langRenderTags(id);
+  langRenderDD(id, "");
+}
+
+function langRenderTags(id) {
+  var state = langState[id] || { selected: [] };
+  var tagsEl = document.getElementById(id + "-tags");
+  if (!tagsEl) return;
+  tagsEl.innerHTML = state.selected.map(function(l) {
+    return "<span class='lang-tag'>" + l +
+      "<button type='button' class='lang-tag-x' onclick="langToggle('" + id + "','" + l + "')">✕</button></span>";
+  }).join("");
+}
+
+function langGetValues(id) {
+  return (langState[id] || { selected: [] }).selected;
+}
+
+// ── Inline helpers (fallback if app.js not loaded) ─────────
+function _populateSelect(selId, options, placeholder) {
+  var s = document.getElementById(selId);
+  if (!s) return;
+  s.innerHTML = '<option value="">' + (placeholder || '— Select —') + '</option>' +
+    options.map(function(o) {
+      return '<option value="' + o + '">' + o + '</option>';
+    }).join('');
+}
+function _buildClassSelector(tierSelId, subSelId) {
+  var tierSel = document.getElementById(tierSelId);
+  var subSel  = document.getElementById(subSelId);
+  if (!tierSel || !subSel) return;
+  var tree = (typeof CLASS_TREE !== 'undefined') ? CLASS_TREE : {};
+  tierSel.innerHTML = '<option value="">— Select Tier —</option>' +
+    Object.keys(tree).map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+  tierSel.onchange = function() {
+    var tier = tierSel.value;
+    if (!tier) { subSel.innerHTML = '<option value="">— Select Class —</option>'; subSel.disabled = true; return; }
+    var subs = tree[tier] ? tree[tier].subclasses : [];
+    subSel.innerHTML = '<option value="">— Select Class —</option>' +
+      subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+    subSel.disabled = false;
+  };
+  subSel.disabled = true;
+}
+
+function initPage() {
+  try {
+    if (typeof TIMEZONES === 'undefined' || typeof LANGUAGES === 'undefined') {
+      // app.js not ready yet, retry
+      setTimeout(initPage, 50);
+      return;
+    }
+    langInit("r-languages", 3);
+    langInit("r-preflang", 3);
+
+    const session = getSession();
+    if (session) {
+      document.getElementById("hero-block").style.display    = "none";
+      document.getElementById("auth-state").style.display    = "none";
+      document.getElementById("logged-in-state").style.display = "block";
+      document.getElementById("welcome-msg").textContent = \`Welcome back, \${session.name || session.gamertag}!\`;
+      document.getElementById("view-profile-btn").href   = \`profile.html?id=\${session.id}\`;
+    }
+  } catch(e) {
+    console.error('initPage error:', e);
+  }
+}
+onReady(initPage);
+
+// ── Auth actions ──────────────────────────────────────────
+async function doLogin() {
+  clearAlert("login-error");
+  const tag = document.getElementById("l-tag").value.trim();
+  const key = document.getElementById("l-key").value.trim();
+  if (!tag || !key) { showAlert("login-error", "Enter your Player ID and Secret Key."); return; }
+  try {
+    const res = await apiPost({ action: "login", gamertag: tag, captainKey: key });
+    const m = res.member;
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain, avatarUrl: m.avatarUrl || "" });
+    toast("Welcome back, " + (m.name || m.gamertag) + "!");
+    document.getElementById("hero-block").style.display    = "none";
+    document.getElementById("auth-state").style.display    = "none";
+    document.getElementById("logged-in-state").style.display = "block";
+    document.getElementById("welcome-msg").textContent = `Welcome back, ${m.name || m.gamertag}!`;
+    document.getElementById("view-profile-btn").href   = `profile.html?id=${m.id}`;
+  } catch(e) {
+    showAlert("login-error", e.message);
+  }
+}
+
+async function doRegister() {
+  clearAlert("reg-error");
+  const name      = document.getElementById("r-name").value.trim();
+  const tag       = document.getElementById("r-tag").value.trim();
+  const tier      = document.getElementById("r-tier").value;
+  const cls       = document.getElementById("r-class").value;
+  const power     = parsePower(document.getElementById("r-power").value);
+  const level     = document.getElementById("r-level").value.trim();
+  const desc      = document.getElementById("r-desc").value.trim() || "I'm a pretty cool person - ready to join in!";
+  const playstyle = document.getElementById("r-playstyle").value;
+  const discId    = document.getElementById("r-discord-id").value.trim();
+  const discName  = document.getElementById("r-discord-name").value.trim();
+  const tz        = document.getElementById("r-timezone").value;
+  const lfg       = document.getElementById("r-lfg").checked;
+  const isCaptain = false; // set by team creation
+  const wantCaptain = document.getElementById("r-want-captain").checked;
+  const languages = chipGetValues("r-languages").join(",");
+  const prefLang  = chipGetValues("r-preflang");
+
+  if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
+  if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
+  if (String(tag).length !== 12 || !/^\d{12}$/.test(String(tag))) {
+    showAlert("reg-error", "Player ID must be exactly 12 digits. Find it in your in-game profile.");
+    return;
+  }
+  const tier = document.getElementById("r-tier").value;
+  const cls  = document.getElementById("r-class").value;
+  if (!tier || !cls) { showAlert("reg-error", "Please select your Class Tier and Class."); return; }
+  const power = document.getElementById("r-power").value.trim();
+  const level = document.getElementById("r-level").value.trim();
+  if (!power) { showAlert("reg-error", "Power Rating is required."); return; }
+  if (!level) { showAlert("reg-error", "Character Level is required."); return; }
+  const tz = document.getElementById("r-timezone").value;
+  if (!tz) { showAlert("reg-error", "Please select your Time Zone."); return; }
+  if (!prefLang.length) { showAlert("reg-error", "Please select at least one Preferred Language."); return; }
+  // Check for duplicate Player ID
+  regShowProcessing("Checking Player ID…");
+  let allExisting = [];
+  try {
+    const check = await apiGet({ action:"getAll" });
+    allExisting = check.members || [];
+  } catch(e) {}
+  const duplicate = allExisting.find(m => String(m.gamertag) === String(tag));
+  if (duplicate) {
+    regHideProcessing();
+    showAlert("reg-error", `Player ID ${tag} is already registered. Please log in instead. If you&#39;re having issues, contact an admin on Discord or in-game.`);
+    return;
+  }
+  regShowProcessing("Creating your profile…");
+
+  const btn = document.getElementById("reg-btn");
+  btn.disabled = true;
+  try {
+    const res = await apiPost({
+      action: "registerMember", name, gamertag: tag, tier, class: cls,
+      power, level, description: desc, playstyle,
+      discordId: discId, discordName: discName, timezone: tz,
+      languages, prefLanguage: prefLang, lookingForTeam: lfg, isCaptain, lookingForCaptainRole: wantCaptain,
+      avatarUrl: selectedAvatarUrl,
+    });
+    const m = res.member;
+    setSession({ id: m.id, gamertag: m.gamertag, name: m.name, captainKey: m.captainKey, isCaptain: m.isCaptain, avatarUrl: m.avatarUrl || "" });
+    document.getElementById("auth-state").style.display  = "none";
+    document.getElementById("hero-block").style.display  = "none";
+    document.getElementById("reg-success").classList.add("active");
+    document.getElementById("out-tag").textContent = m.gamertag;
+    document.getElementById("out-key").textContent = m.captainKey;
+    document.getElementById("goto-profile").href   = `profile.html?id=${m.id}`;
+    // Start 10-second countdown before links are enabled
+    startSuccessCountdown();
+  } catch(e) {
+    regHideProcessing();
+    showAlert("reg-error", e.message);
+  } finally {
+    btn.disabled = false;
+    regHideProcessing();
+  }
+}
+
+function doLogout() {
+  confirm_("Log Out", "Are you sure you want to log out?", () => { clearSession(); location.reload(); }, false);
+}
+
+function copyKey() {
+  navigator.clipboard.writeText(document.getElementById("out-key").textContent)
+    .then(() => toast("Key copied!"))
+    .catch(() => toast("Copy failed — please copy it manually.", "error"));
+}
+</script>
+</body>
+</html><option value="" selected>+ Add a language…</option>eta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Register / Log In — Berserk Guild</title>
+<link rel="stylesheet" href="css/style.css?v=2026061402" />
+<script src="js/app.js?v=2026061402"></script>
+<style>
+  /* Local submit spinner — doesn't use the global overlay timer */
+  .reg-overlay { display:none;position:fixed;inset:0;background:rgba(11,13,18,0.88);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem; }
+  .reg-overlay.active { display:flex; }
+  .reg-spin { width:44px;height:44px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .reg-overlay-title { font-size:1rem;font-weight:600;color:#e8edf5; }
+  .reg-overlay-sub { font-size:0.82rem;color:#8b98b5; }
+  /* Text inputs and textareas — full custom styling */
+  .form-card input[type="text"],
+  .form-card input[type="number"],
+  .form-card input[type="password"],
+  .form-card input[type="email"],
+  .form-card input:not([type]),
+  .form-card textarea {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: var(--surface2) !important;
+    border: 1px solid var(--border3) !important;
+    border-radius: 7px !important;
+    padding: 9px 12px !important;
+    font-size: 0.88rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+  /* Selects in register form — match dark appearance */
+  .form-card select {
+    background: var(--surface2) !important;
+    border-color: var(--border3) !important;
+  }
+  /* Language picker */
+  .lang-picker {
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border3);
+    border-radius: 7px;
+    padding: 6px 10px;
+    min-height: 42px;
+    cursor: text;
+  }
+  .lang-picker:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  }
+  .lang-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .lang-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--blue-dim); border: 1px solid var(--blue-mid);
+    color: var(--blue-bright); border-radius: 4px;
+    padding: 2px 8px; font-size: 0.78rem; font-weight: 600;
+  }
+  .lang-tag-x { background: none; border: none; color: inherit;
+    cursor: pointer; font-size: 0.8rem; padding: 0; opacity: 0.7; line-height: 1; }
+  .lang-search {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    color: #e8edf5 !important;
+    font-size: 0.88rem !important;
+    width: 100% !important;
+    padding: 2px 0 !important;
+    box-shadow: none !important;
+  }
+  .lang-search::placeholder { color: var(--text3) !important; }
+  /* Chip select wrapper */
+  .chip-select-wrap {
+    border: 1px solid var(--border3);
+    border-radius: 7px;
+    background: var(--surface2);
+    padding: 6px 10px;
+    min-height: 42px;
+  }
+  .chip-select-wrap select {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 4px 0 !important;
+    font-size: 0.85rem !important;
+    color: var(--text2) !important;
+    cursor: pointer;
+    width: 100%;
+  }
+  .chip-select-wrap select:focus { outline: none !important; }
+  .chip-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; min-height: 0; }
+  .lang-dd-item {
+    padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: var(--text2);
+  }
+  .lang-dd-item:hover { background: var(--surface2); color: var(--text); }
+  .form-card input:focus,
+  .form-card textarea:focus,
+  .form-card select:focus {
+    border-color: var(--blue) !important;
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12) !important;
+    outline: none !important;
+  }
+  .form-card input::placeholder,
+  .form-card textarea::placeholder {
+    color: var(--text3) !important;
+    -webkit-text-fill-color: var(--text3) !important;
+  }
+  .form-card input:-webkit-autofill,
+  .form-card input:-webkit-autofill:hover,
+  .form-card input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--surface2) inset !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+  }
+  /* Tag input search fields */
+  .tag-input-search {
+    color: #e8edf5 !important;
+    -webkit-text-fill-color: #e8edf5 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 6px !important;
+    width: 100% !important;
+  }
+  .tag-input-search::placeholder {
+    color: var(--text3) !important;
+    -webkit-text-fill-color: var(--text3) !important;
+  }
+</style>
+<!-- panel display controlled via JS directly -->
+</head>
+<body>
+<script>onReady(() => buildNav("register.html"));</script>
+
+<main>
+<div class="form-wrap" style="max-width:640px;">
+
+  <!-- ── WELCOME HERO ──────────────────────────────────── -->
+  <div class="welcome-hero" id="hero-block">
+    <h1>Welcome to the SxS Berserk Team Registry</h1>
+    <p>Find your team, build your roster, and compete together in Sword x Staff. Log in below or create a profile to get started.</p>
+  </div>
+
+  <!-- ── LOGGED IN STATE ──────────────────────────────── -->
+  <div id="logged-in-state" style="display:none;">
+    <div class="form-card">
+      <div class="form-title" id="welcome-msg">Welcome back!</div>
+      <p class="form-subtitle">You are currently logged in.</p>
+      <div class="flex gap-sm flex-wrap mt-md">
+        <a id="view-profile-btn" href="#" class="btn btn-primary">View Your Profile</a>
+        <a href="your-team.html" class="btn btn-ghost">Your Team</a>
+        <a href="create-team.html" class="btn btn-ghost">Create a Team</a>
+        <button class="btn btn-danger" onclick="doLogout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AUTH STATE ────────────────────────────────────── -->
+  <div id="auth-state">
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active"
+  onclick="document.getElementById('panel-login').style.display='block';document.getElementById('panel-register').style.display='none';this.classList.add('active');document.getElementById('tab-register').classList.remove('active');">Log In</button>
+      <button id="tab-register" class="auth-tab"
+  onclick="document.getElementById('panel-register').style.display='block';document.getElementById('panel-login').style.display='none';this.classList.add('active');document.getElementById('tab-login').classList.remove('active');">Create Profile</button>
+    </div>
+
+    <!-- LOGIN PANEL -->
+    <div id="panel-login" style="display:block;">
+      <div class="form-card">
+        <div class="form-title">Welcome back</div>
+        <div class="form-subtitle">Enter your Player ID and the Secret Key you received when you first registered.</div>
+        <div class="field">
+          <label>Player ID <span class="optional">(your in-game Player ID)</span></label>
+          <input id="l-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417"
+          oninput="validatePlayerID(this,'l-tag-hint')" />
+        <div id="l-tag-hint" style="font-size:0.72rem;margin-top:4px;color:var(--text3);">
+          12-digit number — find it in your in-game profile.
+        </div>
+        </div>
+        <div class="field mt-sm">
+          <label>Secret Key</label>
+          <input id="l-key" type="password" placeholder="Your secret key" />
+        </div>
+        <div id="login-error" class="alert alert-error alert-hidden mt-sm"></div>
+        <button class="btn btn-primary btn-full mt-md" onclick="doLogin()">Log In</button>
+        <hr class="divider" />
+        <p class="text-sm text-muted" style="text-align:center;">
+          Haven't made an account?
+          <button class="btn btn-ghost btn-sm" style="margin-left:6px;"
+  onclick="document.getElementById('panel-register').style.display='block';document.getElementById('panel-login').style.display='none';document.getElementById('tab-register').classList.add('active');document.getElementById('tab-login').classList.remove('active');">Register here →</button>
+        </p>
+      </div>
+    </div>
+
+    <!-- REGISTER PANEL -->
+    <div id="panel-register" style="display:none;">
+      <div class="form-card">
+        <div class="form-title">Create Your Profile</div>
+        <div class="form-subtitle">
+          Register once to join or create teams. After registering you'll receive a
+          <strong>Secret Key</strong> — save it safely, it's how you log back in.
+        </div>
+
+        <div class="form-section-label">Basic Info</div>
+
+        <!-- Avatar picker -->
+        <div class="field" style="display:flex;align-items:center;gap:1rem;">
+          <div id="reg-avatar-preview" style="width:64px;height:64px;border-radius:50%;
+            background:var(--surface2);border:2px dashed var(--border2);
+            display:flex;align-items:center;justify-content:center;
+            color:var(--text3);font-size:1.6rem;flex-shrink:0;overflow:hidden;">
+            👤
+          </div>
+          <div>
+            <div class="text-sm font-semibold mb-sm">Profile Picture</div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="tryOpenAvatarPicker()">Choose Avatar</button>
+            <div class="text-xs text-muted mt-sm">Pick a Fantomon portrait</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>In-Game Name <span style="color:var(--red);">*</span></label>
+            <input id="r-name" placeholder="Your name" required />
+            <div style="font-size:0.72rem;color:var(--text3);margin-top:4px;">Must match your exact in-game name.</div>
+          </div>
+          <div class="field">
+            <label>Player ID <span style="color:var(--red);">*</span></label>
+            <input id="r-tag" type="number" inputmode="numeric" placeholder="e.g. 700190302417" required
+              maxlength="12" oninput="validatePlayerID(this,'r-tag-hint')" />
+            <div id="r-tag-hint" style="font-size:0.72rem;margin-top:4px;color:var(--text3);">
+              Must be 12 digits. Find your Player ID in your in-game profile.
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-label">Class</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Current Class Tier <span style="color:var(--red);">*</span></label>
+            <select id="r-tier" required onchange="onTierChange(this.value)">
+              <option value="">— Select Tier —</option>
+              <option value="T1">T1</option>
+              <option value="T2">T2</option>
+              <option value="T3">T3</option>
+              <option value="T4">T4</option>
+              <option value="T5">T5</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Class <span style="color:var(--red);">*</span></label>
+            <select id="r-class" required style="color:var(--text3);">
               <option value="">— Select Tier First —</option>
             </select>
           </div>
@@ -288,7 +1370,7 @@
             <div class="chip-select-wrap">
               <div class="chip-tags" id="r-languages-tags"></div>
               <select id="r-languages-select" onchange="chipAdd('r-languages',this,3)">
-                <option value="">+ Add a language…</option>
+                <option value="" selected>+ Add a language…</option>
                   <option value="English">English</option>
                   <option value="Spanish">Spanish</option>
                   <option value="Portuguese">Portuguese</option>
@@ -328,7 +1410,7 @@
             <div class="chip-select-wrap">
               <div class="chip-tags" id="r-preflang-tags"></div>
               <select id="r-preflang-select" onchange="chipAdd('r-preflang',this,3)">
-                <option value="">+ Add a language…</option>
+                <option value="" selected>+ Add a language…</option>
                   <option value="English">English</option>
                   <option value="Spanish">Spanish</option>
                   <option value="Portuguese">Portuguese</option>
@@ -567,7 +1649,7 @@ function tryOpenAvatarPicker() {
     '<div class="modal-title" style="margin-bottom:1rem;">Choose Your Avatar</div>' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' + grid + '</div>' +
     '<div class="modal-actions">' +
-    '<button class="btn btn-ghost" onclick="document.getElementById('inline-avatar-modal').remove()">Cancel</button>' +
+    '<button class="btn btn-ghost" onclick="iapCancel()">Cancel</button>' +
     '<button class="btn btn-primary" id="iap-confirm" disabled onclick="iapConfirm()">Select</button>' +
     '</div></div></div>';
 
@@ -585,6 +1667,10 @@ function iapSelect(id, url) {
   if (btn) btn.disabled = false;
 }
 
+function iapCancel() {
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
+}
 function iapConfirm() {
   if (!_pickerSelected) return;
   onAvatarSelected(_pickerSelected.url);
@@ -658,13 +1744,14 @@ function onTierChange(tier) {
   if (!cls) return;
   if (!tier) {
     cls.innerHTML = '<option value="">— Select Tier First —</option>';
-    cls.disabled = true;
+    cls.style.color = "var(--text3)";
     return;
   }
   var options = CLASS_MAP[tier] || [];
   cls.innerHTML = '<option value="">— Select Class —</option>' +
     options.map(function(name) { return '<option value="' + name + '">' + name + '</option>'; }).join("");
-  cls.disabled = false;
+  cls.style.color = "";
+  cls.focus();
 }
 
 // ── Local processing overlay (avoids global 2s timer on public page) ───────
