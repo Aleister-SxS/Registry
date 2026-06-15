@@ -117,7 +117,15 @@ function parsePower(str) {
 
 function formatPower(n) {
   if (!n && n !== 0) return "—";
-  const num = Number(n);
+  // Handle strings like "180k", "1.5m" stored directly from user input
+  let num = Number(n);
+  if (isNaN(num)) {
+    const s = String(n).trim().toLowerCase();
+    if (s.endsWith("m")) num = parseFloat(s) * 1_000_000;
+    else if (s.endsWith("k")) num = parseFloat(s) * 1_000;
+    else num = parseFloat(s);
+  }
+  if (isNaN(num) || num === 0) return String(n) || "—";
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/,"") + "M";
   if (num >= 1_000)     return (num / 1_000).toFixed(1).replace(/\.0$/,"") + "k";
   return String(num);

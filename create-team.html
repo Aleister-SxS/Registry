@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create a Team — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061405" />
+<link rel="stylesheet" href="css/style.css?v=2026061406" />
 <style>
   .comp-role-btn {
     display: flex; align-items: center; gap: 8px;
@@ -54,7 +54,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061405"></script>
+<script src="js/app.js?v=2026061406"></script>
 <script>onReady(() => buildNav(""));</script>
 <main>
 <div class="form-wrap">
@@ -250,7 +250,7 @@ async function doCreateTeam() {
     hide(el("create-form"));
     show(el("create-success"));
     el("new-team-name-display").textContent = name;
-    el("btn-view-team").href = `team.html?id=${res.teamId}`;
+    el("btn-view-team").href = `team.html?id=${res.team.id}`;
     el("btn-team-mgmt").href = `your-team.html`;
   } catch(e) {
     hideProcessing();
