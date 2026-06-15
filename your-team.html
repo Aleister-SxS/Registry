@@ -466,7 +466,7 @@ async function fgSave(teamId){
     await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(state.positions)});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
-  finally{hideProcessing(;}
+  finally{hideProcessing();}
 }
 
 // ── Team build modal ──────────────────────────────────────
@@ -548,7 +548,7 @@ async function saveTbm(){
       const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
       if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
     }catch(e){toast(e.message,"error");}
-    finally{hideProcessing(;}
+    finally{hideProcessing();}
   },false);
 }
 
@@ -586,7 +586,7 @@ async function toggleTeamLFC(teamId, checked) {
     if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
     toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
   } catch(e) { toast(e.message,"error"); }
-  finally { hideProcessing(; }
+  finally { hideProcessing(); }
 }
 
 function confirmKick(teamId,memberId,memberName){

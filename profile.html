@@ -509,7 +509,7 @@ async function toggleLFC(checked) {
 }
 
 // ── Avatar ────────────────────────────────────────────────
-async async function onAvatarSelected(url) {
+async function onAvatarSelected(url) {
   const session = getSession();
   if (!session) return;
   showProcessing("Updating Avatar…");
