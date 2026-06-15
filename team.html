@@ -350,7 +350,7 @@ async function doEditTeam(){
     await apiPost({
       action:"captainEditTeam",
       captainId:session.id,captainKey:session.captainKey,teamId:team.id,
-      name, description:el("et-desc").value.trim()||"Join up and let&#39;s win big!",
+      name, description:el("et-desc").value.trim()||"Join up and let's win big!",
       playstyle:el("et-playstyle").value,
       minPower:parsePower(el("et-power").value),
       minLevel:el("et-level").value.trim(),
@@ -360,7 +360,7 @@ async function doEditTeam(){
       composition:[...etComp],
     });
     Object.assign(team,{
-      name,description:el("et-desc").value.trim()||"Join up and let&#39;s win big!",
+      name,description:el("et-desc").value.trim()||"Join up and let's win big!",
       playstyle:el("et-playstyle").value,
       minPower:parsePower(el("et-power").value)||0,
       minLevel:el("et-level").value.trim(),

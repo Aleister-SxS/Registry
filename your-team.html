@@ -463,7 +463,7 @@ async function fgSave(teamId){
   const state=fgState[teamId];
   showProcessing("Saving Formation…");
   try{
-    await apiPost({action:"updateFormation",captainId:session.id,captainKey:session.captainKey,teamId,formation:JSON.stringify(state.positions)});
+    await apiPost({action:"captainEditTeam",memberId:session.id,captainKey:session.captainKey,teamId,formation:state.positions});
     toast("Formation saved!");
   }catch(e){toast(e.message,"error");}
   finally{hideProcessing();}
