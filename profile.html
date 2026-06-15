@@ -223,8 +223,16 @@ onReady(async () => {
       if (changed) setSession(session);
     }
   } catch(e) {
-    profileMember = demoMember();
-    allTeams = [];
+    // API failed — show diagnostic message instead of infinite spinner
+    hide(el("loading"));
+    show(el("profile-content"));
+    el("profile-content").innerHTML = `<div class="empty">
+      <div class="empty-icon">⚠️</div>
+      <p style="color:var(--red);font-weight:600;">Failed to load profile</p>
+      <p style="font-size:0.82rem;color:var(--text2);margin:0.5rem 0;">\${e.message}</p>
+      <button class="btn btn-ghost mt-md" onclick="location.reload()">Try Again</button>
+    </div>`;
+    return;
   }
 
   if (!profileMember) { renderError("Member not found."); return; }

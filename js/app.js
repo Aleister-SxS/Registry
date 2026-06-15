@@ -68,11 +68,22 @@ async function apiGet(params = {}) {
     throw new Error("API not configured. Please set your Apps Script URL in js/app.js");
   }
   const qs = new URLSearchParams(params).toString();
-  const r = await fetch(`${API_URL}?${qs}`, { redirect: "follow" });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const d = await r.json();
-  if (!d.ok) throw new Error(d.error || "Request failed");
-  return d;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
+  try {
+    const r = await fetch(`${API_URL}?${qs}`, { redirect: "follow", signal: controller.signal });
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch { throw new Error("Invalid response from server"); }
+    if (!d.ok) throw new Error(d.error || "Request failed");
+    return d;
+  } catch(e) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error("Request timed out — please check your connection");
+    throw e;
+  }
 }
 
 async function apiPost(body) {
