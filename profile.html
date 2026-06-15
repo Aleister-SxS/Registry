@@ -4,10 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Player Profile — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061402" />
+<link rel="stylesheet" href="css/style.css?v=2026061404" />
 </head>
 <body>
-<script src="js/app.js?v=2026061403"></script>
+<script src="js/app.js?v=2026061404"></script>
 <script>onReady(() => buildNav(""));</script>
 
 <main>
@@ -28,7 +28,7 @@ var _loadTimeout = setTimeout(function() {
         "<button class=\"btn btn-primary\" onclick=\"location.reload()\">Try Again</button></div>";
     }
   }
-}, 15000);
+}, 30000);
 </script>
   <div id="profile-content"></div>
 </main>
@@ -263,7 +263,7 @@ onReady(async () => {
   // Load build-maker.js in background for PVP build section
   if (typeof SKILLS !== "undefined" && SKILLS.length === 0) {
     const bms = document.createElement("script");
-    bms.src = "js/build-maker.js?v=2026061403";
+    bms.src = "js/build-maker.js?v=2026061404";
     bms.onload = function() {
       // Re-render PVP build section if visible
       const buildSection = document.getElementById("pvp-build-section");

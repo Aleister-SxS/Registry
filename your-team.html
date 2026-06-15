@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061402"/>
+<link rel="stylesheet" href="css/style.css?v=2026061404"/>
 <style>
 /* ── Team landing cards ──────────────────────────────────── */
 .my-team-card {
@@ -137,7 +137,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061403"></script>
+<script src="js/app.js?v=2026061404"></script>
 <script>onReady(()=>buildNav("your-team.html"));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
@@ -155,7 +155,7 @@ var _loadTimeout = setTimeout(function() {
         "<button class=\"btn btn-primary\" onclick=\"location.reload()\">Try Again</button></div>";
     }
   }
-}, 15000);
+}, 30000);
 </script>
   <div id="not-logged-in" class="empty" style="display:none;">
     <div class="empty-icon">🛡️</div>
@@ -222,7 +222,7 @@ onReady(async()=>{
   // Load build-maker.js in background for team build features
   if (SKILLS.length === 0) {
     const bms = document.createElement("script");
-    bms.src = "js/build-maker.js?v=2026061403";
+    bms.src = "js/build-maker.js?v=2026061404";
     document.head.appendChild(bms);
   }
   }catch(e){
