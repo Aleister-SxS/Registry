@@ -7,12 +7,30 @@
 <link rel="stylesheet" href="css/style.css?v=2026061402" />
 </head>
 <body>
-<script src="js/app.js?v=2026061402"></script>
+<script src="js/app.js?v=2026061403"></script>
 <script src="js/build-maker.js"></script>
 <script>onReady(() => buildNav(""));</script>
 
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
+<script>
+// Inline timeout - independent of app.js loading
+// If page is still loading after 15s, show error
+var _loadTimeout = setTimeout(function() {
+  var ld = document.getElementById("loading");
+  var pc = document.getElementById("profile-content");
+  if (ld && ld.style.display !== "none" && !ld.classList.contains("hidden")) {
+    if (ld) ld.style.display = "none";
+    if (pc) {
+      pc.style.display = "block";
+      pc.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">⏱️</div>" +
+        "<p style=\"color:var(--red);font-weight:600;\">Page timed out loading</p>" +
+        "<p style=\"font-size:0.82rem;color:var(--text2);margin:0.5rem 0;\">The server is taking too long to respond.</p>" +
+        "<button class=\"btn btn-primary\" onclick=\"location.reload()\">Try Again</button></div>";
+    }
+  }
+}, 15000);
+</script>
   <div id="profile-content"></div>
 </main>
 

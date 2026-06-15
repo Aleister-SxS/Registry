@@ -137,11 +137,27 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061402"></script>
+<script src="js/app.js?v=2026061403"></script>
 <script src="js/build-maker.js"></script>
 <script>onReady(()=>buildNav("your-team.html"));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
+<script>
+var _loadTimeout = setTimeout(function() {
+  var ld = document.getElementById("loading");
+  var tl = document.getElementById("teams-landing");
+  if (ld && ld.style.display !== "none" && !ld.classList.contains("hidden")) {
+    if (ld) ld.style.display = "none";
+    if (tl) {
+      tl.style.display = "block";
+      tl.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">⏱️</div>" +
+        "<p style=\"color:var(--red);font-weight:600;\">Page timed out loading</p>" +
+        "<p style=\"font-size:0.82rem;color:var(--text2);margin:0.5rem 0;\">The server is not responding. Please check your connection and try again.</p>" +
+        "<button class=\"btn btn-primary\" onclick=\"location.reload()\">Try Again</button></div>";
+    }
+  }
+}, 15000);
+</script>
   <div id="not-logged-in" class="empty" style="display:none;">
     <div class="empty-icon">🛡️</div>
     <h3>You&#39;re not logged in.</h3>
