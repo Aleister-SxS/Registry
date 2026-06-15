@@ -71,6 +71,26 @@
     box-shadow: none !important;
   }
   .lang-search::placeholder { color: var(--text3) !important; }
+  /* Chip select wrapper */
+  .chip-select-wrap {
+    border: 1px solid var(--border3);
+    border-radius: 7px;
+    background: var(--surface2);
+    padding: 6px 10px;
+    min-height: 42px;
+  }
+  .chip-select-wrap select {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 4px 0 !important;
+    font-size: 0.85rem !important;
+    color: var(--text2) !important;
+    cursor: pointer;
+    width: 100%;
+  }
+  .chip-select-wrap select:focus { outline: none !important; }
+  .chip-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
   .lang-dd-item {
     padding: 8px 12px; cursor: pointer; font-size: 0.85rem; color: var(--text2);
   }
@@ -264,26 +284,84 @@
         </div>
 
         <div class="field">
-          <label>Languages Spoken <span class="optional">(up to 3)</span></label>
-          <div class="lang-picker" id="r-languages-picker">
-            <div class="lang-tags" id="r-languages-tags"></div>
-            <input type="text" class="lang-search" id="r-languages-search"
-              placeholder="Search languages…" autocomplete="off"
-              oninput="langSearch('r-languages')" onfocus="langOpen('r-languages')" onclick="langOpen('r-languages')" />
-            <div class="lang-dropdown" id="r-languages-dd" style="display:none;position:absolute;z-index:50;width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;max-height:180px;overflow-y:auto;"></div>
+            <label>Languages Spoken <span class="optional">(up to 3)</span></label>
+            <div class="chip-select-wrap">
+              <div class="chip-tags" id="r-languages-tags"></div>
+              <select id="r-languages-select" onchange="chipAdd('r-languages',this,3)">
+                <option value="">+ Add a language…</option>
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Dutch">Dutch</option>
+                  <option value="Russian">Russian</option>
+                  <option value="Polish">Polish</option>
+                  <option value="Turkish">Turkish</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Thai">Thai</option>
+                  <option value="Vietnamese">Vietnamese</option>
+                  <option value="Indonesian">Indonesian</option>
+                  <option value="Malay">Malay</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Swedish">Swedish</option>
+                  <option value="Norwegian">Norwegian</option>
+                  <option value="Danish">Danish</option>
+                  <option value="Finnish">Finnish</option>
+                  <option value="Romanian">Romanian</option>
+                  <option value="Czech">Czech</option>
+                  <option value="Hungarian">Hungarian</option>
+                  <option value="Greek">Greek</option>
+                  <option value="Hebrew">Hebrew</option>
+                  <option value="Filipino">Filipino</option>
+                  <option value="Bengali">Bengali</option>
+              </select>
+            </div>
           </div>
-        </div>
 
         <div class="field">
-          <label>Preferred Language <span style="color:var(--red);">*</span>(s)</label>
-          <div class="lang-picker" id="r-preflang-picker">
-            <div class="lang-tags" id="r-preflang-tags"></div>
-            <input type="text" class="lang-search" id="r-preflang-search"
-              placeholder="Required — search languages…" autocomplete="off"
-              oninput="langSearch('r-preflang')" onfocus="langOpen('r-preflang')" onclick="langOpen('r-preflang')" />
-            <div class="lang-dropdown" id="r-preflang-dd" style="display:none;position:absolute;z-index:50;width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;max-height:180px;overflow-y:auto;"></div>
+            <label>Preferred Language <span style="color:var(--red);">*</span>(s)</label>
+            <div class="chip-select-wrap">
+              <div class="chip-tags" id="r-preflang-tags"></div>
+              <select id="r-preflang-select" onchange="chipAdd('r-preflang',this,3)">
+                <option value="">+ Add a language…</option>
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Dutch">Dutch</option>
+                  <option value="Russian">Russian</option>
+                  <option value="Polish">Polish</option>
+                  <option value="Turkish">Turkish</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Thai">Thai</option>
+                  <option value="Vietnamese">Vietnamese</option>
+                  <option value="Indonesian">Indonesian</option>
+                  <option value="Malay">Malay</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Swedish">Swedish</option>
+                  <option value="Norwegian">Norwegian</option>
+                  <option value="Danish">Danish</option>
+                  <option value="Finnish">Finnish</option>
+                  <option value="Romanian">Romanian</option>
+                  <option value="Czech">Czech</option>
+                  <option value="Hungarian">Hungarian</option>
+                  <option value="Greek">Greek</option>
+                  <option value="Hebrew">Hebrew</option>
+                  <option value="Filipino">Filipino</option>
+                  <option value="Bengali">Bengali</option>
+              </select>
+            </div>
           </div>
-        </div>
 
         <div class="field">
           <label>Time Zone <span style="color:var(--red);">*</span></label>
@@ -461,12 +539,57 @@ function renderTagDropdown(id) {
 // ── Avatar selection ──────────────────────────────────────
 let selectedAvatarUrl = "";
 
+// ── Inline avatar picker (no app.js dependency) ─────────────
+var FANTOMON_LIST = [
+  {id:"aegiswing",label:"Aegiswing"},{id:"nyxarchon",label:"Nyxarchon"},
+  {id:"mandragora",label:"Mandragora"},{id:"herbote",label:"Herbote"},
+  {id:"boaro",label:"Boaro"},{id:"armopi",label:"Armopi"},
+  {id:"falko",label:"Falko"},{id:"zeioletus",label:"Zeioletus"},
+  {id:"kels",label:"Kels"},{id:"tantum",label:"Tantum"},
+  {id:"fairy-test",label:"Fairy Test"},{id:"teny-test",label:"Teny Test"}
+];
+var _pickerSelected = null;
+
 function tryOpenAvatarPicker() {
-  if (typeof openAvatarPicker === "function") {
-    openAvatarPicker(onAvatarSelected);
-  } else {
-    alert("Avatar picker not available — please refresh the page and try again.");
-  }
+  // Remove any existing picker
+  var existing = document.getElementById("inline-avatar-modal");
+  if (existing) existing.remove();
+
+  var grid = FANTOMON_LIST.map(function(f) {
+    var url = "https://eog.gg/assets/sxs/fantomons/" + f.id + ".webp";
+    return '<div id="iap-' + f.id + '" onclick="iapSelect('' + f.id + '','' + url + '')" style="cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);padding:10px;text-align:center;transition:border-color 0.15s;">' +
+      '<img src="' + url + '" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px;" onerror="this.style.opacity=0.3" />' +
+      '<div style="font-size:0.72rem;color:var(--text2);">' + f.label + '</div></div>';
+  }).join("");
+
+  var html = '<div class="modal-overlay open" id="inline-avatar-modal" style="z-index:9998;">' +
+    '<div class="modal" style="max-width:520px;">' +
+    '<div class="modal-title" style="margin-bottom:1rem;">Choose Your Avatar</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' + grid + '</div>' +
+    '<div class="modal-actions">' +
+    '<button class="btn btn-ghost" onclick="document.getElementById('inline-avatar-modal').remove()">Cancel</button>' +
+    '<button class="btn btn-primary" id="iap-confirm" disabled onclick="iapConfirm()">Select</button>' +
+    '</div></div></div>';
+
+  document.body.insertAdjacentHTML("beforeend", html);
+  _pickerSelected = null;
+}
+
+function iapSelect(id, url) {
+  _pickerSelected = {id: id, url: url};
+  FANTOMON_LIST.forEach(function(f) {
+    var el = document.getElementById("iap-" + f.id);
+    if (el) el.style.borderColor = f.id === id ? "var(--blue)" : "var(--border)";
+  });
+  var btn = document.getElementById("iap-confirm");
+  if (btn) btn.disabled = false;
+}
+
+function iapConfirm() {
+  if (!_pickerSelected) return;
+  onAvatarSelected(_pickerSelected.url);
+  var modal = document.getElementById("inline-avatar-modal");
+  if (modal) modal.remove();
 }
 function onAvatarSelected(url) {
   selectedAvatarUrl = url;
@@ -577,6 +700,43 @@ function switchTab(tab) {
 }
 
 // ── Page init ─────────────────────────────────────────────
+// ── Chip-select component (select dropdown → removable chips) ──
+var chipState = {};
+
+function chipAdd(id, select, max) {
+  var val = select.value;
+  if (!val) return;
+  if (!chipState[id]) chipState[id] = [];
+  if (chipState[id].includes(val)) { select.value = ""; return; }
+  if (chipState[id].length >= max) {
+    alert("Maximum " + max + " selections.");
+    select.value = "";
+    return;
+  }
+  chipState[id].push(val);
+  select.value = "";
+  chipRender(id);
+}
+
+function chipRemove(id, val) {
+  if (!chipState[id]) return;
+  chipState[id] = chipState[id].filter(function(v) { return v !== val; });
+  chipRender(id);
+}
+
+function chipRender(id) {
+  var el = document.getElementById(id + "-tags");
+  if (!el) return;
+  el.innerHTML = (chipState[id] || []).map(function(v) {
+    return '<span class="lang-tag">' + v +
+      '<button type="button" class="lang-tag-x" onclick="chipRemove('' + id + '','' + v + '')">✕</button></span>';
+  }).join("");
+}
+
+function chipGetValues(id) {
+  return chipState[id] || [];
+}
+
 // ── Self-contained language picker ───────────────────────────
 var LANG_LIST = ["English","Spanish","Portuguese","French","German","Italian",
   "Dutch","Russian","Polish","Turkish","Arabic","Japanese","Korean","Chinese",
@@ -689,10 +849,6 @@ function initPage() {
       setTimeout(initPage, 50);
       return;
     }
-    var ps = (typeof populateSelect === 'function') ? populateSelect : _populateSelect;
-    ps("r-timezone", TIMEZONES, "— Select Time Zone —");
-    var bcs = (typeof buildClassSelector === 'function') ? buildClassSelector : _buildClassSelector;
-    bcs("r-tier", "r-class");
     langInit("r-languages", 3);
     langInit("r-preflang", 3);
 
@@ -747,8 +903,8 @@ async function doRegister() {
   const lfg       = document.getElementById("r-lfg").checked;
   const isCaptain = false; // set by team creation
   const wantCaptain = document.getElementById("r-want-captain").checked;
-  const languages = langGetValues("r-languages").join(",");
-  const prefLang  = langGetValues("r-preflang");
+  const languages = chipGetValues("r-languages").join(",");
+  const prefLang  = chipGetValues("r-preflang");
 
   if (!name) { showAlert("reg-error", "In-Game Name is required."); return; }
   if (!tag)  { showAlert("reg-error", "Player ID is required."); return; }
