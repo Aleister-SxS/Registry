@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Player Profile — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061404" />
@@ -12,24 +15,7 @@
 
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
-<script>
-// Inline timeout - independent of app.js loading
-// If page is still loading after 15s, show error
-var _loadTimeout = setTimeout(function() {
-  var ld = document.getElementById("loading");
-  var pc = document.getElementById("profile-content");
-  if (ld && ld.style.display !== "none" && !ld.classList.contains("hidden")) {
-    if (ld) ld.style.display = "none";
-    if (pc) {
-      pc.style.display = "block";
-      pc.innerHTML = "<div class=\"empty\"><div class=\"empty-icon\">⏱️</div>" +
-        "<p style=\"color:var(--red);font-weight:600;\">Page timed out loading</p>" +
-        "<p style=\"font-size:0.82rem;color:var(--text2);margin:0.5rem 0;\">The server is taking too long to respond.</p>" +
-        "<button class=\"btn btn-primary\" onclick=\"location.reload()\">Try Again</button></div>";
-    }
-  }
-}, 30000);
-</script>
+
   <div id="profile-content"></div>
 </main>
 
