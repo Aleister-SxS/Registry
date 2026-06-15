@@ -254,30 +254,22 @@ onReady(async () => {
 
   if (!profileMember) { renderError("Member not found."); return; }
 
-  // Load build-maker.js dynamically (non-blocking) then render
-  if (typeof SKILLS === "undefined") {
+  // Render page immediately - don't wait for build-maker.js
+  if (typeof SKILLS === "undefined") window.SKILLS = [];
+  hide(el("loading"));
+  show(el("profile-content"));
+  renderProfile();
+  populateEditModal();
+  // Load build-maker.js in background for PVP build section
+  if (typeof SKILLS !== "undefined" && SKILLS.length === 0) {
     const bms = document.createElement("script");
     bms.src = "js/build-maker.js?v=2026061403";
     bms.onload = function() {
-      hide(el("loading"));
-      show(el("profile-content"));
-      renderProfile();
-      populateEditModal();
-    };
-    bms.onerror = function() {
-      // build-maker failed - render without skill data
-      window.SKILLS = [];
-      hide(el("loading"));
-      show(el("profile-content"));
-      renderProfile();
-      populateEditModal();
+      // Re-render PVP build section if visible
+      const buildSection = document.getElementById("pvp-build-section");
+      if (buildSection) renderPvpBuildSection();
     };
     document.head.appendChild(bms);
-  } else {
-    hide(el("loading"));
-    show(el("profile-content"));
-    renderProfile();
-    populateEditModal();
   }
 });
 
