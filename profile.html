@@ -8,9 +8,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Player Profile — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061404" />
+<script src="js/app.js?v=2026061404"></script>
 </head>
 <body>
-<script src="js/app.js?v=2026061404"></script>
 <script>onReady(() => buildNav(""));</script>
 
 <main>
@@ -195,6 +195,7 @@
 </div>
 
 <script>
+
 let profileMember = null;
 let allTeams = [], allMembers = [], settings = {};
 
@@ -240,23 +241,12 @@ onReady(async () => {
 
   if (!profileMember) { renderError("Member not found."); return; }
 
-  // Render page immediately - don't wait for build-maker.js
+  // Render immediately - SKILLS already loaded at bottom of body
   if (typeof SKILLS === "undefined") window.SKILLS = [];
   hide(el("loading"));
   show(el("profile-content"));
   renderProfile();
   populateEditModal();
-  // Load build-maker.js in background for PVP build section
-  if (typeof SKILLS !== "undefined" && SKILLS.length === 0) {
-    const bms = document.createElement("script");
-    bms.src = "js/build-maker.js?v=2026061404";
-    bms.onload = function() {
-      // Re-render PVP build section if visible
-      const buildSection = document.getElementById("pvp-build-section");
-      if (buildSection) renderPvpBuildSection();
-    };
-    document.head.appendChild(bms);
-  }
 });
 
 function demoMember() {
@@ -909,6 +899,10 @@ function renderError(msg) {
   show(el("profile-content"));
   el("profile-content").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><p>${esc(msg)}</p></div>`;
 }
+
 </script>
+
+<!-- build-maker.js loaded LAST so it never blocks page rendering -->
+<script src="js/build-maker.js?v=2026061404"></script>
 </body>
 </html>

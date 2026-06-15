@@ -8,140 +8,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061404"/>
-<style>
-/* ── Team landing cards ──────────────────────────────────── */
-.my-team-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  transition: border-color 0.15s;
-}
-.my-team-card:hover { border-color: var(--border3); }
-.my-team-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:0.75rem; }
-.my-team-card-name { font-size:1.05rem; font-weight:700; margin-bottom:3px; }
-.my-team-card-captain { font-size:0.72rem; color:var(--text3); font-family:var(--mono); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:3px; }
-.my-team-card-captain-info { display:flex; align-items:center; gap:6px; }
-
-/* ── Collapsible sections ────────────────────────────────── */
-.collapsible-section {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  margin-bottom: 0.75rem;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-/* collapsible open handled below */
-.collapsible-header {
-  background: var(--surface2);
-  border-bottom: 1px solid transparent;
-  padding: 0.85rem 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.12s;
-}
-.collapsible-header:hover { background: var(--surface3); }
-.collapsible-header.open { border-bottom-color: var(--border2); }
-.collapsible-title {
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  color: var(--blue-bright);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.collapsible-chevron {
-  color: var(--text3);
-  font-size: 0.75rem;
-  transition: transform 0.2s;
-}
-.collapsible-header.open .collapsible-chevron { transform: rotate(180deg); }
-.collapsible-body { display: none; padding: 1.25rem; }
-.collapsible-body.open { display: block !important; flex: none !important; overflow-y: auto; }
-
-/* ── Two column layout for management ───────────────────── */
-.mgmt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-@media(max-width:700px) { .mgmt-grid { grid-template-columns:1fr; } }
-
-/* ── Chat ────────────────────────────────────────────────── */
-.chat-panel {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  height: 460px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-.chat-header {
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border2);
-  padding: 0.75rem 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.chat-title { font-family:var(--mono); font-size:0.72rem; color:var(--blue-bright); text-transform:uppercase; letter-spacing:0.1em; font-weight:700; }
-.chat-messages {
-  flex:1; overflow-y:auto; padding:1rem;
-  display:flex; flex-direction:column; gap:2px; scroll-behavior:smooth;
-}
-.chat-messages::-webkit-scrollbar{width:4px;}
-.chat-messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.chat-msg { display:flex; gap:9px; padding:5px 8px; border-radius:7px; transition:background 0.1s; align-items:flex-start; }
-.chat-msg:hover { background:var(--surface2); }
-.chat-msg:hover .chat-msg-delete { opacity:1; }
-.chat-msg-avatar { width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);flex-shrink:0;margin-top:1px; }
-.chat-msg-avatar-fb { width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.5rem;font-weight:700;color:var(--blue-bright);flex-shrink:0;margin-top:1px; }
-.chat-msg-body { flex:1;min-width:0; }
-.chat-msg-meta { display:flex;align-items:baseline;gap:7px;margin-bottom:2px; }
-.chat-msg-name { font-size:0.78rem;font-weight:700;color:var(--text); }
-.chat-msg-name.is-me { color:var(--blue-bright); }
-.chat-msg-name.is-captain { color:var(--amber); }
-.chat-msg-time { font-size:0.65rem;color:var(--text3);font-family:var(--mono); }
-.chat-msg-text { font-size:0.83rem;color:var(--text2);line-height:1.5;word-break:break-word; }
-.chat-msg-delete { background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.7rem;padding:2px 5px;border-radius:4px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;align-self:center; }
-.chat-msg-delete:hover { color:var(--red);background:var(--red-dim); }
-.chat-date-div { text-align:center;font-size:0.63rem;color:var(--text3);font-family:var(--mono);padding:6px 0;position:relative; }
-.chat-date-div::before,.chat-date-div::after { content:"";position:absolute;top:50%;width:36%;height:1px;background:var(--border); }
-.chat-date-div::before{left:0;} .chat-date-div::after{right:0;}
-.chat-empty-msg { flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text3);font-size:0.82rem;text-align:center;padding:2rem; }
-.chat-input-area { border-top:1px solid var(--border2);padding:0.75rem 1rem;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:var(--surface2); }
-.chat-input { flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:0.85rem;resize:none;min-height:38px;max-height:100px;outline:none;font-family:inherit;line-height:1.45;transition:border-color 0.15s; }
-.chat-input:focus { border-color:var(--blue); }
-.chat-input::placeholder { color:var(--text3); }
-.chat-send-btn { background:var(--blue);border:none;border-radius:7px;color:#fff;font-size:0.82rem;font-weight:600;padding:8px 14px;cursor:pointer;flex-shrink:0;transition:opacity 0.15s;align-self:flex-end; }
-.chat-send-btn:hover{opacity:0.85;} .chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.chat-refresh-info { font-size:0.65rem;color:var(--text3); }
-.chat-translate-btn { background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.68rem;padding:2px 5px;border-radius:4px;opacity:0;transition:opacity 0.15s,color 0.15s;flex-shrink:0;align-self:center; }
-.chat-msg:hover .chat-translate-btn { opacity:1; }
-.chat-translate-btn:hover { color:var(--blue-bright);background:var(--blue-dim); }
-.chat-translation { margin-top:5px;padding-top:5px;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text2);font-style:italic;line-height:1.45; }
-.chat-translation-label { font-size:0.62rem;color:var(--text3);margin-bottom:2px;font-style:normal; }
-
-/* ── Build display ───────────────────────────────────────── */
-.build-member-card { background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem;margin-bottom:0.5rem; }
-.build-slots-row { display:grid;grid-template-columns:repeat(4,1fr);gap:5px; }
-.build-slot-sm { background:var(--bg);border:1px dashed var(--border2);border-radius:6px;padding:5px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:68px;justify-content:center;cursor:pointer;transition:border-color 0.15s; }
-.build-slot-sm.filled { border-style:solid;border-color:var(--blue-mid);background:var(--surface); }
-.build-slot-sm:hover { border-color:var(--blue-mid); }
-</style>
+<script src="js/app.js?v=2026061404"></script>
 </head>
 <body>
-<script src="js/app.js?v=2026061404"></script>
 <script>onReady(()=>buildNav("your-team.html"));</script>
+
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
   <div id="not-logged-in" class="empty" style="display:none;">
@@ -185,7 +56,10 @@
   </div>
 </div>
 
+<!-- Processing handled by global overlay in app.js -->
+
 <script>
+
 let allTeams=[],allMembers=[],settings={};
 let session=null;
 let activeTeamId=null;
@@ -202,16 +76,10 @@ onReady(async()=>{
     allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
   }catch(e){ allTeams=[];allMembers=[]; }
   try{
-    // Render immediately - don't wait for build-maker.js
+    // Render immediately - SKILLS loaded at bottom of body
   if (typeof SKILLS === "undefined") window.SKILLS = [];
   hide(el("loading"));
   renderLanding();
-  // Load build-maker.js in background for team build features
-  if (SKILLS.length === 0) {
-    const bms = document.createElement("script");
-    bms.src = "js/build-maker.js?v=2026061404";
-    document.head.appendChild(bms);
-  }
   }catch(e){
     console.error("your-team.html render error:", e);
     hide(el("loading"));
@@ -868,7 +736,10 @@ async function chatTranslate(msgId, text) {
     if (btn) btn.textContent = "🌐";
   }
 }
+
 </script>
-<!-- Processing handled by global overlay in app.js -->
+
+<!-- build-maker.js loaded LAST so it never blocks page rendering -->
+<script src="js/build-maker.js?v=2026061404"></script>
 </body>
 </html>
