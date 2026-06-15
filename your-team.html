@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061407"/>
-<script src="js/app.js?v=2026061407"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061501"/>
+<script src="js/app.js?v=2026061501"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -61,6 +61,7 @@
 <script>
 
 let allTeams=[],allMembers=[],settings={};
+const chatTranslations={}; // { msgId: { label, text } } — persists across re-renders
 let session=null;
 let activeTeamId=null;
 const fgState={};
@@ -322,7 +323,7 @@ function renderMgmt(teamId){
     <div>
       ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
           ${members.map(m=>{
-            const build=m.teamBuild||{techniques:[],charms:[]};
+            const build=m.pvpBuild&&typeof m.pvpBuild==="object"?m.pvpBuild:(typeof m.pvpBuild==="string"&&m.pvpBuild?JSON.parse(m.pvpBuild):{techniques:[],charms:[]});
             const techs=Array.isArray(build.techniques)?build.techniques:[];
             const chms=Array.isArray(build.charms)?build.charms:[];
             const isMe=m.id===session.id;
@@ -474,7 +475,8 @@ async function fgSave(teamId){
 // ── Team build modal ──────────────────────────────────────
 function openTbm(teamId,memberId,memberClass){
   const m=allMembers.find(x=>x.id===memberId);
-  const build=m?.teamBuild||{techniques:[],charms:[]};
+  const rawBuild=m?.pvpBuild;
+  const build=rawBuild&&typeof rawBuild==="object"?rawBuild:(typeof rawBuild==="string"&&rawBuild?JSON.parse(rawBuild):{techniques:[],charms:[]});
   tbmState={
     techniques:[...(build.techniques||[])].slice(0,4).concat(Array(4)).slice(0,4),
     charms:[...(build.charms||[])].slice(0,4).concat(Array(4)).slice(0,4),
@@ -546,8 +548,8 @@ async function saveTbm(){
     closeTbm();
     showProcessing("Saving Team Build…");
     try{
-      await apiPost({action:"updateTeamBuild",memberId:session.id,captainKey:session.captainKey,teamId:tbmState.teamId,build:JSON.stringify(build)});
-      const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.teamBuild=build;
+      await apiPost({action:"updateProfile",memberId:session.id,captainKey:session.captainKey,pvpBuild:JSON.stringify(build)});
+      const m=allMembers.find(x=>x.id===tbmState.memberId);if(m)m.pvpBuild=build;
       if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
     }catch(e){toast(e.message,"error");}
     finally{hideProcessing();}
@@ -688,6 +690,17 @@ function chatRender(teamId,messages){
     </div>`;
   }).join("");
   if(isNew||wasAtBottom)container.scrollTop=container.scrollHeight;
+  // Re-inject any active translations that survived a re-render
+  Object.entries(chatTranslations).forEach(([msgId,trans])=>{
+    const msgEl=el("msg-"+msgId);
+    if(!msgEl)return;
+    if(msgEl.querySelector(".chat-translation"))return; // already present
+    const div=document.createElement("div");
+    div.className="chat-translation";
+    div.innerHTML=`<div class="chat-translation-label">🌐 ${esc(trans.label)}</div>${esc(trans.text)}`;
+    const body=msgEl.querySelector(".chat-msg-body");
+    if(body)body.appendChild(div);
+  });
 }
 async function chatSend(teamId){
   if(!session)return;
@@ -718,26 +731,46 @@ async function chatTranslate(msgId, text) {
   const msgEl = el("msg-" + msgId);
   if (!msgEl) return;
 
-  // Get user's preferred language
-  const myMember = allMembers.find(m=>m.id===session.id);
-  const prefLang = myMember?.prefLanguage || "English";
-
   // Toggle: remove if already showing
-  const existing = msgEl.querySelector(".chat-translation");
-  if (existing) { existing.remove(); return; }
+  if (chatTranslations[msgId]) {
+    delete chatTranslations[msgId];
+    const existing = msgEl.querySelector(".chat-translation");
+    if (existing) existing.remove();
+    return;
+  }
 
   const btn = msgEl.querySelector(".chat-translate-btn");
   if (btn) btn.textContent = "⏳";
+
+  const myMember = allMembers.find(m=>m.id===session.id);
+  const prefLang = (myMember?.prefLanguage || "English").split(",")[0].trim();
+
   try {
     const translated = await translateText(text, prefLang);
-    // null means already in target language
     if (translated === null) {
-      toast("Message appears to already be in " + prefLang, "info"); if(btn)btn.textContent="🌐"; return;
+      toast("Message appears to already be in " + prefLang, "info");
+      if(btn) btn.textContent = "🌐";
+      return;
     }
-    const div = document.createElement("div");
-    div.className = "chat-translation";
-    div.innerHTML = `<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
-    msgEl.querySelector(".chat-msg-body").appendChild(div);
+    // Store in cache so re-renders can restore it
+    chatTranslations[msgId] = { label: prefLang, text: translated };
+    // Inject into DOM
+    const msgEl2 = el("msg-" + msgId); // re-fetch in case DOM changed during await
+    if (msgEl2) {
+      const existing = msgEl2.querySelector(".chat-translation");
+      if (existing) existing.remove();
+      const div = document.createElement("div");
+      div.className = "chat-translation";
+      div.innerHTML = `<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
+      const body = msgEl2.querySelector(".chat-msg-body");
+      if (body) body.appendChild(div);
+    }
+    // Auto-dismiss after 10 seconds
+    setTimeout(()=>{
+      delete chatTranslations[msgId];
+      const me = el("msg-" + msgId);
+      if (me) { const t = me.querySelector(".chat-translation"); if(t) t.remove(); }
+    }, 10000);
   } catch(e) {
     toast(e.message, "error");
   } finally {
@@ -748,6 +781,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061407"></script>
+<script src="js/build-maker.js?v=2026061501"></script>
 </body>
 </html>

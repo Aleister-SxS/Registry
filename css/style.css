@@ -759,3 +759,87 @@ input[type="text"], input[type="number"], input[type="password"] {
   justify-content: center; gap: 0.5rem; padding: 2rem;
   color: var(--text3); font-size: 0.85rem;
 }
+
+/* ── Collapsible sections (your-team.html) ───────────────── */
+.collapsible-section {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.collapsible-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.125rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
+  cursor: pointer; user-select: none;
+  transition: background 0.15s;
+}
+.collapsible-header:hover { background: var(--surface3); }
+.collapsible-title {
+  font-size: 0.82rem; font-weight: 700; color: var(--text);
+  letter-spacing: 0.02em;
+}
+.collapsible-chevron {
+  color: var(--text3); font-size: 0.72rem;
+  transition: transform 0.2s;
+}
+.collapsible-header.open .collapsible-chevron { transform: none; }
+.collapsible-header:not(.open) .collapsible-chevron { transform: rotate(-90deg); }
+.collapsible-body {
+  display: none;
+  padding: 1rem 1.125rem;
+  flex: 1;
+}
+.collapsible-body.open { display: block; }
+
+/* ── Team Builds section ─────────────────────────────────── */
+.build-member-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.build-member-card:last-child { margin-bottom: 0; }
+.build-slots-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.build-slot-sm {
+  background: var(--surface);
+  border: 1px dashed var(--border2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  min-height: 54px;
+  text-align: center;
+}
+.build-slot-sm.filled {
+  border-style: solid;
+  border-color: var(--blue-mid);
+  background: var(--surface);
+}
+
+/* ── Chat panel (inside collapsible) ────────────────────── */
+.chat-panel {
+  display: flex; flex-direction: column;
+  height: 400px; overflow: hidden;
+}
+.chat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  flex-shrink: 0;
+}
+.chat-refresh-info {
+  font-size: 0.72rem; color: var(--text3);
+  font-family: var(--mono);
+}
