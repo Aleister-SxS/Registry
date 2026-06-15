@@ -8,7 +8,6 @@
 </head>
 <body>
 <script src="js/app.js?v=2026061403"></script>
-<script src="js/build-maker.js?v=2026061403"></script>
 <script>onReady(() => buildNav(""));</script>
 
 <main>
@@ -255,10 +254,31 @@ onReady(async () => {
 
   if (!profileMember) { renderError("Member not found."); return; }
 
-  hide(el("loading"));
-  show(el("profile-content"));
-  renderProfile();
-  populateEditModal();
+  // Load build-maker.js dynamically (non-blocking) then render
+  if (typeof SKILLS === "undefined") {
+    const bms = document.createElement("script");
+    bms.src = "js/build-maker.js?v=2026061403";
+    bms.onload = function() {
+      hide(el("loading"));
+      show(el("profile-content"));
+      renderProfile();
+      populateEditModal();
+    };
+    bms.onerror = function() {
+      // build-maker failed - render without skill data
+      window.SKILLS = [];
+      hide(el("loading"));
+      show(el("profile-content"));
+      renderProfile();
+      populateEditModal();
+    };
+    document.head.appendChild(bms);
+  } else {
+    hide(el("loading"));
+    show(el("profile-content"));
+    renderProfile();
+    populateEditModal();
+  }
 });
 
 function demoMember() {
