@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Your Invites — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061407" />
+<link rel="stylesheet" href="css/style.css?v=2026061502" />
 <style>
 .status-block{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:1.25rem;overflow:hidden;}
 .status-block-header{background:var(--surface2);border-bottom:1px solid var(--border2);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
@@ -25,7 +25,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061407"></script>
+<script src="js/app.js?v=2026061502"></script>
 <script>onReady(()=>buildNav("status.html"));</script>
 <main>
   <div style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;">Your Invites</div>
@@ -73,6 +73,16 @@
         <span id="jrq-badge" class="badge badge-pending" style="display:none;"></span>
       </div>
       <div class="status-block-body" id="sc-joinreqs"></div>
+    </div>
+
+    <!-- Captain: Invites You've Sent -->
+    <div class="status-block" id="sent-invites-section">
+      <div class="status-block-header" onclick="toggleStatusBlock('sent-invites-section')">
+        <span class="status-block-title">📬 Invites You've Sent</span>
+        <span id="sinv-badge" class="badge badge-pending" style="display:none;"></span>
+        <span class="status-chevron">▼</span>
+      </div>
+      <div class="status-block-body" id="sc-sent-invites"></div>
     </div>
 
   </div>
@@ -222,6 +232,45 @@ function renderStatus(){
       jrqEl.innerHTML=`<div class="status-empty"><div class="status-empty-icon">⚜️</div>No pending join requests to your teams.</div>`;
     }
   }
+  // ── Sent Invites (captain view) ──
+  const sentInvSecEl = el("sent-invites-section");
+  const sinvBadge = el("sinv-badge");
+  const sinvEl = el("sc-sent-invites");
+  if (!capTeams.length) {
+    if (sentInvSecEl) sentInvSecEl.style.display = "none";
+  } else {
+    if (sentInvSecEl) sentInvSecEl.style.display = "block";
+    const sentInvites = allRequests.filter(r =>
+      r.type === "invite" &&
+      capTeams.map(t => t.id).includes(r.teamId) &&
+      r.status === "pending"
+    );
+    if (sentInvites.length) {
+      sinvBadge.textContent = sentInvites.length; show(sinvBadge);
+      sinvEl.innerHTML = sentInvites.map(r => {
+        const target = allMembers.find(mb => mb.id === r.toId);
+        const team = allTeams.find(t => t.id === r.teamId);
+        return `<div class="status-row">
+          <div class="status-row-info">
+            <div class="flex-center gap-sm mb-sm">
+              ${memberAvatar(target, 34)}
+              <div>
+                <div class="status-row-name">${esc(target?.name || "Unknown Player")}</div>
+                <div class="status-row-sub">${esc(target?.gamertag || "")}${target?.class ? " · " + esc(CLASS_ICONS[target.class]||"") + " " + esc(target.class) : ""}${target?.power ? " · ⚡" + formatPower(target.power) : ""}</div>
+              </div>
+            </div>
+            <div class="status-row-sub">⏳ Pending invite to join <strong style="color:var(--text);">${esc(r.teamName || team?.name || "your team")}</strong></div>
+          </div>
+          <div class="status-row-actions">
+            <button class="btn btn-danger btn-sm" onclick="cancelSentInvite('${r.id}')">Revoke</button>
+          </div>
+        </div>`;
+      }).join("");
+    } else {
+      hide(sinvBadge);
+      sinvEl.innerHTML = `<div class="status-empty"><div class="status-empty-icon">📬</div>No pending invites sent.</div>`;
+    }
+  }
 }
 
 async function respondInvite(reqId,decision){
@@ -251,6 +300,15 @@ async function cancelRequest(reqId){
     await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
     const idx=allRequests.findIndex(x=>x.id===reqId);if(idx>=0)allRequests.splice(idx,1);
     renderStatus();hideProcessing("Request cancelled.");
+  }catch(e){toast(e.message,"error");}
+}
+async function cancelSentInvite(reqId){
+  showProcessing("Revoking Invite…");
+  const session=getSession();if(!session)return;
+  try{
+    await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
+    const idx=allRequests.findIndex(x=>x.id===reqId);if(idx>=0)allRequests.splice(idx,1);
+    renderStatus();hideProcessing("Invite revoked.");
   }catch(e){toast(e.message,"error");}
 }
 </script>
