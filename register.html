@@ -520,7 +520,7 @@ var FANTOMON_LIST = [
   {id:"mandragora",label:"Mandragora"},{id:"herbote",label:"Herbote"},
   {id:"boaro",label:"Boaro"},{id:"armopi",label:"Armopi"},
   {id:"falko",label:"Falko"},{id:"zeioletus",label:"Zeioletus"},
-  {id:"kels",label:"Kels"},{id:"tantum",label:"Tantum"}
+  {id:"kels",label:"Kels"}
 ];
 var _pickerSelected = null;
 
@@ -600,10 +600,16 @@ function iapConfirm() {
   if (!_pickerSelected) return;
   var url = _pickerSelected.url;
   selectedAvatarUrl = url;
-  var preview = document.getElementById("avatar-preview");
-  if (preview) { preview.src = url; preview.style.display = "block"; }
-  var placeholder = document.getElementById("avatar-placeholder");
-  if (placeholder) placeholder.style.display = "none";
+  // Update the preview container in the form
+  var previewDiv = document.getElementById("reg-avatar-preview");
+  if (previewDiv) {
+    previewDiv.innerHTML = "";
+    var img = document.createElement("img");
+    img.src = url;
+    img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%;";
+    img.onerror = function() { previewDiv.textContent = "👤"; };
+    previewDiv.appendChild(img);
+  }
   var modal = document.getElementById("inline-avatar-modal");
   if (modal) modal.remove();
 }
