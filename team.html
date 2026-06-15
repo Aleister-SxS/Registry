@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Team Profile — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061407"/>
+<link rel="stylesheet" href="css/style.css?v=2026061501"/>
 <style>
   .req-row-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.79rem;}
   .req-row-item:last-child{border-bottom:none;}
@@ -19,7 +19,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061407"></script>
+<script src="js/app.js?v=2026061501"></script>
 <script>onReady(()=>buildNav(""));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
@@ -175,7 +175,7 @@ function renderTeam(){
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
           <span style="font-size:0.62rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;">⚜️ Team Captain</span>
           ${capAv}
-          <a href="profile.html?id=${team.captainId}" style="font-size:0.82rem;color:var(--amber);font-weight:600;">${esc(team.captainName||"—")}${capClass}</a>
+          <a href="profile.html?id=${team.captainId}" style="font-size:0.82rem;color:var(--amber);font-weight:600;">${esc(capMember?.name||team.captainName||"—")}${capClass}</a>
         </div>
       </div>
       <div class="flex gap-xs flex-wrap" style="align-items:center;">
@@ -354,8 +354,8 @@ async function doEditTeam(){
       playstyle:el("et-playstyle").value,
       minPower:parsePower(el("et-power").value),
       minLevel:el("et-level").value.trim(),
-      requiresDiscord:el("et-discord").checked,
-      lookingForCaptain:el("et-want-captain").checked,
+      requiresDiscord:el("et-discord").checked?"TRUE":"FALSE",
+      lookingForCaptain:el("et-want-captain").checked?"TRUE":"FALSE",
       prefLanguage:el("et-lang").value||"Any Language",
       composition:[...etComp],
     });
@@ -378,7 +378,10 @@ function showProcessing(title="Saving…"){
   const ov=el("team-processing");const ti=el("team-processing-title");
   if(ov)ov.classList.add("active");if(ti)ti.textContent=title;
 }
-function hideProcessing(){el("team-processing")?.classList.remove("active");}
+function hideProcessing(successMsg){
+  el("team-processing")?.classList.remove("active");
+  if(successMsg)toast(successMsg,"success",3500);
+}
 
 function renderError(msg){
   hide(el("loading"));show(el("content"));

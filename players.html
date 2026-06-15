@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Guild Members — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061407" />
+<link rel="stylesheet" href="css/style.css?v=2026061501" />
 <style>
   /* Side-by-side grid, responsive */
   .members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:0.875rem; align-items:start; }
@@ -50,7 +50,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061407"></script>
+<script src="js/app.js?v=2026061501"></script>
 <script>onReady(()=>buildNav("players.html"));</script>
 <main>
   <div class="section-header">
@@ -96,17 +96,15 @@
   <div id="players-empty" class="empty" style="display:none;"><div class="empty-icon">👾</div><p>No members match your filters.</p></div>
 </main>
 
-<!-- Invite modal -->
+<!-- Invite modal — team picker -->
 <div class="modal-overlay" id="invite-modal">
   <div class="modal">
     <div class="modal-title">Invite <span id="inv-target-name"></span></div>
-    <div class="modal-body">Send a team invite to this player.</div>
-    <div class="field"><label>Your Player ID</label><input id="inv-tag" /></div>
-    <div class="field mt-sm"><label>Secret Key</label><input id="inv-key" type="password" placeholder="••••••••" /></div>
+    <div class="modal-body" id="inv-modal-body">Choose which of your teams to invite this player to.</div>
+    <div id="inv-team-list" style="display:flex;flex-direction:column;gap:0.5rem;margin:1rem 0;"></div>
     <div id="inv-error" class="alert alert-error alert-hidden mt-sm"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeInviteModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="doSendInvite()">Send Invite</button>
     </div>
   </div>
 </div>
@@ -177,7 +175,7 @@ function renderPlayers(){
   updatePlayerFilterBadge(active);
   const session=getSession();
   const maxTeams=Number(settings.maxMemberTeams)||3;
-  const captainTeam=session?allTeams.find(t=>t.captainId===session.id):null;
+  const myCaptainTeams=session?allTeams.filter(t=>t.captainId===session.id):[];
 
   const members=allMembers.filter(m=>{
     if(active.includes("lft")&&String(m.lookingForTeam).toUpperCase()!=="TRUE")return false;
@@ -202,7 +200,7 @@ function renderPlayers(){
     const isWC=String(m.lookingForCaptainRole).toUpperCase()==="TRUE";
     const teamCount=(Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).length;
     const captainedTeams=allTeams.filter(t=>t.captainId===m.id);
-    const alreadyInvited=session&&captainTeam&&allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&r.teamId===captainTeam.id);
+    const alreadyInvitedAll=session&&myCaptainTeams.length&&allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&myCaptainTeams.map(t=>t.id).includes(r.teamId));
 
     const av=m.avatarUrl
       ?`<img src="${esc(m.avatarUrl)}" class="mc-avatar" onerror="this.outerHTML='<div class=mc-avatar-fb>${initials(m.name)}</div>'" />`
@@ -231,9 +229,9 @@ function renderPlayers(){
         style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
     </div>`:"";
 
-    const inviteBtn=captainTeam&&!isMe&&teamCount<maxTeams&&isLFT&&!alreadyInvited
+    const inviteBtn=myCaptainTeams.length&&!isMe&&teamCount<maxTeams&&isLFT&&!alreadyInvitedAll
       ?`<button class="btn btn-primary btn-sm w-full mt-sm" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`
-      :alreadyInvited?`<div class="text-xs text-muted mt-sm" style="text-align:center;">Invite pending…</div>`:"";
+      :alreadyInvitedAll?`<div class="text-xs text-muted mt-sm" style="text-align:center;">Invite pending…</div>`:"";
 
     return `<div class="mc" id="mc-${m.id}">
       <div class="mc-header" onclick="toggleMemberCard('${m.id}')">
@@ -255,15 +253,73 @@ function renderPlayers(){
   }).join("");
 }
 
-function openInviteModal(memberId,memberName){inviteTargetId=memberId;el("inv-target-name").textContent=memberName;el("inv-tag").value=getSession()?.gamertag||"";el("inv-key").value="";clearAlert("inv-error");el("invite-modal").classList.add("open");}
-function closeInviteModal(){el("invite-modal").classList.remove("open");}
-async function doSendInvite(){
-  const tag=el("inv-tag").value.trim(),key=el("inv-key").value.trim();
+function openInviteModal(memberId, memberName) {
+  inviteTargetId = memberId;
+  el("inv-target-name").textContent = memberName;
   clearAlert("inv-error");
-  if(!tag||!key){showAlert("inv-error","Enter your credentials.");return;}
+
+  const session = getSession();
+  if (!session) { toast("You must be logged in to send invites.", "error"); return; }
+
+  const myTeams = allTeams.filter(t => t.captainId === session.id);
+  const maxSize = Number(settings.maxTeamSize) || 4;
+
+  if (!myTeams.length) {
+    el("inv-modal-body").textContent = "You are not a captain of any team.";
+    el("inv-team-list").innerHTML = "";
+    el("invite-modal").classList.add("open");
+    return;
+  }
+
+  el("inv-modal-body").textContent = "Choose which of your teams to invite this player to:";
+  el("inv-team-list").innerHTML = myTeams.map(t => {
+    const memberCount = allMembers.filter(m => (Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).includes(t.id)).length;
+    const isFull = memberCount >= maxSize || t.status === "full";
+    const alreadyPending = allRequests.find(r => r.type === "invite" && r.toId === memberId && r.status === "pending" && r.teamId === t.id);
+    const alreadyMember = (()=>{ const tm=allMembers.find(m=>m.id===memberId); return tm&&(Array.isArray(tm.teamIds)?tm.teamIds:(tm.teamIds||"").split(",").filter(Boolean)).includes(t.id); })();
+
+    let btnHtml;
+    if (alreadyMember) {
+      btnHtml = `<span style="font-size:0.72rem;color:var(--text3);">Already a member</span>`;
+    } else if (alreadyPending) {
+      btnHtml = `<span style="font-size:0.72rem;color:var(--amber);">Invite pending</span>`;
+    } else if (isFull) {
+      btnHtml = `<span style="font-size:0.72rem;color:var(--text3);">Team full</span>`;
+    } else {
+      btnHtml = `<button class="btn btn-primary btn-sm" onclick="doSendInvite('${t.id}','${esc(t.name)}')">Invite</button>`;
+    }
+
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;
+      background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
+      padding:0.625rem 0.875rem;">
+      <div>
+        <div style="font-size:0.88rem;font-weight:600;">${esc(t.name)}</div>
+        <div style="font-size:0.72rem;color:var(--text3);">${memberCount}/${maxSize} members</div>
+      </div>
+      ${btnHtml}
+    </div>`;
+  }).join("");
+
+  el("invite-modal").classList.add("open");
+}
+
+function closeInviteModal() { el("invite-modal").classList.remove("open"); }
+
+async function doSendInvite(teamId, teamName) {
+  const session = getSession();
+  if (!session) return;
+  clearAlert("inv-error");
+  closeInviteModal();
   showProcessing("Sending Invite…");
-  try{await apiPost({action:"sendInvite",gamertag:tag,captainKey:key,toMemberId:inviteTargetId});closeInviteModal();hideProcessing("Invite sent!");renderPlayers();}
-  catch(e){hideProcessing();showAlert("inv-error",e.message);}
+  try {
+    await apiPost({action:"sendInvite", memberId:session.id, captainKey:session.captainKey, toMemberId:inviteTargetId, teamId});
+    allRequests.push({type:"invite",toId:inviteTargetId,teamId,teamName,status:"pending",id:"local-"+Date.now()});
+    hideProcessing("Invite sent to " + teamName + "!");
+    renderPlayers();
+  } catch(e) {
+    hideProcessing();
+    toast(e.message, "error");
+  }
 }
 </script>
 </body>
