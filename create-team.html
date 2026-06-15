@@ -241,7 +241,7 @@ async function doCreateTeam() {
   try {
     const res = await apiPost({
       action:"createTeam",
-      captainId:session.id, captainKey:session.captainKey,
+      memberId:session.id, captainKey:session.captainKey,
       name, playstyle, description:desc, minPower, minLevel,
       requiresDiscord:reqDiscord, lookingForCaptain:needCaptain,
       prefLanguage:prefLang, composition:[...compSelected],

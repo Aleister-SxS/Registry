@@ -803,10 +803,10 @@ async function doSaveProfile() {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
       name, gamertag:tag, tier, class:cls, power, level, bio:"", description:desc,
       playstyle, discordId:discId, discordName:discName, timezone:tz,
-      languages, prefLanguage:prefLang, lookingForTeam:lfg, isCaptain });
+      languages, prefLanguage:prefLangVal, lookingForTeam:lfg, isCaptain });
     Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,
       description:desc||"I'm a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
-      languages,prefLanguage:prefLang,
+      languages,prefLanguage:prefLangVal,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
     const s = getSession();
     s.gamertag=tag; s.name=name; s.isCaptain=isCaptain;

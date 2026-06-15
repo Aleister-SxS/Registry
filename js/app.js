@@ -273,7 +273,7 @@ function buildNav(activePage, opts = {}) {
         <button class="session-tag" onclick="toggleNavDropdown()" title="Account menu"
           style="display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;">
           ${session.avatarUrl
-            ? `<img src="${esc(session.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" />`
+            ? `<img src="${esc(session.avatarUrl)}" class="nav-avatar-img" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" />`
             : `<div style="width:26px;height:26px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--blue-bright);">${esc((session.name||session.gamertag||"?")[0].toUpperCase())}</div>`
           }
           <span>${esc(session.name || session.gamertag)}</span> ▾
@@ -294,7 +294,7 @@ function buildNav(activePage, opts = {}) {
   const mobileUserSection = session
     ? `<div class="mobile-nav-user">
         ${session.avatarUrl
-          ? `<img src="${esc(session.avatarUrl)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" />`
+          ? `<img src="${esc(session.avatarUrl)}" class="nav-avatar-img" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" />`
           : `<div class="avatar avatar-md">${esc((session.name||session.gamertag||"?")[0].toUpperCase())}</div>`
         }
         <div>

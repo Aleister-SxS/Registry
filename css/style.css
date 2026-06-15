@@ -609,3 +609,28 @@ input[type="text"], input[type="number"], input[type="password"] {
   align-items: start;
 }
 @media(max-width:720px) { .teams-grid { grid-template-columns: 1fr; } }
+
+/* ── Chip / tag styles (shared across register and edit modal) ── */
+.chip-tags, .lang-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
+.lang-tag {
+  display:inline-flex; align-items:center; gap:4px;
+  background:var(--blue-dim); border:1px solid var(--blue-mid);
+  color:var(--blue-bright); border-radius:4px;
+  padding:2px 8px; font-size:0.78rem; font-weight:600;
+}
+.lang-tag-x {
+  background:none; border:none; color:inherit; cursor:pointer;
+  font-size:0.8rem; padding:0; opacity:0.7; line-height:1;
+}
+.lang-tag-x:hover { opacity:1; }
+.chip-select-wrap {
+  border:1px solid var(--border3); border-radius:7px;
+  background:var(--surface2); padding:6px 10px; min-height:42px;
+}
+.chip-select-wrap select {
+  background:transparent !important; border:none !important;
+  box-shadow:none !important; padding:4px 0 !important;
+  font-size:0.85rem !important; color:var(--text2) !important;
+  cursor:pointer; width:100%;
+}
+.chip-select-wrap select:focus { outline:none !important; }
