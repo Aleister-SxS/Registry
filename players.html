@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Guild Members — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061501" />
+<link rel="stylesheet" href="css/style.css?v=2026061502" />
 <style>
   /* Side-by-side grid, responsive */
   .members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:0.875rem; align-items:start; }
@@ -50,7 +50,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061501"></script>
+<script src="js/app.js?v=2026061502"></script>
 <script>onReady(()=>buildNav("players.html"));</script>
 <main>
   <div class="section-header">
@@ -312,7 +312,7 @@ async function doSendInvite(teamId, teamName) {
   closeInviteModal();
   showProcessing("Sending Invite…");
   try {
-    await apiPost({action:"sendInvite", memberId:session.id, captainKey:session.captainKey, toMemberId:inviteTargetId, teamId});
+    await apiPost({action:"sendInvite", gamertag:session.gamertag, captainKey:session.captainKey, toMemberId:inviteTargetId, teamId});
     allRequests.push({type:"invite",toId:inviteTargetId,teamId,teamName,status:"pending",id:"local-"+Date.now()});
     hideProcessing("Invite sent to " + teamName + "!");
     renderPlayers();

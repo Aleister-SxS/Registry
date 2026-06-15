@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061501"/>
-<script src="js/app.js?v=2026061501"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061502"/>
+<script src="js/app.js?v=2026061502"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -171,7 +171,7 @@ function renderLanding(){
             <div class="my-team-card-captain">⚜️ Team Captain</div>
             <div class="my-team-card-captain-info">
               ${capAv}
-              <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${capClass}</span>
+              <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(capMember?.name||t.captainName||"—")}${capClass}</span>
             </div>
           </div>
           <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}">
@@ -781,6 +781,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061501"></script>
+<script src="js/build-maker.js?v=2026061502"></script>
 </body>
 </html>
