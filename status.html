@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Your Invites — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061510" />
+<link rel="stylesheet" href="css/style.css?v=2026061511" />
 <style>
 .status-block{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:1.25rem;overflow:hidden;}
 .status-block-header{background:var(--surface2);border-bottom:1px solid var(--border2);padding:0.75rem 1.25rem;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
@@ -25,7 +25,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061510"></script>
+<script src="js/app.js?v=2026061511"></script>
 <script>onReady(()=>buildNav("status.html"));</script>
 <main>
   <div style="font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;">Your Invites</div>
@@ -240,7 +240,15 @@ async function respondJoin(reqId,decision){
   const session=getSession();if(!session)return;
   try{
     await apiPost({action:"respondRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId,accept:decision==="accept"});
-    const r=allRequests.find(x=>x.id===reqId);if(r)r.status=decision==="accept"?"accepted":"declined";
+    const r=allRequests.find(x=>x.id===reqId);
+    if(r){
+      r.status=decision==="accept"?"accepted":"declined";
+      if(decision==="accept"){
+        // Cancel any other pending requests/invites for this member+team locally
+        allRequests.filter(x=>x.id!==reqId&&x.status==="pending"&&x.teamId===r.teamId&&(x.fromId===r.fromId||x.toId===r.fromId))
+          .forEach(x=>x.status="cancelled");
+      }
+    }
     renderStatus();hideProcessing(decision==="accept"?"Member added!":"Request declined.");
   }catch(e){hideProcessing();toast(e.message,"error");}
 }
