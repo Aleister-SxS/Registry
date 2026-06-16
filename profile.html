@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Player Profile — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061505" />
-<script src="js/app.js?v=2026061505"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061506" />
+<script src="js/app.js?v=2026061506"></script>
 </head>
 <body>
 <script>onReady(() => buildNav(""));</script>
@@ -504,6 +504,13 @@ async function toggleLFT(checked) {
 async function toggleLFC(checked) {
   const session = getSession();
   if (!session) return;
+  const maxCaptainTeams = Number(settings.maxCaptainTeams) || 3;
+  const captainTeams = allTeams.filter(t => t.captainId === profileMember.id);
+  if (checked && captainTeams.length >= maxCaptainTeams) {
+    el("lfc-toggle").checked = false;
+    toast("You've reached your captain team limit. Leave a captained team before enabling WTC.", "amber");
+    return;
+  }
   showProcessing("Updating Captain Preference…");
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey, lookingForCaptainRole: checked });
@@ -908,6 +915,6 @@ function renderError(msg) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061505"></script>
+<script src="js/build-maker.js?v=2026061506"></script>
 </body>
 </html>
