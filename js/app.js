@@ -56,6 +56,8 @@ function setSession(data) {
 
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  // Clear broadcast collapse state so the banner shows expanded on next login
+  Object.keys(sessionStorage).filter(k => k.startsWith("broadcast_collapsed_")).forEach(k => sessionStorage.removeItem(k));
 }
 
 function isLoggedIn() {
@@ -383,11 +385,32 @@ function buildNav(activePage, opts = {}) {
   if (!document.getElementById("broadcast-banner") && activePage !== "admin.html" && getSession()) {
     apiGet({ action: "getActiveBroadcast" }).then(d => {
       if (!d.broadcast || !d.broadcast.message) return;
+      const broadcastId = d.broadcast.id || "broadcast";
+      const collapseKey = "broadcast_collapsed_" + broadcastId;
+      const isCollapsed = sessionStorage.getItem(collapseKey) === "1";
+
       const banner = document.createElement("div");
       banner.id = "broadcast-banner";
-      banner.style.cssText = "background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:0.84rem;color:var(--amber);line-height:1.4;";
-      banner.innerHTML = `<span>📢 <strong>Broadcast Message from Guild Leader:</strong> ${esc(d.broadcast.message)}</span>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:1rem;opacity:0.7;flex-shrink:0;padding:0 4px;" title="Dismiss">✕</button>`;
+      banner.style.cssText = "background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);color:var(--amber);font-size:0.84rem;";
+
+      function renderBanner() {
+        const collapsed = sessionStorage.getItem(collapseKey) === "1";
+        if (collapsed) {
+          banner.innerHTML = `<div style="padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span style="opacity:0.75;font-size:0.78rem;">📢 Broadcast Message from Guild Leader — <button onclick="window._broadcastExpand()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.78rem;font-weight:600;padding:0;text-decoration:underline;">View Broadcast Message</button></span>
+          </div>`;
+        } else {
+          banner.innerHTML = `<div style="padding:10px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;line-height:1.4;">
+            <span>📢 <strong>Broadcast Message from Guild Leader:</strong> ${esc(d.broadcast.message)}</span>
+            <button onclick="window._broadcastCollapse()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.75rem;font-weight:600;opacity:0.8;flex-shrink:0;padding:2px 6px;border:1px solid var(--amber-mid);border-radius:4px;white-space:nowrap;">Collapse ▲</button>
+          </div>`;
+        }
+      }
+
+      window._broadcastCollapse = () => { sessionStorage.setItem(collapseKey, "1"); renderBanner(); };
+      window._broadcastExpand   = () => { sessionStorage.removeItem(collapseKey); renderBanner(); };
+
+      renderBanner();
       const nav = document.getElementById("site-nav");
       if (nav) nav.insertAdjacentElement("afterend", banner);
     }).catch(() => {});

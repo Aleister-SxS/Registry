@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061508"/>
-<script src="js/app.js?v=2026061508"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061509"/>
+<script src="js/app.js?v=2026061509"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -31,23 +31,37 @@
 
 <!-- Team build modal -->
 <div class="modal-overlay" id="team-build-modal" style="z-index:400;">
-  <div class="modal" style="max-width:700px;width:100%;">
+  <div class="modal" style="max-width:780px;width:100%;">
     <div class="modal-title">Edit Team Build — <span id="tbm-member-name"></span></div>
-    <div class="modal-body">Select up to 4 Techniques and 4 Charms.</div>
-    <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-technique-slots"></div>
-    <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-charm-slots"></div>
-    <div id="tbm-browser" style="display:none;">
-      <hr class="divider"/>
-      <div class="flex-between mb-sm flex-wrap gap-sm">
-        <div class="flex gap-xs">
-          <button class="filter-btn active" id="tbm-tab-t" onclick="tbmSetTab('technique')">Techniques</button>
-          <button class="filter-btn" id="tbm-tab-c" onclick="tbmSetTab('charm')">Charms</button>
+    <div class="modal-body">Select up to 4 Techniques and 4 Charms, and set your Fantomon for this team.</div>
+    <div style="display:flex;gap:1.25rem;align-items:flex-start;">
+      <!-- Left: skills -->
+      <div style="flex:1;min-width:0;">
+        <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-technique-slots"></div>
+        <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-charm-slots"></div>
+        <div id="tbm-browser" style="display:none;">
+          <hr class="divider"/>
+          <div class="flex-between mb-sm flex-wrap gap-sm">
+            <div class="flex gap-xs">
+              <button class="filter-btn active" id="tbm-tab-t" onclick="tbmSetTab('technique')">Techniques</button>
+              <button class="filter-btn" id="tbm-tab-c" onclick="tbmSetTab('charm')">Charms</button>
+            </div>
+            <input class="search-input" id="tbm-search" placeholder="Search skills…" oninput="tbmRenderBrowser()"/>
+          </div>
+          <div class="build-grid" id="tbm-skill-grid" style="max-height:200px;overflow-y:auto;"></div>
         </div>
-        <input class="search-input" id="tbm-search" placeholder="Search skills…" oninput="tbmRenderBrowser()"/>
       </div>
-      <div class="build-grid" id="tbm-skill-grid" style="max-height:240px;overflow-y:auto;"></div>
+      <!-- Right: fantomon -->
+      <div style="width:160px;flex-shrink:0;">
+        <div class="section-title mb-sm">Team Fantomon</div>
+        <div id="tbm-fantomon-display" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;text-align:center;margin-bottom:8px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+          <div id="tbm-fantomon-img-wrap"></div>
+          <div id="tbm-fantomon-label" style="font-size:0.75rem;color:var(--text2);">None selected</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;" id="tbm-fantomon-list"></div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeTbm()">Cancel</button>
@@ -67,7 +81,7 @@ let activeTeamId=null;
 const fgState={};
 const chatCache={};
 const chatIntervals={};
-let tbmState={techniques:[],charms:[],activeTab:"technique",activeSlot:null,teamId:null,memberId:null,memberClass:""};
+let tbmState={techniques:[],charms:[],fantomon:null,activeTab:"technique",activeSlot:null,teamId:null,memberId:null,memberClass:""};
 
 onReady(async()=>{
   session=getSession();
@@ -329,9 +343,10 @@ function renderMgmt(teamId){
       ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
           ${members.map(m=>{
             const rawTeamBuilds=m.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
-            const build=rawTeamBuilds[teamId]||{techniques:[],charms:[]};
+            const build=rawTeamBuilds[teamId]||{techniques:[],charms:[],fantomon:null};
             const techs=Array.isArray(build.techniques)?build.techniques:[];
             const chms=Array.isArray(build.charms)?build.charms:[];
+            const teamFantomon=build.fantomon?AVATAR_PRESETS.find(p=>p.id===build.fantomon):null;
             const isMe=m.id===session.id;
             const isCap=m.id===t.captainId;
             const slotHtml=ids=>Array.from({length:4},(_,i)=>{
@@ -354,10 +369,22 @@ function renderMgmt(teamId){
                 </div>
                 ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${teamId}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`:""}
               </div>
-              <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">TECHNIQUES</div>
-              <div class="build-slots-row mb-sm">${slotHtml(techs)}</div>
-              <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">CHARMS</div>
-              <div class="build-slots-row">${slotHtml(chms)}</div>
+              <div style="display:flex;gap:1rem;align-items:flex-start;">
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">TECHNIQUES</div>
+                  <div class="build-slots-row mb-sm">${slotHtml(techs)}</div>
+                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">CHARMS</div>
+                  <div class="build-slots-row">${slotHtml(chms)}</div>
+                </div>
+                <div style="width:80px;flex-shrink:0;text-align:center;">
+                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">FANTOMON</div>
+                  ${teamFantomon
+                    ?`<img src="${esc(teamFantomon.url)}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />
+                      <div style="font-size:0.6rem;color:var(--text2);margin-top:3px;">${esc(teamFantomon.label)}</div>`
+                    :`<div style="width:56px;height:56px;border-radius:50%;background:var(--surface3);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto;">🐾</div>
+                      <div style="font-size:0.6rem;color:var(--text3);margin-top:3px;">None</div>`}
+                </div>
+              </div>
             </div>`;
           }).join("")}
         `, true)}
@@ -482,18 +509,46 @@ async function fgSave(teamId){
 function openTbm(teamId,memberId,memberClass){
   const m=allMembers.find(x=>x.id===memberId);
   const rawTeamBuilds=m?.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
-  const build=rawTeamBuilds[teamId]||{techniques:[],charms:[]};
+  const build=rawTeamBuilds[teamId]||{techniques:[],charms:[],fantomon:null};
   tbmState={
     techniques:[...(build.techniques||[])].slice(0,4).concat(Array(4)).slice(0,4),
     charms:[...(build.charms||[])].slice(0,4).concat(Array(4)).slice(0,4),
+    fantomon:build.fantomon||null,
     activeTab:"technique",activeSlot:null,teamId,memberId,memberClass,
   };
   el("tbm-member-name").textContent=m?.name||memberId;
   tbmRenderSlots();
+  tbmRenderFantomon();
   hide(el("tbm-browser"));
   el("team-build-modal").classList.add("open");
 }
 function closeTbm(){el("team-build-modal").classList.remove("open");}
+
+function tbmRenderFantomon(){
+  const list=el("tbm-fantomon-list");
+  const imgWrap=el("tbm-fantomon-img-wrap");
+  const label=el("tbm-fantomon-label");
+  if(!list)return;
+  // Render selected fantomon display
+  const sel=AVATAR_PRESETS.find(p=>p.id===tbmState.fantomon);
+  if(sel){
+    imgWrap.innerHTML=`<img src="${esc(sel.url)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />`;
+    label.textContent=sel.label;
+  } else {
+    imgWrap.innerHTML=`<div style="width:72px;height:72px;border-radius:50%;background:var(--surface3);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🐾</div>`;
+    label.textContent="None selected";
+  }
+  // Render picker list
+  list.innerHTML=AVATAR_PRESETS.map(p=>`
+    <button onclick="tbmSelectFantomon('${p.id}')" style="display:flex;align-items:center;gap:7px;background:${p.id===tbmState.fantomon?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${p.id===tbmState.fantomon?"var(--blue-mid)":"var(--border2)"};border-radius:6px;padding:5px 8px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;">
+      <img src="${esc(p.url)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'" />
+      <span style="font-size:0.78rem;color:var(--text);font-weight:${p.id===tbmState.fantomon?"700":"400"};">${esc(p.label)}</span>
+    </button>`).join("");
+}
+function tbmSelectFantomon(id){
+  tbmState.fantomon = tbmState.fantomon === id ? null : id;
+  tbmRenderFantomon();
+}
 function tbmRenderSlots(){
   const mk=(ids,type,cid)=>{
     el(cid).innerHTML=Array.from({length:4},(_,i)=>{
@@ -549,7 +604,7 @@ function tbmSelectSkill(skillId){
   tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();
 }
 async function saveTbm(){
-  const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean)};
+  const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean),fantomon:tbmState.fantomon||null};
   confirm_("Save Team Build","Confirm saving your build to the team strategy board?",async()=>{
     closeTbm();
     showProcessing("Saving Team Build…");
@@ -799,6 +854,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061508"></script>
+<script src="js/build-maker.js?v=2026061509"></script>
 </body>
 </html>
