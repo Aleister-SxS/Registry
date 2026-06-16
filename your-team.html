@@ -669,16 +669,20 @@ function chatRender(teamId,messages){
     const isMe=msg.memberId===session.id;
     const isCap=msg.memberId===captainId;
     const canDelete=isMe||session.id===captainId;
-    const av=msg.avatarUrl
-      ?`<img src="${esc(msg.avatarUrl)}" class="chat-msg-avatar" onerror="this.style.display='none'" />`
-      :`<div class="chat-msg-avatar-fb">${esc((msg.memberName||"?")[0].toUpperCase())}</div>`;
+    // Use live member data so name/avatar always reflect the current profile
+    const liveMember=allMembers.find(x=>x.id===msg.memberId);
+    const displayName=liveMember?.name||msg.memberName||"?";
+    const displayAvatar=liveMember?.avatarUrl||msg.avatarUrl||"";
+    const av=displayAvatar
+      ?`<img src="${esc(displayAvatar)}" class="chat-msg-avatar" onerror="this.style.display='none'" />`
+      :`<div class="chat-msg-avatar-fb">${esc(displayName[0].toUpperCase())}</div>`;
     const div=dateStr!==lastDate?`<div class="chat-date-div">${dateStr}</div>`:"";
     lastDate=dateStr;
     return `${div}<div class="chat-msg" id="msg-${msg.id}">
       ${av}
       <div class="chat-msg-body">
         <div class="chat-msg-meta">
-          <span class="chat-msg-name ${isMe?"is-me":""} ${isCap?"is-captain":""}">${esc(msg.memberName)}${isCap?" ⚜️":""}</span>
+          <span class="chat-msg-name ${isMe?"is-me":""} ${isCap?"is-captain":""}">${esc(displayName)}${isCap?" ⚜️":""}</span>
           <span class="chat-msg-time">${timeStr}</span>
         </div>
         <div class="chat-msg-text">${esc(msg.text).replace(/\n/g,"<br>")}</div>
