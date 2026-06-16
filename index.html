@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Team Registry — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061502" />
+<link rel="stylesheet" href="css/style.css?v=2026061503" />
 <style>
   /* Card overflow fix */
   .team-card { overflow: hidden; height: auto; }
@@ -72,7 +72,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061502"></script>
+<script src="js/app.js?v=2026061503"></script>
 <script>onReady(() => buildNav("index.html"));</script>
 
 <main>
@@ -388,10 +388,13 @@ function renderTeams() {
           <div style="font-size:0.62rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">⚜️ Team Captain</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
             ${capAv}
-            <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(capMember?.name||t.captainName||"—")}${capClass}</span>
+            <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${capClass}</span>
           </div>
         </div>
-        <span class="badge badge-${status}" style="flex-shrink:0;"><span class="badge-dot"></span>${label}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+          <span class="badge badge-${status}"><span class="badge-dot"></span>${label}</span>
+          ${t.lookingForCaptain==="TRUE"?`<span class="badge badge-amber"><span class="badge-dot"></span>⚜️ Seeking Captain</span>`:""}
+        </div>
       </div>
 
       ${comp ? `<div class="comp-row">${comp}</div>` : ""}

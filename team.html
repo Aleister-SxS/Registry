@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Team Profile — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061501"/>
+<link rel="stylesheet" href="css/style.css?v=2026061503"/>
 <style>
   .req-row-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.79rem;}
   .req-row-item:last-child{border-bottom:none;}
@@ -19,7 +19,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061501"></script>
+<script src="js/app.js?v=2026061503"></script>
 <script>onReady(()=>buildNav(""));</script>
 <main>
   <div id="loading" class="loading"><span class="spinner"></span></div>
@@ -180,7 +180,7 @@ function renderTeam(){
       </div>
       <div class="flex gap-xs flex-wrap" style="align-items:center;">
         <span class="badge badge-${status}"><span class="badge-dot"></span>${status==="open"?"Recruiting":status==="full"?"Full":"Closed"}</span>
-        ${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber">⚜️ Seeking Captain</span>`:""}
+        ${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber"><span class="badge-dot"></span>⚜️ Seeking Captain</span>`:""}
         ${!isMember&&status==="open"?`<button class="btn btn-primary" onclick="openJoinModal()">+ Request to Join</button>`:""}
         ${isMember?`<a href="your-team.html" class="btn btn-ghost">Team Management →</a>`:""}
       </div>
@@ -219,7 +219,7 @@ function renderTeam(){
             </div>
             <div class="req-row-item">
               <span class="req-row-label">Seeking Captain</span>
-              <span style="color:var(--text2);">${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber" style="font-size:0.68rem;">⚜️ Yes</span>`:"No"}</span>
+              <span style="color:var(--text2);">${team.lookingForCaptain==="TRUE"?`<span class="badge badge-amber" style="font-size:0.68rem;"><span class="badge-dot"></span>⚜️ Yes</span>`:"No"}</span>
             </div>
           </div>
         </div>
