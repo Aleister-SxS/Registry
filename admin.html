@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061407"/>
+<link rel="stylesheet" href="css/style.css?v=2026061504"/>
 </head>
 <body>
-<script src="js/app.js?v=2026061407"></script>
+<script src="js/app.js?v=2026061504"></script>
 <script>onReady(()=>buildNav("admin.html"));</script>
 <main>
 
@@ -319,7 +319,8 @@ function renderAdminMembers(){
             <td><a href="profile.html?id=${m.id}" class="btn btn-ghost btn-xs">View</a>
             <button class="btn btn-xs ${m.suspended==='TRUE'?'btn-success':'btn-amber'}" onclick="toggleSuspend('${m.id}','${esc(m.name)}','${m.suspended}')">
               ${m.suspended==='TRUE'?'Unsuspend':'Suspend'}
-            </button></td>
+            </button>
+            <button class="btn btn-xs btn-danger" onclick="confirmDeleteMember('${m.id}','${esc(m.name)}')">Delete</button></td>
           </tr>`).join("")}
         </tbody>
       </table>
@@ -469,6 +470,20 @@ async function toggleSuspend(memberId,memberName,currentStatus){
         await apiPost({action:"adminSuspendMember",adminPassword:ADMIN_PASSWORD,memberId,suspended:suspend});
         const m=allMembers.find(x=>x.id===memberId);if(m)m.suspended=suspend?"TRUE":"FALSE";
         renderAdminMembers();hideProcessing(suspend?"Member suspended.":"Member unsuspended.");
+      }catch(e){hideProcessing();toast(e.message,"error");}
+    }
+  );
+}
+
+function confirmDeleteMember(memberId,memberName){
+  confirm_(`Delete "${memberName}"`,
+    `Permanently delete this account? This will remove them from all teams and cannot be undone.`,
+    async()=>{
+      showProcessing("Deleting Account…");
+      try{
+        await apiPost({action:"adminDeleteMember",adminPassword:ADMIN_PASSWORD,memberId});
+        const idx=allMembers.findIndex(x=>x.id===memberId);if(idx>=0)allMembers.splice(idx,1);
+        renderAdminMembers();hideProcessing("Account deleted.");
       }catch(e){hideProcessing();toast(e.message,"error");}
     }
   );
