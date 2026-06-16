@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061504"/>
-<script src="js/app.js?v=2026061504"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061505"/>
+<script src="js/app.js?v=2026061505"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -368,7 +368,7 @@ function renderMgmt(teamId){
           <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
         </div>
         <div id="chat-disclaimer-${teamId}" style="background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:8px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear. Chat may be monitored for moderation. Translation services may not function properly — this is a work in progress.</span>
+          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not a live-chat system. Messages may take up to a minute to appear. Translation services default to English translation. Translation services are an ongoing project — please expect some errors. Chats may be monitored for moderation purposes.</span>
           <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;" title="Dismiss">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages-${teamId}">
@@ -792,6 +792,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061504"></script>
+<script src="js/build-maker.js?v=2026061505"></script>
 </body>
 </html>

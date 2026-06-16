@@ -624,7 +624,7 @@ async function translateText(text, targetLang) {
   // Check for API error messages returned as text
   const result = d.responseData.translatedText;
   if (!result || result.toUpperCase().includes("INVALID LANGUAGE") || result.toUpperCase().includes("PLEASE SELECT")) {
-    throw new Error("Translation not available for this language pair.");
+    throw new Error("Translations default to English. Translation to other languages is not currently available.");
   }
   // If result matches input, already in target language
   if (result.trim().toLowerCase() === text.trim().toLowerCase()) return null;
