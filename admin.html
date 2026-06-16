@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061504"/>
+<link rel="stylesheet" href="css/style.css?v=2026061507"/>
 </head>
 <body>
-<script src="js/app.js?v=2026061504"></script>
+<script src="js/app.js?v=2026061507"></script>
 <script>onReady(()=>buildNav("admin.html"));</script>
 <main>
 
@@ -96,7 +96,6 @@
       </div>
     </div>
   </div>
-</div>
 
 <!-- Broadcast Tab -->
 <div id="atab-broadcast" style="display:none;">
@@ -186,6 +185,7 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <!-- Edit team modal -->
@@ -344,7 +344,7 @@ async function saveTeamEdit(){
   if(!editingTeamId)return;
   clearAlert("et-error");
   try{
-    await apiPost({action:"adminEditTeam",adminPassword:ADMIN_PASSWORD,teamId:editingTeamId,
+    await apiPost({action:"adminUpdateTeam",adminPassword:ADMIN_PASSWORD,teamId:editingTeamId,
       name:el("et-name").value.trim(),description:el("et-desc").value.trim(),status:el("et-status").value});
     const t=allTeams.find(x=>x.id===editingTeamId);
     if(t){t.name=el("et-name").value.trim();t.description=el("et-desc").value.trim();t.status=el("et-status").value;}

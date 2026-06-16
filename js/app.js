@@ -377,6 +377,21 @@ function buildNav(activePage, opts = {}) {
   document.body.style.minHeight = "100vh";
   const mainEl = document.querySelector("main");
   if (mainEl) mainEl.style.flex = "1";
+
+  // ── Active broadcast banner ──────────────────────────────
+  // Fetch once per page load; skip on admin page
+  if (!document.getElementById("broadcast-banner") && activePage !== "admin.html") {
+    apiGet({ action: "getActiveBroadcast" }).then(d => {
+      if (!d.broadcast || !d.broadcast.message) return;
+      const banner = document.createElement("div");
+      banner.id = "broadcast-banner";
+      banner.style.cssText = "background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:0.84rem;color:var(--amber);line-height:1.4;";
+      banner.innerHTML = `<span>📢 <strong>Notice:</strong> ${esc(d.broadcast.message)}</span>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:1rem;opacity:0.7;flex-shrink:0;padding:0 4px;" title="Dismiss">✕</button>`;
+      const nav = document.getElementById("site-nav");
+      if (nav) nav.insertAdjacentElement("afterend", banner);
+    }).catch(() => {}); // fail silently — broadcast is non-critical
+  }
 }
 
 // ── Cascading class selector ──────────────────────────────
