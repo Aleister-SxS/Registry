@@ -9,65 +9,162 @@
 <title>Your Messages — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061514" />
 <style>
-/* Override shared main styles for full-width layout */
-main{max-width:100% !important;margin:0 !important;padding:0 !important;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;}
+/* ── Full-bleed layout ─────────────────────────────────────────── */
+main{max-width:100% !important;margin:0 !important;padding:0 !important;
+  overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;}
 body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
+
+/* Shell: two columns on desktop, one column on mobile */
 .dm-shell{display:flex;width:100%;flex:1;min-height:0;overflow:hidden;}
-.dm-sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--border2);display:flex;flex-direction:column;background:var(--surface);}
-.dm-sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+
+/* ── Sidebar ───────────────────────────────────────────────────── */
+.dm-sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--border2);
+  display:flex;flex-direction:column;background:var(--surface);}
+.dm-sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .dm-sidebar-title{font-size:0.9rem;font-weight:700;}
-.dm-compose-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.dm-compose-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border2);
+  background:none;color:var(--text2);cursor:pointer;font-size:1rem;display:flex;
+  align-items:center;justify-content:center;transition:all 0.15s;}
 .dm-compose-btn:hover{background:var(--surface2);color:var(--text);}
 .dm-search{padding:8px 10px;border-bottom:1px solid var(--border2);flex-shrink:0;}
-.dm-search input{width:100%;height:30px;font-size:0.78rem;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);padding:0 10px;}
+.dm-search input{width:100%;height:30px;font-size:0.78rem;border:1px solid var(--border2);
+  border-radius:6px;background:var(--surface2);color:var(--text);padding:0 10px;box-sizing:border-box;}
 .dm-search input:focus{outline:none;border-color:var(--blue);}
 .dm-convo-list{flex:1;overflow-y:auto;}
-.dm-convo{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);position:relative;transition:background 0.1s;}
+.dm-convo{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;
+  border-bottom:1px solid var(--border);position:relative;transition:background 0.1s;}
 .dm-convo:hover{background:var(--surface2);}
 .dm-convo.active{background:var(--surface2);}
-.dm-convo.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);border-radius:0 2px 2px 0;}
+.dm-convo.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--blue);border-radius:0 2px 2px 0;}
 .dm-av-wrap{position:relative;flex-shrink:0;}
 .dm-av{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);}
-.dm-av-fb{width:36px;height:36px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--blue-bright);}
-.dm-unread-badge{position:absolute;bottom:-1px;right:-1px;min-width:16px;height:16px;border-radius:8px;background:#e24b4a;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--surface);padding:0 3px;}
+.dm-av-fb{width:36px;height:36px;border-radius:50%;background:var(--blue-dim);
+  border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:700;color:var(--blue-bright);}
+.dm-unread-badge{position:absolute;bottom:-1px;right:-1px;min-width:16px;height:16px;
+  border-radius:8px;background:#e24b4a;color:#fff;font-size:0.6rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border:1.5px solid var(--surface);padding:0 3px;}
 .dm-convo-info{flex:1;min-width:0;}
 .dm-convo-name{font-size:0.8rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
 .dm-convo-time{font-size:0.65rem;color:var(--text3);flex-shrink:0;margin-left:4px;}
-.dm-convo-preview{font-size:0.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.dm-convo-preview{font-size:0.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:1px;}
 .dm-convo-preview.unread{color:var(--text);font-weight:600;}
+
+/* ── Thread panel ──────────────────────────────────────────────── */
 .dm-thread{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);}
-.dm-thread-header{padding:12px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;background:var(--surface);flex-shrink:0;}
+.dm-thread-header{padding:12px 16px;border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:10px;background:var(--surface);flex-shrink:0;}
+.dm-back-btn{display:none;background:none;border:none;color:var(--blue-bright);
+  font-size:1.25rem;cursor:pointer;padding:0 6px 0 0;line-height:1;flex-shrink:0;}
 .dm-thread-name{font-size:0.95rem;font-weight:700;}
 .dm-thread-sub{font-size:0.72rem;color:var(--text2);}
 .dm-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
-.dm-date-div{text-align:center;font-size:0.65rem;color:var(--text3);font-family:var(--mono);padding:4px 0;margin:4px 0;}
+.dm-date-div{text-align:center;font-size:0.65rem;color:var(--text3);
+  font-family:var(--mono);padding:4px 0;margin:4px 0;}
 .dm-msg-row{display:flex;gap:8px;align-items:flex-end;}
 .dm-msg-row.mine{flex-direction:row-reverse;}
 .dm-msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;object-fit:cover;}
-.dm-msg-av-fb{width:28px;height:28px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.58rem;font-weight:700;color:var(--blue-bright);flex-shrink:0;}
-.dm-bubble{max-width:65%;padding:7px 11px;border-radius:12px;font-size:0.82rem;line-height:1.45;word-break:break-word;}
-.dm-bubble.theirs{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-bottom-left-radius:3px;}
+.dm-msg-av-fb{width:28px;height:28px;border-radius:50%;background:var(--blue-dim);
+  border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;
+  font-size:0.58rem;font-weight:700;color:var(--blue-bright);flex-shrink:0;}
+.dm-bubble{max-width:72%;padding:7px 11px;border-radius:12px;font-size:0.82rem;
+  line-height:1.45;word-break:break-word;}
+.dm-bubble.theirs{background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);border-bottom-left-radius:3px;}
 .dm-bubble.mine{background:var(--blue);color:#fff;border-bottom-right-radius:3px;}
 .dm-bubble-time{font-size:0.62rem;color:var(--text3);margin-top:2px;}
-.dm-compose-area{padding:10px 14px;border-top:1px solid var(--border2);background:var(--surface);flex-shrink:0;}
+
+/* ── Compose area — sticky to bottom, survives virtual keyboard ── */
+.dm-compose-area{padding:10px 14px;border-top:1px solid var(--border2);
+  background:var(--surface);flex-shrink:0;}
 .dm-char-count{font-size:0.65rem;color:var(--text3);text-align:right;margin-bottom:4px;}
 .dm-char-count.warn{color:var(--amber);}
 .dm-char-count.over{color:var(--red);}
 .dm-compose-row{display:flex;gap:8px;align-items:flex-end;}
-.dm-input{flex:1;min-height:38px;max-height:100px;resize:none;font-size:0.82rem;border:1px solid var(--border2);border-radius:8px;background:var(--surface2);color:var(--text);padding:8px 12px;font-family:inherit;line-height:1.4;}
+.dm-input{flex:1;min-height:38px;max-height:100px;resize:none;font-size:0.82rem;
+  border:1px solid var(--border2);border-radius:8px;background:var(--surface2);
+  color:var(--text);padding:8px 12px;font-family:inherit;line-height:1.4;box-sizing:border-box;}
 .dm-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,0.12);}
-.dm-send-btn{height:38px;padding:0 16px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;flex-shrink:0;transition:background 0.15s;}
+.dm-send-btn{height:38px;padding:0 16px;border-radius:8px;border:none;background:var(--blue);
+  color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;flex-shrink:0;transition:background 0.15s;}
 .dm-send-btn:hover{background:var(--blue-mid);}
 .dm-send-btn:disabled{opacity:0.5;cursor:not-allowed;}
-.dm-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:8px;font-size:0.85rem;}
+
+/* ── Empty / no-convos states ──────────────────────────────────── */
+.dm-empty{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;color:var(--text3);gap:8px;font-size:0.85rem;}
 .dm-empty-icon{font-size:2.5rem;opacity:0.25;}
 .dm-no-convos{padding:2rem 1rem;text-align:center;color:var(--text3);font-size:0.8rem;}
-/* Compose new message modal */
+
+/* ── New message modal ─────────────────────────────────────────── */
 .dm-new-modal .modal{max-width:420px;}
-.dm-member-result{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background 0.1s;}
+.dm-member-result{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:6px;cursor:pointer;transition:background 0.1s;}
 .dm-member-result:hover{background:var(--surface2);}
 .dm-member-result-name{font-size:0.85rem;font-weight:600;}
 .dm-member-result-sub{font-size:0.72rem;color:var(--text2);}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE  (≤ 600 px)
+   – Sidebar and thread stack; only one is visible at a time.
+   – Thread slides in from the right when a convo is opened.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* Shell becomes a horizontal sliding container */
+  .dm-shell{position:relative;overflow:hidden;}
+
+  /* Sidebar fills full width */
+  .dm-sidebar{
+    width:100%;
+    position:absolute;inset:0;
+    transition:transform 0.25s ease;
+    z-index:2;
+  }
+  /* When a thread is open, slide sidebar off to the left */
+  .dm-shell.thread-open .dm-sidebar{
+    transform:translateX(-100%);
+    pointer-events:none;
+  }
+
+  /* Thread panel fills full width and starts off-screen to the right */
+  .dm-thread{
+    width:100%;
+    position:absolute;inset:0;
+    transform:translateX(100%);
+    transition:transform 0.25s ease;
+    z-index:1;
+  }
+  /* Slide thread in when a convo is open */
+  .dm-shell.thread-open .dm-thread{
+    transform:translateX(0);
+  }
+
+  /* Show the back button on mobile */
+  .dm-back-btn{display:block;}
+
+  /* Wider bubbles on narrow screens */
+  .dm-bubble{max-width:85%;}
+
+  /* Tighten thread header */
+  .dm-thread-header{padding:10px 12px;}
+
+  /* Ensure compose area is always reachable — on iOS/Android the
+     viewport shrinks when the keyboard opens; flex column + flex-shrink:0
+     on the compose area keeps it above the keyboard. */
+  .dm-thread{
+    /* Use dvh (dynamic viewport height) where supported so the shell
+       shrinks with the keyboard. Falls back gracefully. */
+    height:100dvh;
+    max-height:100dvh;
+  }
+  .dm-messages{
+    /* Allow messages area to shrink so compose stays visible */
+    min-height:0;
+  }
+}
 </style>
 </head>
 <body>
@@ -76,7 +173,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 <main style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
 
 <div class="dm-shell" id="dm-shell">
-  <!-- Sidebar -->
+  <!-- ── Sidebar ─────────────────────────────────────── -->
   <div class="dm-sidebar">
     <div class="dm-sidebar-header">
       <span class="dm-sidebar-title">💬 Your Messages</span>
@@ -90,7 +187,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
     </div>
   </div>
 
-  <!-- Thread panel -->
+  <!-- ── Thread panel ───────────────────────────────── -->
   <div class="dm-thread" id="dm-thread">
     <div class="dm-empty" id="dm-empty-state">
       <div class="dm-empty-icon">💬</div>
@@ -99,6 +196,8 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
     </div>
     <!-- Thread header (hidden until convo selected) -->
     <div class="dm-thread-header" id="dm-thread-header" style="display:none;">
+      <!-- Back button — only visible on mobile -->
+      <button class="dm-back-btn" onclick="closeThread()" title="Back to conversations">‹</button>
       <div id="dm-thread-av"></div>
       <div>
         <div class="dm-thread-name" id="dm-thread-name"></div>
@@ -143,9 +242,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 
 <script>
 let allMembers=[], session=null, activeWithId=null;
-// Local DM thread cache: { [withId]: [{id,fromId,toId,text,sentAt,readAt,...}] }
 const dmCache={};
-// Conversation list: [{withId, withName, withMember, lastText, lastTime, unread}]
 let convos=[];
 
 onReady(async ()=>{
@@ -156,33 +253,23 @@ onReady(async ()=>{
     allMembers=d.members||[];
   }catch(e){toast("Failed to load members","error");return;}
 
-  // Check if opened with ?to= param to pre-open a conversation
   const params=new URLSearchParams(window.location.search);
   const toId=params.get("to");
 
   await loadConvos();
   renderConvoList();
 
-  if(toId){
-    // Open or create conversation with this member
-    await openThread(toId);
-  }
+  if(toId) await openThread(toId);
 });
 
-// ── Load all conversations ────────────────────────────────
+// ── Conversations ──────────────────────────────────────────────
 async function loadConvos(){
   try{
-    // Fetch the inbox — we call getDMs for each known convo partner
-    // We'll use a lightweight approach: call a new getInbox action
     const d=await apiPost({action:"getInbox",memberId:session.id,captainKey:session.captainKey});
     convos=d.convos||[];
-  }catch(e){
-    // getInbox may not exist yet — fall back to empty
-    convos=[];
-  }
+  }catch(e){ convos=[]; }
 }
 
-// ── Render conversation list ──────────────────────────────
 function renderConvoList(){
   const q=(el("dm-search-input")?.value||"").toLowerCase();
   const filtered=convos.filter(c=>!q||c.withName.toLowerCase().includes(q));
@@ -202,78 +289,73 @@ function renderConvoList(){
     return `<div class="dm-convo${active}" onclick="openThread('${c.withId}')">
       <div class="dm-av-wrap">${av}${badge}</div>
       <div class="dm-convo-info">
-        <div class="dm-convo-name">${esc(c.withName)}<span class="dm-convo-time">${esc(c.lastTime||"")}</span></div>
+        <div class="dm-convo-name">${esc(c.withName)}<span class="dm-convo-time">${formatRelTime(c.lastTime)}</span></div>
         <div class="dm-convo-preview${c.unread>0?" unread":""}">${esc(c.lastText||"")}</div>
       </div>
     </div>`;
   }).join("");
 }
 
-// ── Open a thread ─────────────────────────────────────────
+// ── Thread ─────────────────────────────────────────────────────
 async function openThread(withId){
   activeWithId=withId;
   const withMember=allMembers.find(m=>m.id===withId);
   const withName=withMember?.name||"Unknown";
 
-  // Update active state in sidebar
+  // On mobile: slide thread panel in
+  el("dm-shell")?.classList.add("thread-open");
+
   renderConvoList();
 
-  // Show thread header
-  const header=el("dm-thread-header");
-  const emptyState=el("dm-empty-state");
-  const messagesEl=el("dm-messages");
-  const composeArea=el("dm-compose-area");
+  const header=el("dm-thread-header"),emptyState=el("dm-empty-state");
+  const messagesEl=el("dm-messages"),composeArea=el("dm-compose-area");
   if(emptyState)emptyState.style.display="none";
   if(header)header.style.display="flex";
   if(messagesEl)messagesEl.style.display="flex";
   if(composeArea)composeArea.style.display="block";
 
-  // Render header
   const av=withMember?.avatarUrl
     ?`<img src="${esc(withMember.avatarUrl)}" class="dm-av" style="width:36px;height:36px;" onerror="this.style.display='none'" />`
     :`<div class="dm-av-fb">${esc((withName)[0].toUpperCase())}</div>`;
   if(el("dm-thread-av"))el("dm-thread-av").innerHTML=av;
   if(el("dm-thread-name"))el("dm-thread-name").textContent=withName;
   if(el("dm-thread-sub"))el("dm-thread-sub").textContent=
-    `${withMember?.class||""} ${withMember?.gamertag?`· ${withMember.gamertag}`:""}`.trim();
+    `${withMember?.class||""}${withMember?.gamertag?" · "+withMember.gamertag:""}`.trim();
   if(el("dm-thread-profile-link"))el("dm-thread-profile-link").href=`profile.html?id=${withId}`;
 
-  // Set placeholder
   const input=el("dm-input");
   if(input)input.placeholder=`Message ${withName}…`;
 
-  // Fetch messages
   showProcessing("Loading messages…");
   try{
     const d=await apiPost({action:"getDMs",memberId:session.id,captainKey:session.captainKey,withMemberId:withId});
     dmCache[withId]=d.dms||[];
     hideProcessing();
     renderThread();
-    // Mark convo as read locally
     const c=convos.find(x=>x.withId===withId);
     if(c)c.unread=0;
     renderConvoList();
-  }catch(e){
-    hideProcessing();
-    toast(e.message,"error");
-  }
+  }catch(e){hideProcessing();toast(e.message,"error");}
 }
 
-// ── Render thread messages ────────────────────────────────
+// Back button — return to sidebar on mobile
+function closeThread(){
+  el("dm-shell")?.classList.remove("thread-open");
+  // Optionally reset active state so no convo is highlighted
+  activeWithId=null;
+  renderConvoList();
+}
+
 function renderThread(){
   const msgs=dmCache[activeWithId]||[];
   const container=el("dm-messages");
   if(!container)return;
-  let lastDate="";
-  let html="";
+  let lastDate="",html="";
   msgs.forEach(msg=>{
     const d=new Date(msg.sentAt);
     const dateStr=d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
     const timeStr=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-    if(dateStr!==lastDate){
-      html+=`<div class="dm-date-div">${esc(dateStr)}</div>`;
-      lastDate=dateStr;
-    }
+    if(dateStr!==lastDate){html+=`<div class="dm-date-div">${esc(dateStr)}</div>`;lastDate=dateStr;}
     const isMe=msg.fromId===session.id;
     const sender=isMe?session:allMembers.find(m=>m.id===msg.fromId);
     const av=sender?.avatarUrl
@@ -282,7 +364,7 @@ function renderThread(){
     html+=`<div class="dm-msg-row${isMe?" mine":""}">
       ${av}
       <div style="display:flex;flex-direction:column;${isMe?"align-items:flex-end":""}">
-        <div class="dm-bubble ${isMe?"mine":"theirs"}" id="dm-msg-${esc(msg.id)}">${esc(msg.text).replace(/\n/g,"<br>")}</div>
+        <div class="dm-bubble ${isMe?"mine":"theirs"}">${esc(msg.text).replace(/\n/g,"<br>")}</div>
         <div class="dm-bubble-time" style="${isMe?"text-align:right":""}">${esc(timeStr)}${isMe&&!msg.readAt?" · Delivered":""}</div>
       </div>
     </div>`;
@@ -291,7 +373,7 @@ function renderThread(){
   container.scrollTop=container.scrollHeight;
 }
 
-// ── Send a message ────────────────────────────────────────
+// ── Send ───────────────────────────────────────────────────────
 async function dmSend(){
   const input=el("dm-input");
   const text=(input?.value||"").trim();
@@ -303,33 +385,41 @@ async function dmSend(){
     const d=await apiPost({action:"sendDM",memberId:session.id,captainKey:session.captainKey,toMemberId:activeWithId,text});
     if(!dmCache[activeWithId])dmCache[activeWithId]=[];
     dmCache[activeWithId].push(d.dm);
-    input.value="";
-    input.style.height="";
+    input.value="";input.style.height="";
     el("dm-char-count").textContent="0 / 500";
     el("dm-char-count").className="dm-char-count";
     renderThread();
-    // Update convo list
     const c=convos.find(x=>x.withId===activeWithId);
     const withMember=allMembers.find(m=>m.id===activeWithId);
-    if(c){c.lastText=text;c.lastTime="now";}
-    else{convos.unshift({withId:activeWithId,withName:withMember?.name||"Unknown",lastText:text,lastTime:"now",unread:0});}
+    if(c){c.lastText=text;c.lastTime=new Date().toISOString();}
+    else convos.unshift({withId:activeWithId,withName:withMember?.name||"Unknown",lastText:text,lastTime:new Date().toISOString(),unread:0});
     renderConvoList();
   }catch(e){toast(e.message,"error");}
   finally{if(btn)btn.disabled=false;}
 }
 
 function dmKeydown(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();dmSend();}}
-function dmAutoResize(el){el.style.height="";el.style.height=Math.min(el.scrollHeight,100)+"px";}
-function dmUpdateCount(el){
-  const len=el.value.length;
-  const cc=document.getElementById("dm-char-count");
-  if(!cc)return;
+function dmAutoResize(t){t.style.height="";t.style.height=Math.min(t.scrollHeight,100)+"px";}
+function dmUpdateCount(t){
+  const len=t.value.length;
+  const cc=el("dm-char-count");if(!cc)return;
   cc.textContent=len+" / 500";
   cc.className="dm-char-count"+(len>450?(len>=500?" over":" warn"):"");
-  if(len>500)el.value=el.value.substring(0,500);
+  if(len>500)t.value=t.value.substring(0,500);
 }
 
-// ── New message modal ─────────────────────────────────────
+// ── Format relative timestamp in sidebar ───────────────────────
+function formatRelTime(iso){
+  if(!iso||iso==="now")return iso||"";
+  const d=new Date(iso);if(isNaN(d))return iso;
+  const diff=Date.now()-d.getTime();
+  if(diff<60000)return"now";
+  if(diff<3600000)return Math.floor(diff/60000)+"m";
+  if(diff<86400000)return Math.floor(diff/3600000)+"h";
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+
+// ── New DM modal ───────────────────────────────────────────────
 function openNewDM(){
   const modal=el("dm-new-modal");
   if(modal)modal.classList.add("open");
@@ -337,25 +427,20 @@ function openNewDM(){
   if(input){input.value="";dmNewSearch();}
   setTimeout(()=>{if(input)input.focus();},50);
 }
-function closeDMNewModal(){
-  const modal=el("dm-new-modal");
-  if(modal)modal.classList.remove("open");
-}
+function closeDMNewModal(){el("dm-new-modal")?.classList.remove("open");}
 function dmNewSearch(){
   const q=(el("dm-new-search")?.value||"").toLowerCase().trim();
-  const results=el("dm-new-results");
-  if(!results)return;
+  const results=el("dm-new-results");if(!results)return;
   if(!q){results.innerHTML="<div style='font-size:0.78rem;color:var(--text3);padding:8px 10px;'>Type to search members…</div>";return;}
   const matches=allMembers.filter(m=>
-    m.id!==session.id&&
-    (m.name.toLowerCase().includes(q)||String(m.gamertag).includes(q))
+    m.id!==session.id&&(m.name.toLowerCase().includes(q)||String(m.gamertag).includes(q))
   ).slice(0,8);
   if(!matches.length){results.innerHTML="<div style='font-size:0.78rem;color:var(--text3);padding:8px 10px;'>No members found.</div>";return;}
   results.innerHTML=matches.map(m=>{
     const av=m.avatarUrl
       ?`<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'" />`
       :`<div style="width:32px;height:32px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:var(--blue-bright);flex-shrink:0;">${esc((m.name||"?")[0].toUpperCase())}</div>`;
-    return `<div class="dm-member-result" onclick="startDM('${m.id}')">
+    return`<div class="dm-member-result" onclick="startDM('${m.id}')">
       ${av}
       <div>
         <div class="dm-member-result-name">${esc(m.name)}</div>
@@ -364,10 +449,7 @@ function dmNewSearch(){
     </div>`;
   }).join("");
 }
-function startDM(memberId){
-  closeDMNewModal();
-  openThread(memberId);
-}
+function startDM(memberId){closeDMNewModal();openThread(memberId);}
 </script>
 </body>
 </html>
