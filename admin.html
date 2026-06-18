@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512"/>
+<link rel="stylesheet" href="css/style.css?v=2026061514"/>
 </head>
 <body>
-<script src="js/app.js?v=2026061512"></script>
+<script src="js/app.js?v=2026061514"></script>
 <script>onReady(()=>buildNav("admin.html"));</script>
 <main>
 
@@ -36,6 +36,7 @@
     <button class="filter-btn" onclick="showAdminTab('settings',this)">Settings</button>
     <button class="filter-btn" onclick="showAdminTab('keylookup',this)">Key Lookup</button>
     <button class="filter-btn" onclick="showAdminTab('chatlogs',this)">Chat Logs</button>
+    <button class="filter-btn" onclick="showAdminTab('dmlogs',this)">DM Logs</button>
     <button class="filter-btn" onclick="showAdminTab('broadcast',this)">Broadcast</button>
     <button class="filter-btn" onclick="showAdminTab('resetkey',this)">Reset Key</button>
     <button class="filter-btn" onclick="showAdminTab('export',this)">Export</button>
@@ -186,9 +187,30 @@
     </div>
   </div>
 </div>
-</div>
 
-<!-- Edit team modal -->
+<div id="atab-dmlogs" style="display:none;">
+  <div class="form-wrap" style="max-width:800px;">
+    <div class="form-card">
+      <div class="form-title">DM Logs</div>
+      <div class="form-subtitle">View direct message conversations between members. Select a member to see their conversations.</div>
+      <div style="display:flex;gap:1rem;align-items:flex-start;">
+        <div style="width:220px;flex-shrink:0;">
+          <div class="field">
+            <input id="dm-admin-search" placeholder="Search members…" oninput="renderDMAdminList()" style="width:100%;background:var(--surface2);border-color:var(--border3);" />
+          </div>
+          <div id="dm-admin-member-list" style="border:1px solid var(--border2);border-radius:var(--radius);max-height:400px;overflow-y:auto;"></div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div id="dm-admin-thread-panel" style="display:none;">
+            <div style="font-size:0.8rem;font-weight:600;margin-bottom:8px;" id="dm-admin-thread-title"></div>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;" id="dm-admin-messages"></div>
+          </div>
+          <div id="dm-admin-empty" style="color:var(--text3);font-size:0.82rem;padding:2rem;text-align:center;">Select a member to view their DM logs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="edit-team-modal">
   <div class="modal">
     <div class="modal-title">Edit Team</div>
@@ -263,7 +285,10 @@ function showAdminTab(name,btn){
       if(cur)sel.value=cur;
     }
   }
-  ["teams","members","settings","keylookup","chatlogs","broadcast","resetkey","export"].forEach(t=>{
+  if(name==="dmlogs"){
+    renderDMAdminList();
+  }
+  ["teams","members","settings","keylookup","chatlogs","dmlogs","broadcast","resetkey","export"].forEach(t=>{
     const el_=el("atab-"+t);
     if(el_)el_.style.display=t===name?"block":"none";
   });
@@ -448,6 +473,66 @@ function confirmClearChat(){
       loadAdminChat();toast("Chat cleared.");
     }catch(e){toast(e.message,"error");}
   });
+}
+
+// ── DM Logs ───────────────────────────────────────────────
+let dmAdminSelectedId = null;
+
+function renderDMAdminList(){
+  const q=(el("dm-admin-search")?.value||"").toLowerCase();
+  const listEl=el("dm-admin-member-list");
+  if(!listEl)return;
+  const filtered=allMembers.filter(m=>!q||m.name.toLowerCase().includes(q)||String(m.gamertag).includes(q));
+  if(!filtered.length){listEl.innerHTML=`<div style="padding:10px;font-size:0.78rem;color:var(--text3);">No members found.</div>`;return;}
+  listEl.innerHTML=filtered.map(m=>{
+    const active=m.id===dmAdminSelectedId?" background:var(--blue-dim);border-color:var(--blue-mid);":"";
+    return `<div onclick="loadDMAdminThread('${m.id}','${esc(m.name)}')"
+      style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:0.82rem;${active}transition:background 0.1s;"
+      onmouseover="if('${m.id}'!==dmAdminSelectedId)this.style.background='var(--surface2)'"
+      onmouseout="if('${m.id}'!==dmAdminSelectedId)this.style.background=''">
+      <div style="font-weight:600;">${esc(m.name)}</div>
+      <div style="font-size:0.7rem;color:var(--text3);">${esc(m.gamertag||"")}</div>
+    </div>`;
+  }).join("");
+}
+
+async function loadDMAdminThread(memberId, memberName){
+  dmAdminSelectedId=memberId;
+  renderDMAdminList();
+  el("dm-admin-empty").style.display="none";
+  el("dm-admin-thread-panel").style.display="block";
+  el("dm-admin-thread-title").textContent=`DM conversations for ${memberName}`;
+  el("dm-admin-messages").innerHTML=`<div class="loading"><span class="spinner"></span></div>`;
+  try{
+    const d=await apiPost({action:"adminGetDMs",adminPassword:ADMIN_PASSWORD,memberId});
+    const threads=d.threads||[];
+    if(!threads.length){
+      el("dm-admin-messages").innerHTML=`<div style="color:var(--text3);font-size:0.82rem;text-align:center;padding:1rem;">No DMs found for this member.</div>`;
+      return;
+    }
+    let html="";
+    threads.forEach(thread=>{
+      html+=`<div style="margin-bottom:1rem;">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--text2);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border2);">
+          Conversation with ${esc(thread.otherName)}
+        </div>`;
+      thread.messages.forEach(msg=>{
+        const isFrom=msg.fromId===memberId;
+        const d=new Date(msg.sentAt);
+        const timeStr=d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+        html+=`<div style="display:flex;gap:8px;margin-bottom:6px;${isFrom?"flex-direction:row-reverse":""}">
+          <div style="max-width:70%;background:${isFrom?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${isFrom?"var(--blue-mid)":"var(--border2)"};border-radius:8px;padding:6px 10px;font-size:0.78rem;">
+            <div style="font-weight:600;font-size:0.7rem;color:var(--text2);margin-bottom:2px;">${esc(isFrom?memberName:thread.otherName)} · ${esc(timeStr)}</div>
+            <div>${esc(msg.text)}</div>
+          </div>
+        </div>`;
+      });
+      html+="</div>";
+    });
+    el("dm-admin-messages").innerHTML=html;
+  }catch(e){
+    el("dm-admin-messages").innerHTML=`<div style="color:var(--red);font-size:0.82rem;">${esc(e.message)}</div>`;
+  }
 }
 
 async function forceTeamStatus(teamId,status){

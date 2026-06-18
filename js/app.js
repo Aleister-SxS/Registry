@@ -267,15 +267,17 @@ function buildNav(activePage, opts = {}) {
     return;
   }
   const pages = [
-    { href: "index.html",       label: "Team Registry",    requiresAuth: true },
-    { href: "players.html",     label: "Guild Members",    requiresAuth: true },
-    { href: "status.html",      label: "Your Invites",     requiresAuth: true },
-    { href: "your-team.html",   label: "Your Teams",       requiresAuth: true },
+    { href: "index.html",    label: "Team Registry",  requiresAuth: true },
+    { href: "players.html",  label: "Guild Members",  requiresAuth: true },
+    { href: "status.html",   label: "Your Invites",   requiresAuth: true },
+    { href: "messages.html", label: "Your Messages",  requiresAuth: true },
+    { href: "your-team.html",label: "Your Teams",     requiresAuth: true },
   ];
 
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    return `<a href="${p.href}" class="nav-link${active}">${p.label}</a>`;
+    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : "";
+    return `<a href="${p.href}" class="nav-link${active}">${p.label}${badge}</a>`;
   }).join("");
 
   const rightHtml = session
@@ -298,7 +300,8 @@ function buildNav(activePage, opts = {}) {
   // Mobile hamburger menu items
   const mobileLinks = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}</a>`;
+    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : "";
+    return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}${mbadge}</a>`;
   }).join("");
 
   const mobileUserSection = session
@@ -413,6 +416,18 @@ function buildNav(activePage, opts = {}) {
       renderBanner();
       const nav = document.getElementById("site-nav");
       if (nav) nav.insertAdjacentElement("afterend", banner);
+    }).catch(() => {});
+  }
+
+  // ── Unread DM badge ───────────────────────────────────────
+  if (session && activePage !== "messages.html") {
+    apiGet({ action: "getAll", memberId: session.id }).then(d => {
+      if (d.unreadDMs > 0) {
+        const badge    = document.getElementById("nav-dm-badge");
+        const badgeMob = document.getElementById("nav-dm-badge-mobile");
+        if (badge)    badge.style.display    = "inline";
+        if (badgeMob) badgeMob.style.display = "inline";
+      }
     }).catch(() => {});
   }
 }

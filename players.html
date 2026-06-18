@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Guild Members — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512" />
+<link rel="stylesheet" href="css/style.css?v=2026061514" />
 <style>
   /* Side-by-side grid, responsive */
   .members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:0.875rem; align-items:start; }
@@ -50,7 +50,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061512"></script>
+<script src="js/app.js?v=2026061514"></script>
 <script>onReady(()=>buildNav("players.html"));</script>
 <main>
   <div class="section-header">
@@ -248,6 +248,7 @@ function renderPlayers(){
         ${captainingSection}
         <div class="mt-sm"><a href="profile.html?id=${m.id}" class="btn btn-ghost btn-sm w-full" onclick="event.stopPropagation();">View Profile</a></div>
         ${inviteBtn}
+        ${!isMe&&session?`<a href="messages.html?to=${m.id}" class="btn btn-ghost btn-sm w-full mt-sm" onclick="event.stopPropagation()">💬 Message</a>`:""}
       </div>
     </div>`;
   }).join("");

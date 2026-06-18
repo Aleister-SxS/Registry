@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061513"/>
-<script src="js/app.js?v=2026061513"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061514"/>
+<script src="js/app.js?v=2026061514"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -405,9 +405,12 @@ function renderMgmt(teamId){
           <div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>Loading…</div></div>
         </div>
         <div class="chat-input-area">
-          <textarea class="chat-input" id="chat-input-${teamId}" placeholder="Message your team…" rows="1"
-            onkeydown="chatKeydown(event,'${teamId}')" oninput="chatAutoResize(this)"></textarea>
-          <button class="chat-send-btn" id="chat-send-${teamId}" onclick="chatSend('${teamId}')">Send</button>
+          <div class="chat-char-count" id="chat-char-${teamId}">0 / 500</div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chat-input-${teamId}" placeholder="Message your team…" rows="1"
+              onkeydown="chatKeydown(event,'${teamId}')" oninput="chatAutoResize(this);chatUpdateCount(this,'${teamId}')"></textarea>
+            <button class="chat-send-btn" id="chat-send-${teamId}" onclick="chatSend('${teamId}')">Send</button>
+          </div>
         </div>
       </div>
     `, true)}
@@ -796,6 +799,14 @@ function chatDeleteConfirm(teamId,messageId){
 }
 function chatKeydown(e,teamId){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend(teamId);}}
 function chatAutoResize(el){el.style.height="";el.style.height=Math.min(el.scrollHeight,100)+"px";}
+function chatUpdateCount(inputEl, teamId){
+  const len=inputEl.value.length;
+  const cc=el("chat-char-"+teamId);
+  if(!cc)return;
+  cc.textContent=len+" / 500";
+  cc.className="chat-char-count"+(len>450?(len>=500?" over":" warn"):"");
+  if(len>500)inputEl.value=inputEl.value.substring(0,500);
+}
 
 // ── Chat translation ──────────────────────────────────────
 async function chatTranslate(msgId, text) {
@@ -854,6 +865,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061513"></script>
+<script src="js/build-maker.js?v=2026061514"></script>
 </body>
 </html>
