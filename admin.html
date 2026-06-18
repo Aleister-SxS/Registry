@@ -233,7 +233,9 @@
 
 </main>
 <script>
-const ADMIN_PASSWORD = "Blazer!?31!?";
+// Admin password is never stored as a constant — verified server-side only.
+// _adminPw holds the entered password for the duration of the session in memory.
+let _adminPw = "";
 let adminAuthed = false;
 let allTeams=[], allMembers=[], settings={};
 let editingTeamId = null;
@@ -257,9 +259,14 @@ function loadDemo(){
   settings={maxTeamSize:4,maxMemberTeams:3,maxCaptainTeams:3};
 }
 
-function adminLogin(){
-  const pw=el("adm-pw").value;
-  if(pw!==ADMIN_PASSWORD){showAlert("adm-login-err","Incorrect password.");return;}
+async function adminLogin(){
+  const pw=el("adm-pw").value.trim();
+  if(!pw){showAlert("adm-login-err","Enter the admin password.");return;}
+  clearAlert("adm-login-err");
+  try{
+    await apiPost({action:"adminLogin",adminPassword:pw});
+  }catch(e){showAlert("adm-login-err","Incorrect password.");return;}
+  _adminPw=pw;
   adminAuthed=true;
   hide(el("admin-locked"));show(el("admin-panel"));
   renderAdminTeams();renderAdminMembers();
@@ -270,6 +277,7 @@ function adminLogin(){
 
 function adminLogout(){
   adminAuthed=false;
+  _adminPw="";
   el("adm-pw").value="";
   show(el("admin-locked"));hide(el("admin-panel"));
 }
@@ -369,7 +377,7 @@ async function saveTeamEdit(){
   if(!editingTeamId)return;
   clearAlert("et-error");
   try{
-    await apiPost({action:"adminUpdateTeam",adminPassword:ADMIN_PASSWORD,teamId:editingTeamId,
+    await apiPost({action:"adminUpdateTeam",adminPassword:_adminPw,teamId:editingTeamId,
       name:el("et-name").value.trim(),description:el("et-desc").value.trim(),status:el("et-status").value});
     const t=allTeams.find(x=>x.id===editingTeamId);
     if(t){t.name=el("et-name").value.trim();t.description=el("et-desc").value.trim();t.status=el("et-status").value;}
@@ -380,7 +388,7 @@ async function saveTeamEdit(){
 function confirmDeleteTeam(teamId,teamName){
   confirm_(`Delete "${teamName}"`,`Permanently delete this team and remove all members from it? This cannot be undone.`,async()=>{
     try{
-      await apiPost({action:"adminDeleteTeam",adminPassword:ADMIN_PASSWORD,teamId});
+      await apiPost({action:"adminDeleteTeam",adminPassword:_adminPw,teamId});
       const idx=allTeams.findIndex(x=>x.id===teamId);if(idx>=0)allTeams.splice(idx,1);
       allMembers.forEach(m=>{if(m.teamIds)m.teamIds=m.teamIds.filter(id=>id!==teamId);});
       renderAdminTeams();toast("Team deleted.");
@@ -394,7 +402,7 @@ async function saveSettings(){
   const maxMemberTeams=Number(el("s-max-member-teams").value)||3;
   const maxCaptainTeams=Number(el("s-max-captain-teams").value)||3;
   try{
-    await apiPost({action:"updateSettings",adminPassword:ADMIN_PASSWORD,maxTeamSize,maxMemberTeams,maxCaptainTeams});
+    await apiPost({action:"updateSettings",adminPassword:_adminPw,maxTeamSize,maxMemberTeams,maxCaptainTeams});
     settings={maxTeamSize,maxMemberTeams,maxCaptainTeams};
     hideProcessing("Settings saved!");
   }catch(e){hideProcessing();showAlert("settings-msg",e.message);}
@@ -406,7 +414,7 @@ async function doKeyLookup(){
   clearAlert("kl-error");el("kl-result").style.display="none";
   if(!tag){showAlert("kl-error","Enter a Player ID.");return;}
   try{
-    const res=await apiPost({action:"adminLookupKey",adminPassword:ADMIN_PASSWORD,gamertag:tag});
+    const res=await apiPost({action:"adminLookupKey",adminPassword:_adminPw,gamertag:tag});
     el("kl-result-tag").textContent=res.gamertag;
     el("kl-result-key").textContent=res.captainKey;
     el("kl-result").style.display="block";
@@ -416,7 +424,7 @@ async function doKeyLookup(){
 async function cleanDuplicates(){
   confirm_("Clean Duplicate Teams","This will remove any duplicate teams (same name + captain). This cannot be undone.",async()=>{
     try{
-      const res=await apiPost({action:"adminDeleteDuplicates",adminPassword:ADMIN_PASSWORD});
+      const res=await apiPost({action:"adminDeleteDuplicates",adminPassword:_adminPw});
       if(res.count===0){toast("No duplicates found.","info");}
       else{toast(`Removed ${res.count} duplicate(s): ${res.deleted.join(", ")}`,"success");}
       const d=await apiGet({action:"getAll"});
@@ -431,7 +439,7 @@ async function loadAdminChat(){
   el("admin-chat-container").style.display="block";
   el("admin-chat-messages").innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const d=await apiGet({action:"getMessages",teamId,adminPassword:ADMIN_PASSWORD});
+    const d=await apiGet({action:"getMessages",teamId,adminPassword:_adminPw});
     const msgs=d.messages||[];
     if(!msgs.length){el("admin-chat-messages").innerHTML='<div class="empty" style="padding:2rem;"><p>No messages.</p></div>';return;}
     el("admin-chat-messages").innerHTML=msgs.map(msg=>{
@@ -460,7 +468,7 @@ async function loadAdminChat(){
 
 async function adminDeleteMsg(messageId,teamId){
   try{
-    await apiPost({action:"adminDeleteMessage",adminPassword:ADMIN_PASSWORD,messageId,teamId});
+    await apiPost({action:"adminDeleteMessage",adminPassword:_adminPw,messageId,teamId});
     loadAdminChat();toast("Message deleted.");
   }catch(e){toast(e.message,"error");}
 }
@@ -469,7 +477,7 @@ function confirmClearChat(){
   const teamId=el("chat-team-select").value;if(!teamId)return;
   confirm_("Clear All Messages","Delete ALL messages in this team's chat? This cannot be undone.",async()=>{
     try{
-      await apiPost({action:"adminClearChat",adminPassword:ADMIN_PASSWORD,teamId});
+      await apiPost({action:"adminClearChat",adminPassword:_adminPw,teamId});
       loadAdminChat();toast("Chat cleared.");
     }catch(e){toast(e.message,"error");}
   });
@@ -504,7 +512,7 @@ async function loadDMAdminThread(memberId, memberName){
   el("dm-admin-thread-title").textContent=`DM conversations for ${memberName}`;
   el("dm-admin-messages").innerHTML=`<div class="loading"><span class="spinner"></span></div>`;
   try{
-    const d=await apiPost({action:"adminGetDMs",adminPassword:ADMIN_PASSWORD,memberId});
+    const d=await apiPost({action:"adminGetDMs",adminPassword:_adminPw,memberId});
     const threads=d.threads||[];
     if(!threads.length){
       el("dm-admin-messages").innerHTML=`<div style="color:var(--text3);font-size:0.82rem;text-align:center;padding:1rem;">No DMs found for this member.</div>`;
@@ -539,7 +547,7 @@ async function forceTeamStatus(teamId,status){
   if(!status)return;
   showProcessing("Updating Status…");
   try{
-    await apiPost({action:"adminForceTeamStatus",adminPassword:ADMIN_PASSWORD,teamId,status});
+    await apiPost({action:"adminForceTeamStatus",adminPassword:_adminPw,teamId,status});
     const t=allTeams.find(x=>x.id===teamId);if(t)t.status=status;
     renderAdminTeams();hideProcessing("Team status updated!");
   }catch(e){hideProcessing();toast(e.message,"error");}
@@ -552,7 +560,7 @@ async function toggleSuspend(memberId,memberName,currentStatus){
     async()=>{
       showProcessing(suspend?"Suspending Member…":"Unsuspending Member…");
       try{
-        await apiPost({action:"adminSuspendMember",adminPassword:ADMIN_PASSWORD,memberId,suspended:suspend});
+        await apiPost({action:"adminSuspendMember",adminPassword:_adminPw,memberId,suspended:suspend});
         const m=allMembers.find(x=>x.id===memberId);if(m)m.suspended=suspend?"TRUE":"FALSE";
         renderAdminMembers();hideProcessing(suspend?"Member suspended.":"Member unsuspended.");
       }catch(e){hideProcessing();toast(e.message,"error");}
@@ -566,7 +574,7 @@ function confirmDeleteMember(memberId,memberName){
     async()=>{
       showProcessing("Deleting Account…");
       try{
-        await apiPost({action:"adminDeleteMember",adminPassword:ADMIN_PASSWORD,memberId});
+        await apiPost({action:"adminDeleteMember",adminPassword:_adminPw,memberId});
         const idx=allMembers.findIndex(x=>x.id===memberId);if(idx>=0)allMembers.splice(idx,1);
         renderAdminMembers();hideProcessing("Account deleted.");
       }catch(e){hideProcessing();toast(e.message,"error");}
@@ -580,7 +588,7 @@ let broadcasts = []; // local cache of broadcast history
 async function loadBroadcasts(){
   el("broadcast-history").innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const d = await apiGet({action:"adminGetBroadcasts",adminPassword:ADMIN_PASSWORD});
+    const d = await apiGet({action:"adminGetBroadcasts",adminPassword:_adminPw});
     broadcasts = d.broadcasts || [];
     renderBroadcastHistory();
   }catch(e){
@@ -627,7 +635,7 @@ async function toggleBroadcastActive(idx){
   const b = broadcasts[idx];
   showProcessing(b.active==="TRUE"?"Deactivating…":"Activating…");
   try{
-    await apiPost({action:"adminUpdateBroadcast",adminPassword:ADMIN_PASSWORD,
+    await apiPost({action:"adminUpdateBroadcast",adminPassword:_adminPw,
       broadcastId:b.id, active:b.active!=="TRUE"});
     broadcasts[idx].active = b.active==="TRUE"?"FALSE":"TRUE";
     renderBroadcastHistory();
@@ -640,7 +648,7 @@ async function deleteBroadcast(idx){
   confirm_("Delete Broadcast","Permanently delete this broadcast message?",async()=>{
     showProcessing("Deleting…");
     try{
-      await apiPost({action:"adminDeleteBroadcast",adminPassword:ADMIN_PASSWORD,broadcastId:b.id});
+      await apiPost({action:"adminDeleteBroadcast",adminPassword:_adminPw,broadcastId:b.id});
       broadcasts.splice(idx,1);
       renderBroadcastHistory();
       hideProcessing("Broadcast deleted.");
@@ -657,14 +665,14 @@ async function saveBroadcast(){
     if(editIdx !== undefined && editIdx !== ""){
       // Update existing
       const b = broadcasts[parseInt(editIdx)];
-      await apiPost({action:"adminUpdateBroadcast",adminPassword:ADMIN_PASSWORD,
+      await apiPost({action:"adminUpdateBroadcast",adminPassword:_adminPw,
         broadcastId:b.id, message:msg, active:true});
       broadcasts[parseInt(editIdx)].message = msg;
       broadcasts[parseInt(editIdx)].active = "TRUE";
       delete el("broadcast-msg").dataset.editIdx;
     } else {
       // New broadcast
-      const res = await apiPost({action:"adminSetBroadcast",adminPassword:ADMIN_PASSWORD,message:msg,active:true});
+      const res = await apiPost({action:"adminSetBroadcast",adminPassword:_adminPw,message:msg,active:true});
       broadcasts.push({id:res.broadcastId||("bc-"+Date.now()),message:msg,active:"TRUE",sentAt:new Date().toISOString()});
     }
     el("broadcast-msg").value="";
@@ -681,7 +689,7 @@ async function doResetKey(){
   if(!tag){showAlert("rk-error","Enter a Player ID.");return;}
   showProcessing("Resetting Key…");
   try{
-    const res=await apiPost({action:"adminResetKey",adminPassword:ADMIN_PASSWORD,gamertag:tag});
+    const res=await apiPost({action:"adminResetKey",adminPassword:_adminPw,gamertag:tag});
     el("rk-result-tag").textContent=res.gamertag;
     el("rk-result-key").textContent=res.newKey;
     el("rk-result").style.display="block";

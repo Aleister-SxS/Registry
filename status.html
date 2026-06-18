@@ -58,19 +58,21 @@
     </div>
 
     <!-- Your Join Requests -->
-    <div class="status-block">
-      <div class="status-block-header">
+    <div class="status-block" id="requests-block">
+      <div class="status-block-header" onclick="toggleStatusBlock('requests-block')">
         <span class="status-block-title">📤 Your Join Requests</span>
         <span id="req-badge" class="badge badge-pending" style="display:none;"></span>
+        <span class="status-chevron">▼</span>
       </div>
       <div class="status-block-body" id="sc-requests"></div>
     </div>
 
     <!-- Captain: Join Requests to Your Teams -->
     <div class="status-block" id="captain-section">
-      <div class="status-block-header">
+      <div class="status-block-header" onclick="toggleStatusBlock('captain-section')">
         <span class="status-block-title">⚜️ Join Requests to Your Team(s)</span>
         <span id="jrq-badge" class="badge badge-pending" style="display:none;"></span>
+        <span class="status-chevron">▼</span>
       </div>
       <div class="status-block-body" id="sc-joinreqs"></div>
     </div>
