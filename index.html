@@ -6,32 +6,126 @@
 <title>Team Registry — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061512" />
 <style>
-  /* Card overflow fix */
-  .team-card { overflow: hidden; height: auto; }
-  /* Requirements rows with dividers */
-  .req-row-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 5px 0; font-size: 0.78rem;
-    border-bottom: 1px solid var(--border);
+  /* ── Team card redesign ─────────────────────────────────── */
+  .team-card {
+    overflow: hidden; height: auto;
+    transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
   }
-  .req-row-item:last-child { border-bottom: none; }
-  .req-row-label { color: var(--text3); width: 128px; flex-shrink: 0; font-size: 0.73rem; }
-  /* Clickable open pip */
-  .pip-join {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--surface2); border: 1px dashed var(--blue-mid);
+  .team-card:hover {
+    border-color: var(--border3);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  /* Captain label above name */
+  .tc-cap-label {
+    font-size: 0.6rem; color: var(--text3); font-family: var(--mono);
+    text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px;
+  }
+
+  /* Larger pips (28px) */
+  .pip {
+    width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 0.7rem; color: var(--blue-bright);
-    transition: background 0.15s, border-color 0.15s;
+    font-family: var(--mono); font-size: 0.58rem; font-weight: 700;
+    transition: transform 0.12s;
   }
-  .pip-join:hover { background: var(--blue-dim); border-style: solid; }
-  /* Filter dropdown */
+  .pip:hover { transform: scale(1.1); }
+  .pip-filled {
+    background: var(--blue); color: #fff;
+    border: 2px solid rgba(79,142,247,0.5);
+  }
+  .pip-filled.pip-cap {
+    background: var(--amber-dim); color: var(--amber);
+    border: 2px solid var(--amber-mid);
+  }
+  .pip-empty {
+    background: var(--surface2);
+    border: 1.5px dashed rgba(120,160,255,0.22);
+  }
+  .pip-join {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(79,142,247,0.10); border: 1.5px dashed var(--blue-mid);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.85rem; color: var(--blue-bright);
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+  .pip-join:hover {
+    background: var(--blue-dim); border-style: solid;
+    transform: scale(1.1);
+  }
+
+  /* Condensed requirements pill row */
+  .req-pill-row {
+    display: flex; gap: 5px; flex-wrap: wrap;
+    align-items: center; margin-bottom: 0.65rem;
+  }
+  .req-tag {
+    font-size: 0.68rem; padding: 2px 8px; border-radius: 4px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+  .req-tag-open {
+    background: var(--green-dim); border-color: var(--green-mid); color: var(--green);
+  }
+
+  /* ── Casual badge: light blue (distinct from green Recruiting) */
+  .badge-casual {
+    background: rgba(96,165,250,0.13);
+    color: #60a5fa;
+    border: 1px solid rgba(96,165,250,0.35);
+  }
+
+  /* ── Join button: green tint ─────────────────────────────── */
+  .btn-join {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    background: rgba(52,211,153,0.13); border: 1px solid rgba(52,211,153,0.4);
+    color: var(--green); border-radius: 6px; padding: 5px 12px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    font-family: inherit; white-space: nowrap; text-decoration: none;
+  }
+  .btn-join:hover {
+    background: rgba(52,211,153,0.22); border-color: rgba(52,211,153,0.6);
+    opacity: 1; text-decoration: none;
+  }
+  .btn-join:active { transform: scale(0.97); }
+
+  /* ── Full button: faded red ──────────────────────────────── */
+  .btn-full-disabled {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.3);
+    color: var(--red); border-radius: 6px; padding: 5px 12px;
+    font-size: 0.78rem; font-weight: 600; opacity: 0.7;
+    cursor: not-allowed; font-family: inherit; white-space: nowrap;
+  }
+
+  /* ── Surface filter buttons ──────────────────────────────── */
+  .filter-surface-bar {
+    display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-surface-btn {
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text2); font-size: 0.78rem; padding: 6px 13px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    font-family: inherit; font-weight: 500; white-space: nowrap;
+  }
+  .filter-surface-btn:hover {
+    border-color: var(--border3); color: var(--text);
+  }
+  .filter-surface-btn.active {
+    border-color: var(--blue-mid); color: var(--blue-bright);
+    background: var(--blue-dim);
+  }
+
+  /* ── Advanced filter dropdown (unchanged behaviour) ─────── */
   .filter-dropdown-wrap { position: relative; }
   .filter-dropdown-btn {
     background: var(--surface); border: 1px solid var(--border2);
-    color: var(--text2); font-size: 0.8rem; padding: 6px 14px;
-    border-radius: 7px; cursor: pointer; display: flex; align-items: center; gap: 6px;
-    transition: border-color 0.15s;
+    color: var(--text2); font-size: 0.78rem; padding: 6px 13px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: border-color 0.15s; font-family: inherit;
   }
   .filter-dropdown-btn:hover { border-color: var(--border3); color: var(--text); }
   .filter-dropdown-menu {
@@ -57,7 +151,6 @@
     width: 14px; height: 14px; accent-color: var(--blue);
     cursor: pointer; flex-shrink: 0;
   }
-  .filter-check.active { color: var(--blue-bright); }
   .active-filters { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
   .active-filter-chip {
     font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
@@ -80,44 +173,49 @@
     <span class="section-title">Team Registry</span>
     <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
       <input class="search-input" id="team-search" placeholder="Search teams…" oninput="renderTeams()" />
-      <button class="btn btn-ghost btn-sm" onclick="refreshTeams()" title="Refresh teams" style="flex-shrink:0;">↻ Refresh</button>
-      <div class="filter-dropdown-wrap">
-        <button class="filter-dropdown-btn" onclick="toggleFilterMenu()">🔽 Filters <span id="filter-count-badge"></span></button>
-        <div class="filter-dropdown-menu" id="filter-menu">
-          <div class="filter-group-label">Availability</div>
-          <label class="filter-check"><input type="checkbox" data-filter="status" data-value="open" onchange="renderTeams()" /> Recruiting</label>
-          <label class="filter-check"><input type="checkbox" data-filter="status" data-value="full" onchange="renderTeams()" /> Full</label>
-          <label class="filter-check"><input type="checkbox" data-filter="openToAll" data-value="true" onchange="renderTeams()" /> Open to All (no requirements)</label>
+      <div class="filter-surface-bar">
+        <button class="filter-surface-btn" id="fsb-recruiting" onclick="toggleSurfaceFilter('recruiting')">Recruiting</button>
+        <button class="filter-surface-btn" id="fsb-competitive" onclick="toggleSurfaceFilter('competitive')">Competitive</button>
+        <button class="filter-surface-btn" id="fsb-casual" onclick="toggleSurfaceFilter('casual')">Casual</button>
+        <div class="filter-dropdown-wrap">
+          <button class="filter-dropdown-btn" onclick="toggleFilterMenu()">More Filters <span id="filter-count-badge"></span></button>
+          <div class="filter-dropdown-menu" id="filter-menu">
+            <div class="filter-group-label">Availability</div>
+            <label class="filter-check"><input type="checkbox" data-filter="status" data-value="open" onchange="renderTeams()" /> Recruiting</label>
+            <label class="filter-check"><input type="checkbox" data-filter="status" data-value="full" onchange="renderTeams()" /> Full</label>
+            <label class="filter-check"><input type="checkbox" data-filter="openToAll" data-value="true" onchange="renderTeams()" /> Open to All (no requirements)</label>
 
-          <div class="filter-group-label">Playstyle</div>
-          <label class="filter-check"><input type="checkbox" data-filter="playstyle" data-value="Casual" onchange="renderTeams()" /> Casual</label>
-          <label class="filter-check"><input type="checkbox" data-filter="playstyle" data-value="Competitive" onchange="renderTeams()" /> Competitive</label>
+            <div class="filter-group-label">Playstyle</div>
+            <label class="filter-check"><input type="checkbox" data-filter="playstyle" data-value="Casual" onchange="renderTeams()" /> Casual</label>
+            <label class="filter-check"><input type="checkbox" data-filter="playstyle" data-value="Competitive" onchange="renderTeams()" /> Competitive</label>
 
-          <div class="filter-group-label">Composition</div>
-          <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="Tank" onchange="renderTeams()" /> Has Tank slot</label>
-          <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="Support" onchange="renderTeams()" /> Has Support slot</label>
-          <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="DPS" onchange="renderTeams()" /> Has DPS slot</label>
+            <div class="filter-group-label">Composition</div>
+            <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="Tank" onchange="renderTeams()" /> Has Tank slot</label>
+            <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="Support" onchange="renderTeams()" /> Has Support slot</label>
+            <label class="filter-check"><input type="checkbox" data-filter="comp" data-value="DPS" onchange="renderTeams()" /> Has DPS slot</label>
 
-          <div class="filter-group-label">Preferences</div>
-          <label class="filter-check"><input type="checkbox" data-filter="discord" data-value="true" onchange="renderTeams()" /> Discord Recommended</label>
-          <label class="filter-check"><input type="checkbox" data-filter="lookingForCaptain" data-value="true" onchange="renderTeams()" /> Looking for a Captain</label>
+            <div class="filter-group-label">Preferences</div>
+            <label class="filter-check"><input type="checkbox" data-filter="discord" data-value="true" onchange="renderTeams()" /> Discord Recommended</label>
+            <label class="filter-check"><input type="checkbox" data-filter="lookingForCaptain" data-value="true" onchange="renderTeams()" /> Looking for a Captain</label>
 
-          <div class="filter-group-label">Language Preference</div>
-          <div style="padding:4px 8px;">
-            <div class="tag-input-wrap" id="lang-filter-wrap" style="background:var(--bg);">
-              <div class="tag-input-tags" id="lang-filter-tags"></div>
-              <div class="tag-input-dropdown-wrap">
-                <input class="tag-input-search" id="lang-filter-search" placeholder="Search languages…"
-                  autocomplete="off" oninput="langFilterSearch()" onfocus="langFilterOpen()" />
-                <div class="tag-dropdown" id="lang-filter-dropdown"></div>
+            <div class="filter-group-label">Language Preference</div>
+            <div style="padding:4px 8px;">
+              <div class="tag-input-wrap" id="lang-filter-wrap" style="background:var(--bg);">
+                <div class="tag-input-tags" id="lang-filter-tags"></div>
+                <div class="tag-input-dropdown-wrap">
+                  <input class="tag-input-search" id="lang-filter-search" placeholder="Search languages…"
+                    autocomplete="off" oninput="langFilterSearch()" onfocus="langFilterOpen()" />
+                  <div class="tag-dropdown" id="lang-filter-dropdown"></div>
+                </div>
               </div>
             </div>
-          </div>
-          <div style="padding: 8px 8px 4px;">
-            <button class="btn btn-ghost btn-xs w-full" onclick="clearFilters()">Clear All Filters</button>
+            <div style="padding: 8px 8px 4px;">
+              <button class="btn btn-ghost btn-xs w-full" onclick="clearFilters()">Clear All Filters</button>
+            </div>
           </div>
         </div>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshTeams()" title="Refresh teams" style="flex-shrink:0;">↻ Refresh</button>
       <span class="count-badge" id="team-count">—</span>
     </div>
   </div>
@@ -139,7 +237,7 @@
     <div id="jm-error" class="alert alert-error alert-hidden mt-sm"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeJoinModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="doJoinRequest()">Send Request</button>
+      <button class="btn-join" onclick="doJoinRequest()">Send Request</button>
     </div>
   </div>
 </div>
@@ -148,7 +246,18 @@
 let allTeams=[], allMembers=[], allRequests=[], settings={};
 let joinTargetTeamId=null;
 
-// Close filter menu on outside click
+// ── Surface filter buttons ─────────────────────────────────
+const _surfaceFilters = new Set();
+
+function toggleSurfaceFilter(key) {
+  if (_surfaceFilters.has(key)) _surfaceFilters.delete(key);
+  else _surfaceFilters.add(key);
+  const btn = el("fsb-" + key);
+  if (btn) btn.classList.toggle("active", _surfaceFilters.has(key));
+  renderTeams();
+}
+
+// ── Dropdown filter menu ───────────────────────────────────
 document.addEventListener("click", e => {
   const wrap = document.querySelector(".filter-dropdown-wrap");
   if (wrap && !wrap.contains(e.target)) {
@@ -167,7 +276,6 @@ function getActiveFilters() {
     if (!filters[f]) filters[f] = [];
     filters[f].push(cb.dataset.value);
   });
-  // Add language filter chips
   const langTags = langFilterSelected();
   if (langTags.length) filters.language = langTags;
   return filters;
@@ -225,6 +333,12 @@ function clearFilters() {
   document.querySelectorAll("#filter-menu input[type=checkbox]").forEach(cb => cb.checked = false);
   _langFilterSelected.length = 0;
   langFilterRenderChips();
+  // Also clear surface filters
+  _surfaceFilters.clear();
+  ["recruiting","competitive","casual"].forEach(k => {
+    const btn = el("fsb-" + k);
+    if (btn) btn.classList.remove("active");
+  });
   renderTeams();
 }
 
@@ -232,7 +346,6 @@ function updateActiveBadge(filters) {
   const total = Object.values(filters).reduce((a,b)=>a+b.length,0);
   const badge = el("filter-count-badge");
   if (badge) badge.textContent = total > 0 ? `(${total})` : "";
-  // Active chips
   const row = el("active-filters-row");
   if (!row) return;
   const labels = {
@@ -243,10 +356,6 @@ function updateActiveBadge(filters) {
     openToAll:{"true":"Open to All"},
     lookingForCaptain:{"true":"Seeking Captain"},
   };
-  // Add language chips separately
-  _langFilterSelected.forEach(l => {
-    row.innerHTML += `<div class="active-filter-chip">${esc(l)}<button onclick="langFilterToggle('${esc(l)}')">✕</button></div>`;
-  });
   row.innerHTML = Object.entries(filters).flatMap(([f, vals]) =>
     vals.map(v => {
       const label = labels[f]?.[v] || v;
@@ -255,6 +364,9 @@ function updateActiveBadge(filters) {
       </div>`;
     })
   ).join("");
+  _langFilterSelected.forEach(l => {
+    row.innerHTML += `<div class="active-filter-chip">${esc(l)}<button onclick="langFilterToggle('${esc(l)}')">✕</button></div>`;
+  });
 }
 
 function removeFilter(f, v) {
@@ -263,7 +375,6 @@ function removeFilter(f, v) {
 }
 
 onReady(async () => {
-  // Redirect to login if not authenticated
   if (!getSession()) { window.location.replace('register.html'); return; }
   try {
     const d = await apiGet({ action:"getAll" });
@@ -301,13 +412,18 @@ function renderTeams() {
   const filters = getActiveFilters();
   updateActiveBadge(filters);
 
-  const session = getSession();
-  const maxSize = Number(settings.maxTeamSize)||4;
+  const session  = getSession();
+  const maxSize  = Number(settings.maxTeamSize)||4;
   const myMember = session ? allMembers.find(m=>m.id===session.id) : null;
   const memberTeams = myMember ? (Array.isArray(myMember.teamIds)?myMember.teamIds:(myMember.teamIds||"").split(",").filter(Boolean)) : [];
 
   let teams = allTeams.filter(t => {
     if (search && !t.name.toLowerCase().includes(search) && !(t.description||"").toLowerCase().includes(search)) return false;
+    // Surface filter buttons
+    if (_surfaceFilters.has("recruiting") && t.status === "full") return false;
+    if (_surfaceFilters.has("competitive") && t.playstyle !== "Competitive") return false;
+    if (_surfaceFilters.has("casual") && t.playstyle !== "Casual") return false;
+    // Dropdown filters
     if (filters.status?.length && !filters.status.includes(t.status === "full" ? "full" : "open")) return false;
     if (filters.playstyle?.length && !filters.playstyle.includes(t.playstyle)) return false;
     if (filters.comp?.length && !filters.comp.every(r => (Array.isArray(t.composition)?t.composition:[]).includes(r))) return false;
@@ -334,65 +450,85 @@ function renderTeams() {
       const ids = Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean);
       return ids.includes(t.id);
     });
-    const count  = teamMembers.length;
-    const isFull = count >= maxSize || t.status === "full";
-    const status = t.status === "closed" ? "closed" : isFull ? "full" : "open";
-    const label  = {open:"Recruiting",full:"Full",closed:"Closed"}[status];
+    const count    = teamMembers.length;
+    const isFull   = count >= maxSize || t.status === "full";
+    const status   = t.status === "closed" ? "closed" : isFull ? "full" : "open";
+    const label    = {open:"Recruiting",full:"Full",closed:"Closed"}[status];
     const isOpenToAll = !Number(t.minPower) && !Number(t.minLevel);
-    const comp   = renderComposition(t.composition);
+    const comp     = renderComposition(t.composition);
     const alreadyMember = memberTeams.includes(t.id);
     const pendingReq = session && allRequests.find(r=>r.type==="join"&&r.fromId===session.id&&r.teamId===t.id&&r.status==="pending");
-    const canReq = session && status==="open" && !alreadyMember && !pendingReq;
+    const canReq   = session && status==="open" && !alreadyMember && !pendingReq;
 
     // Captain info
     const capMember = allMembers.find(m=>m.id===t.captainId);
     const capAv = capMember?.avatarUrl
-      ? `<img src="${esc(capMember.avatarUrl)}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
-      : `<div style="width:18px;height:18px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.45rem;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
+      ? `<img src="${esc(capMember.avatarUrl)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
+      : `<div style="width:20px;height:20px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.48rem;font-weight:700;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
     const capClass = capMember?.class ? ` · ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}` : "";
 
-    // Member pips — open slots are clickable join prompts for non-members
+    // Playstyle badge — Casual is light blue, Competitive is purple
+    const styleBadge = t.playstyle
+      ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>`
+      : "";
+
+    // Member pips (28px, captain in amber)
+    const captainId = t.captainId;
     const pips = Array.from({length:maxSize}, (_,i) => {
       const m = teamMembers[i];
       if (m) {
-        return m.avatarUrl
-          ? `<a href="profile.html?id=${m.id}" title="${esc(m.name)}" onclick="event.stopPropagation();"><img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" /></a>`
-          : `<a href="profile.html?id=${m.id}" title="${esc(m.name)}" onclick="event.stopPropagation();"><div class="pip pip-filled">${(m.name||"?")[0].toUpperCase()}</div></a>`;
+        const isCap = m.id === captainId;
+        if (m.avatarUrl) {
+          return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}${isCap?" (Captain)":""}" onclick="event.stopPropagation();">
+            <img src="${esc(m.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid ${isCap?"var(--amber-mid)":"var(--blue-mid)"};" />
+          </a>`;
+        }
+        return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}${isCap?" (Captain)":""}" onclick="event.stopPropagation();">
+          <div class="pip pip-filled${isCap?" pip-cap":""}">${(m.name||"?")[0].toUpperCase()}</div>
+        </a>`;
       }
-      // Empty slot
       if (canReq) {
         return `<div class="pip-join" onclick="event.stopPropagation();openJoinModal('${t.id}','${esc(t.name)}')" title="Request to join">＋</div>`;
       }
       return `<div class="pip pip-empty"></div>`;
     }).join("");
 
-    // Join button
+    // Requirements pill row
+    const reqPills = isOpenToAll
+      ? `<span class="req-tag req-tag-open">✓ Open to All</span>`
+      : `${t.minPower?`<span class="req-tag">⚡ ${formatPower(t.minPower)}+</span>`:""}${t.minLevel?`<span class="req-tag">🎯 Lv.${t.minLevel}+</span>`:""}`;
+    const discordTag = t.requiresDiscord==="TRUE" ? `<span class="req-tag">💬 Discord</span>` : "";
+    const langTag    = `<span class="req-tag">🌐 ${esc(t.prefLanguage||"Any Language")}</span>`;
+
+    // Join / status button
     let joinBtn = "";
     if (alreadyMember) {
-      joinBtn = `<a href="your-team.html" class="btn btn-sm" style="background:var(--blue-dim);border:1px solid var(--blue-mid);color:var(--blue-bright);">✓ Your Team</a>`;
+      joinBtn = `<a href="your-team.html" class="btn-join" style="background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue-bright);">✓ Your Team</a>`;
     } else if (pendingReq) {
       joinBtn = `<button class="btn btn-ghost btn-sm" disabled>Request Pending…</button>`;
     } else if (canReq) {
-      joinBtn = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
+      joinBtn = `<button class="btn-join" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
     } else if (!session) {
-      joinBtn = `<button class="btn btn-primary btn-sm" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
+      joinBtn = `<button class="btn-join" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
+    } else if (status === "full") {
+      joinBtn = `<button class="btn-full-disabled" disabled>Full</button>`;
     } else {
-      joinBtn = `<button class="btn btn-ghost btn-sm" disabled>${status!=="open"?"Not Recruiting":"Team Full"}</button>`;
+      joinBtn = `<button class="btn-full-disabled" disabled>Not Recruiting</button>`;
     }
 
     return `<div class="team-card">
-      <!-- Header -->
       <div class="team-card-header">
         <div style="min-width:0;">
           <div class="team-card-name">${esc(t.name)}</div>
-          <div style="font-size:0.62rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">⚜️ Team Captain</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
+          <div class="tc-cap-label">⚜️ Team Captain</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
             ${capAv}
             <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${capClass}</span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
           <span class="badge badge-${status}"><span class="badge-dot"></span>${label}</span>
+          ${styleBadge}
           ${t.lookingForCaptain==="TRUE"?`<span class="badge badge-amber"><span class="badge-dot"></span>⚜️ Seeking Captain</span>`:""}
         </div>
       </div>
@@ -400,34 +536,10 @@ function renderTeams() {
       ${comp ? `<div class="comp-row">${comp}</div>` : ""}
       <div class="team-card-desc">${t.description ? esc(t.description) : `<span style="color:var(--text3);font-style:italic;">No description.</span>`}</div>
 
-      <!-- Labelled requirements with dividers -->
-      <div style="margin-bottom:0.75rem;">
-        <div class="req-row-item">
-          <span class="req-row-label">Requirements to Join</span>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
-            ${isOpenToAll
-              ? `<span class="badge badge-open" style="font-size:0.68rem;">✓ Open to All</span>`
-              : `${t.minPower?`<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>`:""}${t.minLevel?`<span class="req-pill">🎯 Lv.${t.minLevel}+</span>`:""}`
-            }
-          </div>
-        </div>
-        <div class="req-row-item">
-          <span class="req-row-label">Playstyle</span>
-          ${t.playstyle ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>` : `<span style="color:var(--text3);font-size:0.78rem;">Not specified</span>`}
-        </div>
-        <div class="req-row-item">
-          <span class="req-row-label">Language</span>
-          <span style="font-size:0.78rem;color:var(--text2);">${esc(t.prefLanguage||"Any Language")}</span>
-        </div>
-        <div class="req-row-item">
-          <span class="req-row-label">Discord</span>
-          <span style="font-size:0.78rem;color:var(--text2);">${t.requiresDiscord==="TRUE"?"💬 Recommended":"Not required"}</span>
-        </div>
-      </div>
+      <div class="req-pill-row">${reqPills}${discordTag}${langTag}</div>
 
-      <!-- Footer: pips + actions (no member count) -->
       <div class="team-card-footer">
-        <div style="display:flex;gap:5px;align-items:center;">${pips}</div>
+        <div style="display:flex;gap:4px;align-items:center;">${pips}</div>
         <div class="flex gap-xs">
           <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team</a>
           ${joinBtn}
@@ -473,7 +585,6 @@ async function doJoinRequest() {
   closeJoinModal();
   try {
     await apiPost({ action:"joinRequest", memberId:session.id, captainKey:session.captainKey, teamId:joinTargetTeamId });
-    // Immediately mark the request as pending in local state so card updates right away
     allRequests.push({
       id: "pending-" + Date.now(),
       type: "join",
@@ -486,7 +597,6 @@ async function doJoinRequest() {
     renderTeams();
   } catch(e) {
     hideProcessing();
-    // Re-open modal with error
     openJoinModal(joinTargetTeamId, el("jm-team-name")?.textContent || "");
     showAlert("jm-error", e.message);
   }
