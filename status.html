@@ -127,15 +127,26 @@ onReady(async()=>{
   el("login-box").style.display="block";
 });
 
-function doLogin(){
+async function doLogin(){
   const tag=el("sl-tag").value.trim(),key=el("sl-key").value.trim();
   clearAlert("sl-error");
   if(!tag||!key){showAlert("sl-error","Enter your Player ID and key.");return;}
-  const m=allMembers.find(mb=>String(mb.gamertag)===tag&&mb.captainKey===key);
-  if(!m){showAlert("sl-error","Player ID or key not found.");return;}
-  statusMember=m;
-  setSession({id:m.id,gamertag:m.gamertag,name:m.name,captainKey:m.captainKey,isCaptain:m.isCaptain,avatarUrl:m.avatarUrl||""});
-  showStatus();
+  const btn=document.querySelector("#login-box .btn-primary");
+  if(btn){btn.disabled=true;btn.textContent="Loading…";}
+  try{
+    // Verify credentials server-side — captainKey is no longer in the public getAll response
+    const d=await apiPost({action:"loginMember",gamertag:tag,captainKey:key});
+    const remote=d.member;
+    // Merge with allMembers data (richer, but no captainKey after security fix)
+    statusMember=allMembers.find(mb=>mb.id===remote.id)||remote;
+    setSession({id:remote.id,gamertag:remote.gamertag,name:remote.name,
+      captainKey:key,isCaptain:remote.isCaptain,avatarUrl:remote.avatarUrl||""});
+    showStatus();
+  }catch(e){
+    showAlert("sl-error",e.message||"Player ID or key not found.");
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent="Load";}
+  }
 }
 
 function showStatus(){hide(el("login-box"));show(el("status-content"));renderStatus();}
