@@ -467,7 +467,7 @@ function renderBuildDisplay() {
       if (skill) {
         return `<div class="build-slot filled" title="${esc(skill.name)}" style="min-height:80px;">
           <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
-            style="width:44px;height:44px;" alt="${esc(skill.name)}" onerror="this.style.display='none'" />
+            style="width:44px;height:44px;" alt="${esc(skill.name)}" onerror="skillImgFallback(this)" />
           <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
         </div>`;
       }
@@ -574,7 +574,7 @@ function bmRenderSlots() {
           <button class="build-slot-remove" onclick="event.stopPropagation();bmClearSlot('${type}',${i})">✕</button>
           <img class="skill-icon" style="width:40px;height:40px;"
             src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
-            alt="${esc(skill.name)}" onerror="this.style.display='none'" />
+            alt="${esc(skill.name)}" onerror="skillImgFallback(this)" />
           <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
         </div>`;
       }
@@ -635,7 +635,7 @@ function bmRenderBrowser() {
     const isSel = selectedArr.includes(s.id);
     return `<div class="skill-card ${isSel?"selected":""}" onclick="bmSelectSkill('${s.id}')" title="${esc(s.name)}">
       <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp"
-        loading="lazy" onerror="this.style.display='none'" alt="${esc(s.name)}" />
+        loading="lazy" onerror="skillImgFallback(this)" alt="${esc(s.name)}" />
       <div class="skill-name">${esc(s.name)}</div>
     </div>`;
   }).join("") || `<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>`;

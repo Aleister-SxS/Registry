@@ -250,6 +250,29 @@ function skillIconUrl(id) {
   return `${SKILL_BASE}skill_${id}.webp`;
 }
 
+// ── Skill image fallback ──────────────────────────────────
+// Called via onerror when a skill webp doesn't exist on the server.
+// Replaces the broken <img> with a styled abbreviation tile so the
+// slot never looks empty — always shows e.g. "RS" for "Ricocheting Shield".
+function skillImgFallback(img) {
+  img.onerror = null; // prevent re-triggering
+  const sz = img.style.width || img.getAttribute("width") || "32px";
+  const name = img.alt || img.title || "?";
+  const abbr = name.split(" ").map(function(w){ return w[0]; }).join("").slice(0, 2).toUpperCase();
+  const radius = img.style.borderRadius || "6px";
+  const fb = document.createElement("div");
+  fb.style.cssText = [
+    "width:" + sz, "height:" + sz, "border-radius:" + radius,
+    "background:var(--surface3)", "border:1px solid var(--border2)",
+    "display:flex", "align-items:center", "justify-content:center",
+    "font-size:0.55rem", "font-weight:700", "color:var(--text2)",
+    "flex-shrink:0", "user-select:none",
+  ].join(";");
+  fb.textContent = abbr;
+  fb.title = name;
+  img.replaceWith(fb);
+}
+
 // ── Build Maker class ─────────────────────────────────────
 class BuildMaker {
   constructor(opts = {}) {
@@ -342,7 +365,7 @@ class BuildMaker {
               return `<div class="build-slot filled" title="${esc(skill.name)}">
                 ${!this.readOnly ? `<button class="build-slot-remove" onclick="window._bm_${this.containerId}.toggle('${skill.id}')" title="Remove">✕</button>` : ""}
                 <img class="skill-icon" src="${skillIconUrl(skill.id)}" alt="${esc(skill.name)}"
-                  onerror="this.src='';this.style.display='none'" />
+                  onerror="skillImgFallback(this)" />
                 <div class="skill-name">${esc(skill.name)}</div>
               </div>`;
             }
@@ -365,7 +388,7 @@ class BuildMaker {
           <div class="skill-card ${this.isSelected(s.id) ? "selected" : ""}"
             onclick="window._bm_${this.containerId}.toggle('${s.id}')" title="${esc(s.name)}">
             <img class="skill-icon" src="${skillIconUrl(s.id)}" alt="${esc(s.name)}"
-              loading="lazy" onerror="this.style.display='none'" />
+              loading="lazy" onerror="skillImgFallback(this)" />
             <div class="skill-name">${esc(s.name)}</div>
           </div>
         `).join("")}
