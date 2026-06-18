@@ -521,7 +521,7 @@ var FANTOMON_LIST = [
   {id:"boaro",label:"Boaro"},{id:"armopi",label:"Armopi"},
   {id:"falko",label:"Falko"},{id:"zeioletus",label:"Zeioletus"},
   {id:"kels",label:"Kels"},{id:"sylvaerie",label:"Sylvaerie"},
-  {id:"terragon",label:"Terragon"},{id:"chomosuke",label:"Chomosuke"},
+  {id:"terragon",label:"Terragon"},{id:"chomosuke",label:"Chomosuke",urlOverride:"chomusuke"},
   {id:"pandarial",label:"Pandarial"}
 ];
 var _pickerSelected = null;
@@ -548,7 +548,7 @@ function tryOpenAvatarPicker() {
   var grid = document.createElement("div");
   grid.style.cssText = "display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;";
   FANTOMON_LIST.forEach(function(f) {
-    var url = "https://eog.gg/assets/sxs/fantomons/" + f.id + ".webp";
+    var url = "https://eog.gg/assets/sxs/fantomons/" + (f.urlOverride || f.id) + ".webp";
     var card = document.createElement("div");
     card.id = "iap-" + f.id;
     card.style.cssText = "cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);padding:10px;text-align:center;transition:border-color 0.15s;";
