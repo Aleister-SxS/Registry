@@ -247,7 +247,7 @@ const SKILLS = [
 ];
 
 function skillIconUrl(id) {
-  return `${SKILL_BASE}skill_${id}.webp`;
+  return `${SKILL_BASE}skill_${id}.png`;
 }
 
 // ── Skill image fallback ──────────────────────────────────

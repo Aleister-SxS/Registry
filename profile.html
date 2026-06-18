@@ -466,7 +466,7 @@ function renderBuildDisplay() {
       const skill = id ? SKILLS.find(s=>s.id===id) : null;
       if (skill) {
         return `<div class="build-slot filled" title="${esc(skill.name)}" style="min-height:80px;">
-          <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
+          <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.png"
             style="width:44px;height:44px;" alt="${esc(skill.name)}" onerror="skillImgFallback(this)" />
           <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
         </div>`;
@@ -573,7 +573,7 @@ function bmRenderSlots() {
           onclick="bmSlotClick('${type}',${i})" title="Click to replace or remove">
           <button class="build-slot-remove" onclick="event.stopPropagation();bmClearSlot('${type}',${i})">✕</button>
           <img class="skill-icon" style="width:40px;height:40px;"
-            src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.webp"
+            src="https://lootandwaifus.com/skills/swordxstaff/skill_${skill.id}.png"
             alt="${esc(skill.name)}" onerror="skillImgFallback(this)" />
           <div class="skill-name" style="font-size:0.62rem;">${esc(skill.name)}</div>
         </div>`;
@@ -634,7 +634,7 @@ function bmRenderBrowser() {
   el("bm-skill-grid").innerHTML = skills.map(s => {
     const isSel = selectedArr.includes(s.id);
     return `<div class="skill-card ${isSel?"selected":""}" onclick="bmSelectSkill('${s.id}')" title="${esc(s.name)}">
-      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp"
+      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.png"
         loading="lazy" onerror="skillImgFallback(this)" alt="${esc(s.name)}" />
       <div class="skill-name">${esc(s.name)}</div>
     </div>`;
