@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <title>Your Messages — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061514" />
 <style>
@@ -109,60 +109,70 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 
 /* ═══════════════════════════════════════════════════════════════
    MOBILE  (≤ 600 px)
-   – Sidebar and thread stack; only one is visible at a time.
-   – Thread slides in from the right when a convo is opened.
+   – Sidebar and thread each fill the full screen; only one shown
+     at a time.  Thread slides in from the right on open.
+   – When a thread is open the panel is position:fixed so it is
+     always anchored to the real visible viewport — this is the
+     only reliable way to keep the compose bar above the virtual
+     keyboard on both iOS Safari and Android Chrome.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
-  /* Shell becomes a horizontal sliding container */
+  /* Shell is the slide-animation container for the SIDEBAR only */
   .dm-shell{position:relative;overflow:hidden;}
 
-  /* Sidebar fills full width */
+  /* Sidebar: full width, slides out left when thread is open */
   .dm-sidebar{
     width:100%;
-    position:absolute;inset:0;
+    position:absolute;top:0;left:0;bottom:0;right:0;
     transition:transform 0.25s ease;
     z-index:2;
   }
-  /* When a thread is open, slide sidebar off to the left */
   .dm-shell.thread-open .dm-sidebar{
     transform:translateX(-100%);
     pointer-events:none;
   }
 
-  /* Thread panel fills full width and starts off-screen to the right */
+  /* Thread: hidden off-screen right by default */
   .dm-thread{
     width:100%;
-    position:absolute;inset:0;
+    position:absolute;top:0;left:0;bottom:0;right:0;
     transform:translateX(100%);
     transition:transform 0.25s ease;
     z-index:1;
   }
-  /* Slide thread in when a convo is open */
+
+  /* When open: switch to position:fixed so the panel is always
+     sized to the VISIBLE viewport (not the layout viewport).
+     top = nav height so we don't overlap the nav bar.
+     The viewport meta interactive-widget=resizes-content means
+     the browser will shrink this height when the keyboard appears,
+     keeping the compose area above it. */
   .dm-shell.thread-open .dm-thread{
-    transform:translateX(0);
+    position:fixed;
+    top:var(--nav-h, 58px);
+    bottom:0;
+    left:0;
+    right:0;
+    transform:none;
+    height:auto;
+    /* flex column already set — messages scrolls, compose is pinned */
   }
 
-  /* Show the back button on mobile */
+  /* Show back button */
   .dm-back-btn{display:block;}
 
-  /* Wider bubbles on narrow screens */
+  /* Wider bubbles */
   .dm-bubble{max-width:85%;}
 
-  /* Tighten thread header */
+  /* Tighter header */
   .dm-thread-header{padding:10px 12px;}
 
-  /* Ensure compose area is always reachable — on iOS/Android the
-     viewport shrinks when the keyboard opens; flex column + flex-shrink:0
-     on the compose area keeps it above the keyboard. */
-  .dm-thread{
-    /* Use dvh (dynamic viewport height) where supported so the shell
-       shrinks with the keyboard. Falls back gracefully. */
-    height:100dvh;
-    max-height:100dvh;
-  }
-  .dm-messages{
-    /* Allow messages area to shrink so compose stays visible */
-    min-height:0;
+  /* Messages area must be allowed to shrink */
+  .dm-messages{min-height:0;flex:1;}
+
+  /* Extra bottom padding for iOS home-bar safe area */
+  .dm-compose-area{
+    padding-bottom:max(10px, env(safe-area-inset-bottom, 0px));
   }
 }
 </style>
