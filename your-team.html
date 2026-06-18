@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512"/>
-<script src="js/app.js?v=2026061512"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061513"/>
+<script src="js/app.js?v=2026061513"></script>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -379,7 +379,7 @@ function renderMgmt(teamId){
                 <div style="width:80px;flex-shrink:0;text-align:center;">
                   <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">FANTOMON</div>
                   ${teamFantomon
-                    ?`<img src="${esc(teamFantomon.url)}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />
+                    ?`<img src="${esc(teamFantomon.url)}" title="${esc(teamFantomon.label+(teamFantomon.desc?'\n\n'+teamFantomon.desc:''))}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />
                       <div style="font-size:0.6rem;color:var(--text2);margin-top:3px;">${esc(teamFantomon.label)}</div>`
                     :`<div style="width:56px;height:56px;border-radius:50%;background:var(--surface3);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto;">🐾</div>
                       <div style="font-size:0.6rem;color:var(--text3);margin-top:3px;">None</div>`}
@@ -532,15 +532,14 @@ function tbmRenderFantomon(){
   // Render selected fantomon display
   const sel=AVATAR_PRESETS.find(p=>p.id===tbmState.fantomon);
   if(sel){
-    imgWrap.innerHTML=`<img src="${esc(sel.url)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />`;
+    imgWrap.innerHTML=`<img src="${esc(sel.url)}" title="${esc(sel.label+(sel.desc?'\n\n'+sel.desc:''))}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />`;
     label.textContent=sel.label;
   } else {
     imgWrap.innerHTML=`<div style="width:72px;height:72px;border-radius:50%;background:var(--surface3);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🐾</div>`;
     label.textContent="None selected";
   }
-  // Render picker list
   list.innerHTML=AVATAR_PRESETS.map(p=>`
-    <button onclick="tbmSelectFantomon('${p.id}')" style="display:flex;align-items:center;gap:7px;background:${p.id===tbmState.fantomon?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${p.id===tbmState.fantomon?"var(--blue-mid)":"var(--border2)"};border-radius:6px;padding:5px 8px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;">
+    <button onclick="tbmSelectFantomon('${p.id}')" title="${esc(p.label+(p.desc?'\n\n'+p.desc:''))}" style="display:flex;align-items:center;gap:7px;background:${p.id===tbmState.fantomon?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${p.id===tbmState.fantomon?"var(--blue-mid)":"var(--border2)"};border-radius:6px;padding:5px 8px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;">
       <img src="${esc(p.url)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'" />
       <span style="font-size:0.78rem;color:var(--text);font-weight:${p.id===tbmState.fantomon?"700":"400"};">${esc(p.label)}</span>
     </button>`).join("");
@@ -855,6 +854,6 @@ async function chatTranslate(msgId, text) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061512"></script>
+<script src="js/build-maker.js?v=2026061513"></script>
 </body>
 </html>

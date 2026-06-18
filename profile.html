@@ -7,8 +7,8 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Player Profile — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512" />
-<script src="js/app.js?v=2026061512"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061513" />
+<script src="js/app.js?v=2026061513"></script>
 </head>
 <body>
 <script>onReady(() => buildNav(""));</script>
@@ -429,15 +429,19 @@ ${isOwn ? `
             ${isOwn ? `<button class="btn btn-ghost btn-sm" onclick="openFantomonPicker()">Change</button>` : ""}
           </div>
           ${m.pvpFantomon ? `
+            ${(()=>{ const fp=AVATAR_PRESETS.find(p=>p.id===m.pvpFantomon); return `
             <div style="display:flex;align-items:center;gap:12px;">
-              <img src="${esc(AVATAR_PRESETS.find(p=>p.id===m.pvpFantomon)?.url||'')}"
-                style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);"
+              <img src="${esc(fp?.url||'')}"
+                style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);cursor:default;"
+                title="${esc(fp?.label||m.pvpFantomon)}"
                 onerror="this.style.display='none'" />
               <div>
-                <div style="font-weight:600;font-size:0.9rem;">${esc(AVATAR_PRESETS.find(p=>p.id===m.pvpFantomon)?.label||m.pvpFantomon)}</div>
+                <div style="font-weight:600;font-size:0.9rem;">${esc(fp?.label||m.pvpFantomon)}</div>
                 <div class="text-xs text-muted">Active PVP Fantomon</div>
               </div>
             </div>
+            ${fp?.desc ? `<div style="margin-top:10px;font-size:0.75rem;color:var(--text2);line-height:1.5;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 10px;">${esc(fp.desc)}</div>` : ""}
+            `; })()}
           ` : `<div class="empty" style="padding:1rem;"><p class="text-sm">No Fantomon selected yet.</p>
             ${isOwn ? `<button class="btn btn-ghost btn-sm mt-sm" onclick="openFantomonPicker()">Choose Fantomon</button>` : ""}
           </div>`}
@@ -843,10 +847,12 @@ function openFantomonPicker() {
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem;" id="fantomon-grid">
         ${AVATAR_PRESETS.map(p=>`
           <div onclick="selectFantomon('${p.id}')" id="fp-${p.id}"
+            title="${esc(p.label+(p.desc?'\n\n'+p.desc:''))}"
             style="cursor:pointer;border-radius:10px;border:2px solid var(--border);background:var(--surface);
               padding:10px;text-align:center;transition:border-color 0.15s;
               ${profileMember.pvpFantomon===p.id?'border-color:var(--blue);background:var(--blue-dim);':''}">
             <img src="${p.url}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;" />
+            <div style="font-size:0.7rem;color:var(--text2);margin-top:4px;">${esc(p.label)}</div>
           </div>`).join("")}
       </div>
       <div class="modal-actions">
@@ -915,6 +921,6 @@ function renderError(msg) {
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061512"></script>
+<script src="js/build-maker.js?v=2026061513"></script>
 </body>
 </html>
