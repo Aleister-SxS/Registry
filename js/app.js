@@ -276,7 +276,7 @@ function buildNav(activePage, opts = {}) {
 
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : "";
+    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "status.html" ? `<span id="nav-inv-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
     return `<a href="${p.href}" class="nav-link${active}">${p.label}${badge}</a>`;
   }).join("");
 
@@ -300,7 +300,7 @@ function buildNav(activePage, opts = {}) {
   // Mobile hamburger menu items
   const mobileLinks = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : "";
+    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "status.html" ? `<span id="nav-inv-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
     return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}${mbadge}</a>`;
   }).join("");
 
@@ -419,14 +419,36 @@ function buildNav(activePage, opts = {}) {
     }).catch(() => {});
   }
 
-  // ── Unread DM badge ───────────────────────────────────────
+  // ── Nav badges: unread DMs + pending invites/requests ────────
   if (session && activePage !== "messages.html") {
     apiGet({ action: "getAll", memberId: session.id }).then(d => {
+      // ── DM badge ──
       if (d.unreadDMs > 0) {
         const badge    = document.getElementById("nav-dm-badge");
         const badgeMob = document.getElementById("nav-dm-badge-mobile");
         if (badge)    badge.style.display    = "inline";
         if (badgeMob) badgeMob.style.display = "inline";
+      }
+      // ── Invite/request badge (skip on status.html — user is already there) ──
+      if (activePage !== "status.html") {
+        const requests = d.requests || [];
+        const teams    = d.teams    || [];
+        // Pending invites received by this user
+        const pendingInvites = requests.filter(r =>
+          r.type === "invite" && r.toId === session.id && r.status === "pending"
+        ).length;
+        // Pending join requests to teams this user captains
+        const pendingJoins = requests.filter(r =>
+          r.type === "join" && r.status === "pending" &&
+          teams.some(t => t.captainId === session.id && t.id === r.teamId)
+        ).length;
+        const invCount = pendingInvites + pendingJoins;
+        if (invCount > 0) {
+          const invBadge    = document.getElementById("nav-inv-badge");
+          const invBadgeMob = document.getElementById("nav-inv-badge-mobile");
+          if (invBadge)    { invBadge.textContent    = invCount; invBadge.style.display    = "inline"; }
+          if (invBadgeMob) { invBadgeMob.textContent = invCount; invBadgeMob.style.display = "inline"; }
+        }
       }
     }).catch(() => {});
   }
