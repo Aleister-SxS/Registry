@@ -7,8 +7,141 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Your Teams — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061514"/>
-<script src="js/app.js?v=2026061514"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061901"/>
+<script src="js/app.js?v=2026061901"></script>
+<style>
+/* ── Team Management tab layout ────────────────────────────── */
+.mgmt-header{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 18px;margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.mgmt-header-left{flex:1;min-width:0;}
+.mgmt-team-name{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.mgmt-team-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:0.78rem;color:var(--text2);}
+.mgmt-header-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+
+/* Tabs */
+.mgmt-tabs{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:3px;margin-bottom:0.75rem;}
+.mgmt-tab{flex:1;padding:8px 6px;border-radius:8px;font-size:0.78rem;font-weight:600;text-align:center;cursor:pointer;color:var(--text2);border:none;background:transparent;font-family:inherit;transition:all 0.15s;position:relative;white-space:nowrap;}
+.mgmt-tab.active{background:var(--surface);color:var(--text);border:1px solid var(--border2);}
+.mgmt-tab:hover:not(.active){color:var(--text);background:var(--surface3);}
+.tab-notif{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-left:5px;vertical-align:middle;}
+
+/* Tab panes */
+.mgmt-pane{display:none;}
+.mgmt-pane.active{display:block;}
+
+/* Announcement banner */
+.announcement-banner{background:var(--amber-dim);border:1px solid var(--amber-mid);border-radius:var(--radius);padding:10px 14px;margin-bottom:0.75rem;display:flex;align-items:flex-start;gap:10px;}
+.announcement-icon{font-size:0.95rem;flex-shrink:0;margin-top:1px;}
+.announcement-body{flex:1;min-width:0;}
+.announcement-text{font-size:0.8rem;color:var(--amber);line-height:1.5;}
+.announcement-edit-btn{background:none;border:1px solid var(--amber-mid);color:var(--amber);border-radius:5px;padding:3px 8px;font-size:0.7rem;cursor:pointer;font-family:inherit;flex-shrink:0;margin-top:1px;}
+
+/* Roster pane */
+.roster-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);}
+.roster-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.roster-row:last-child{border-bottom:none;}
+.roster-row-info{flex:1;min-width:0;}
+.roster-row-name{font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.roster-row-meta{font-size:0.72rem;color:var(--text2);margin-top:2px;}
+.roster-open-slot{opacity:0.4;cursor:pointer;border-style:dashed;}
+.roster-open-slot:hover{opacity:0.65;border-color:var(--blue-mid);}
+
+/* Formation pane */
+.fg-zone-bar{font-size:0.62rem;font-weight:600;letter-spacing:0.07em;text-align:center;padding:4px 0;border-radius:5px;margin:5px 0;}
+.fg-front-bar{color:var(--red);background:var(--red-dim);}
+.fg-back-bar{color:var(--blue-bright);background:var(--blue-dim);}
+.fg-grid-wrap{display:flex;flex-direction:column;align-items:center;}
+.fg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:260px;}
+.fg-cell{aspect-ratio:1;border-radius:8px;background:var(--surface2);border:1px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:4px;transition:border-color 0.15s,background 0.15s;}
+.fg-cell:hover{border-color:var(--blue-mid);}
+.fg-cell.filled{background:var(--blue-dim);border:1px solid var(--blue-mid);border-style:solid;}
+.fg-cell.selected-target{border-color:var(--blue);box-shadow:0 0 0 2px rgba(79,142,247,0.25);}
+.fg-member-face{width:32px;height:32px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--blue-bright);margin-bottom:2px;overflow:hidden;}
+.fg-member-face img{width:100%;height:100%;object-fit:cover;}
+.fg-label{font-size:0.5rem;color:var(--text3);text-align:center;line-height:1.2;}
+.fg-picker-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;}
+.fg-picker-btn{padding:4px 10px;border-radius:6px;font-size:0.72rem;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all 0.15s;}
+.fg-picker-btn.selected{border-color:var(--blue);background:var(--blue-dim);color:var(--blue-bright);}
+.fg-picker-btn.placed{border-color:var(--green-mid);background:var(--green-dim);color:var(--green);}
+
+/* Builds pane */
+.build-member-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:border-color 0.15s;}
+.build-member-card:last-child{margin-bottom:0;}
+.build-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.build-card-identity{display:flex;align-items:center;gap:8px;min-width:0;}
+.build-slot-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.build-slot-row:last-child{margin-bottom:0;}
+.build-slot-label{font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;width:68px;flex-shrink:0;}
+.build-slots-wrap{display:flex;gap:4px;}
+
+/* Individual slots */
+.bs{width:40px;height:40px;border-radius:7px;border:1px dashed var(--border2);background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color 0.15s,background 0.15s;flex-shrink:0;}
+.bs.filled{border-style:solid;border-color:var(--border2);background:var(--surface3);}
+.bs.mine:hover{border-color:var(--blue-mid);background:var(--blue-dim);}
+.bs.theirs{cursor:pointer;}
+.bs.theirs:hover{border-color:rgba(52,211,153,0.5);background:rgba(52,211,153,0.06);}
+.bs img{width:28px;height:28px;border-radius:5px;}
+.bs-empty{font-size:0.55rem;color:var(--text3);}
+/* Notification dot for incoming suggestions */
+.bs-notif{position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--amber);border:2px solid var(--surface);animation:bsPulse 2s infinite;}
+@keyframes bsPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.6;transform:scale(0.85);}}
+/* Green "suggest" indicator on hover for others' slots */
+.bs-suggest-tip{position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--green);color:#0b1a12;font-size:0.55rem;padding:2px 6px;border-radius:4px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:10;}
+.bs.theirs:hover .bs-suggest-tip{opacity:1;}
+
+/* Suggestion panel (inline, below the build card) */
+.sugg-panel{background:rgba(79,142,247,0.04);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;}
+.sugg-panel-title{font-size:0.72rem;font-weight:600;color:var(--text2);margin-bottom:8px;}
+.sugg-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border2);margin-bottom:6px;}
+.sugg-item:last-child{margin-bottom:0;}
+.sugg-item.is-captain{border-color:var(--amber-mid);background:var(--amber-dim);}
+.sugg-skill-thumb{width:34px;height:34px;border-radius:6px;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.sugg-skill-thumb img{width:28px;height:28px;border-radius:4px;}
+.sugg-body{flex:1;min-width:0;}
+.sugg-who{font-size:0.72rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.sugg-cap-label{font-size:0.6rem;padding:1px 6px;border-radius:99px;background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-mid);}
+.sugg-skill-name{font-size:0.8rem;font-weight:600;color:var(--text);margin-top:2px;}
+.sugg-reason{font-size:0.7rem;color:var(--text2);margin-top:2px;font-style:italic;}
+.sugg-actions{display:flex;gap:5px;margin-top:6px;}
+.sugg-accept{padding:3px 10px;border-radius:5px;font-size:0.7rem;font-family:inherit;cursor:pointer;background:var(--green-dim);border:1px solid var(--green-mid);color:var(--green);}
+.sugg-dismiss{padding:3px 10px;border-radius:5px;font-size:0.7rem;font-family:inherit;cursor:pointer;background:var(--red-dim);border:1px solid var(--red-mid);color:var(--red);}
+
+/* Suggest picker modal */
+.suggest-picker{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-top:8px;}
+.suggest-picker-title{font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:8px;}
+.suggest-skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px;max-height:140px;overflow-y:auto;margin-bottom:10px;}
+.suggest-skill-card{border-radius:7px;border:1px solid var(--border2);background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 3px;cursor:pointer;transition:border-color 0.15s,background 0.15s;}
+.suggest-skill-card:hover{border-color:var(--blue-mid);background:var(--blue-dim);}
+.suggest-skill-card.selected{border-color:var(--blue);background:var(--blue-dim);}
+.suggest-skill-card img{width:28px;height:28px;border-radius:4px;}
+.suggest-skill-card-name{font-size:0.48rem;color:var(--text2);text-align:center;margin-top:3px;line-height:1.2;}
+.suggest-reason-input{width:100%;padding:7px 9px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:0.75rem;font-family:inherit;resize:none;outline:none;margin-bottom:8px;box-sizing:border-box;}
+.suggest-reason-input:focus{border-color:var(--blue-mid);}
+.suggest-picker-actions{display:flex;gap:6px;justify-content:flex-end;}
+
+/* Fantomon column in builds */
+.build-fantomon-col{width:68px;flex-shrink:0;text-align:center;}
+.build-fantomon-img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);}
+.build-fantomon-empty{width:46px;height:46px;border-radius:50%;background:var(--surface3);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:0.9rem;margin:0 auto;}
+
+/* Build completeness bar */
+.build-progress{height:3px;border-radius:2px;background:var(--surface3);margin-top:6px;overflow:hidden;}
+.build-progress-fill{height:100%;border-radius:2px;background:var(--green);transition:width 0.3s;}
+.build-progress-label{font-size:0.6rem;color:var(--text3);margin-top:2px;}
+
+/* LFC strip */
+.lfc-strip{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:10px 14px;margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+
+/* Captain-only hint */
+.captain-hint{font-size:0.72rem;color:var(--text3);font-style:italic;margin-bottom:0.75rem;}
+
+/* Responsive: stack on mobile */
+@media(max-width:520px){
+  .mgmt-tab{font-size:0.7rem;padding:7px 4px;}
+  .build-slot-label{width:54px;font-size:0.56rem;}
+  .bs{width:36px;height:36px;}
+  .bs img{width:24px;height:24px;}
+}
+</style>
 </head>
 <body>
 <script>onReady(()=>buildNav("your-team.html"));</script>
@@ -21,22 +154,17 @@
     <p>Log in to manage your teams.</p>
     <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
-
-  <!-- Landing: list of teams -->
   <div id="teams-landing" style="display:none;"></div>
-
-  <!-- Management view for one team -->
   <div id="team-mgmt-view" style="display:none;"></div>
 </main>
 
-<!-- Team build modal -->
+<!-- Team Build Edit Modal -->
 <div class="modal-overlay" id="team-build-modal" style="z-index:400;">
   <div class="modal" style="max-width:780px;width:100%;">
     <div class="modal-title">Edit Team Build — <span id="tbm-member-name"></span></div>
     <div class="modal-body">Select up to 4 Techniques and 4 Charms, and set your Fantomon for this team.</div>
-    <div style="display:flex;gap:1.25rem;align-items:flex-start;">
-      <!-- Left: skills -->
-      <div style="flex:1;min-width:0;">
+    <div style="display:flex;gap:1.25rem;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:240px;">
         <div class="section-title mb-sm">Techniques <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;" id="tbm-technique-slots"></div>
         <div class="section-title mb-sm">Charms <span style="color:var(--text3);font-size:0.68rem;">(4 slots)</span></div>
@@ -53,7 +181,6 @@
           <div class="build-grid" id="tbm-skill-grid" style="max-height:200px;overflow-y:auto;"></div>
         </div>
       </div>
-      <!-- Right: fantomon -->
       <div style="width:160px;flex-shrink:0;">
         <div class="section-title mb-sm">Team Fantomon</div>
         <div id="tbm-fantomon-display" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:10px;text-align:center;margin-bottom:8px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
@@ -70,61 +197,68 @@
   </div>
 </div>
 
-<!-- Processing handled by global overlay in app.js -->
+<!-- Announcement edit modal -->
+<div class="modal-overlay" id="ann-modal" style="z-index:400;">
+  <div class="modal" style="max-width:480px;width:100%;">
+    <div class="modal-title">📢 Team Announcement</div>
+    <div class="modal-body">Pin a message for your team — visible at the top of Team Management.</div>
+    <textarea id="ann-input" class="search-input" style="width:100%;height:90px;resize:vertical;padding:8px;" maxlength="300" placeholder="Announcement message (max 300 chars)…"></textarea>
+    <div style="font-size:0.7rem;color:var(--text3);margin-top:4px;text-align:right;" id="ann-char">0 / 300</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAnnModal()">Cancel</button>
+      <button class="btn btn-amber" onclick="clearAnnouncement()" id="ann-clear-btn" style="display:none;">Clear</button>
+      <button class="btn btn-primary" onclick="saveAnnouncement()">Save</button>
+    </div>
+  </div>
+</div>
 
 <script>
-
-let allTeams=[],allMembers=[],settings={};
-const chatTranslations={}; // { msgId: { label, text } } — persists across re-renders
+/* ══════════════════════════════════════════════════════════════════
+   State
+══════════════════════════════════════════════════════════════════ */
+let allTeams=[],allMembers=[],settings={},pendingSuggestions=[],teamAnnouncements=[];
+const chatTranslations={};
 let session=null;
 let activeTeamId=null;
 const fgState={};
 const chatCache={};
 const chatIntervals={};
 let tbmState={techniques:[],charms:[],fantomon:null,activeTab:"technique",activeSlot:null,teamId:null,memberId:null,memberClass:""};
+// Suggestion picker state
+let spState={teamId:null,toId:null,toName:null,slotType:null,slotIndex:null,selectedSkillId:null};
+// Which slot panels are expanded on which member card (by memberId)
+const openSuggPanels={}; // { memberId+slotType+slotIndex : true }
 
+/* ══════════════════════════════════════════════════════════════════
+   Boot
+══════════════════════════════════════════════════════════════════ */
 onReady(async()=>{
   session=getSession();
   if(!session){ hide(el("loading")); show(el("not-logged-in")); return; }
   try{
-    const d=await apiGet({action:"getAll"});
-    allTeams=d.teams||[];allMembers=d.members||[];settings=d.settings||{};
+    const d=await apiGet({action:"getAll",memberId:session.id});
+    allTeams=d.teams||[];
+    allMembers=d.members||[];
+    settings=d.settings||{};
+    pendingSuggestions=d.pendingSuggestions||[];
+    teamAnnouncements=d.teamAnnouncements||[];
   }catch(e){ allTeams=[];allMembers=[]; }
-  try{
-    // Render immediately - SKILLS loaded at bottom of body
-  if (typeof SKILLS === "undefined") window.SKILLS = [];
+  if(typeof SKILLS==="undefined") window.SKILLS=[];
   hide(el("loading"));
   renderLanding();
-  }catch(e){
-    console.error("your-team.html render error:", e);
-    hide(el("loading"));
-    const landing = el("teams-landing");
-    if (landing) {
-      landing.style.display = "block";
-      landing.innerHTML = `<div class="empty">
-        <div class="empty-icon">⚠️</div>
-        <p style="color:var(--red);font-weight:600;margin-bottom:0.5rem;">Page failed to load</p>
-        <p style="font-size:0.82rem;color:var(--text2);margin-bottom:0.5rem;">\${e.message}</p>
-        <p style="font-size:0.7rem;color:var(--text3);word-break:break-all;">\${e.stack||""}</p>
-        <button class="btn btn-primary mt-md" onclick="location.reload()">Try Again</button>
-      </div>`;
-    }
-  }
 });
 
-// ── Landing ───────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Landing
+══════════════════════════════════════════════════════════════════ */
 function renderLanding(){
   activeTeamId=null;
-  // Stop all chat polling
   Object.keys(chatIntervals).forEach(id=>{ clearInterval(chatIntervals[id]); delete chatIntervals[id]; });
-
   hide(el("team-mgmt-view"));
   show(el("teams-landing"));
 
-  // Guard: if session is invalid, show message
-  if (!session || !session.id) {
-    el("teams-landing").innerHTML = `<div class="empty"><div class="empty-icon">🔒</div>
-      <p>Session expired. Please <a href="register.html">log in again</a>.</p></div>`;
+  if(!session||!session.id){
+    el("teams-landing").innerHTML=`<div class="empty"><div class="empty-icon">🔒</div><p>Session expired. Please <a href="register.html">log in again</a>.</p></div>`;
     return;
   }
 
@@ -136,7 +270,7 @@ function renderLanding(){
   if(!myTeams.length){
     el("teams-landing").innerHTML=`<div class="empty">
       <div class="empty-icon">🛡️</div>
-      <h3>You&#39;re currently not in any team.</h3>
+      <h3>You&#39;re not in any team yet.</h3>
       <p>Join an existing team or start your own.</p>
       <div class="empty-actions">
         <a href="index.html" class="btn btn-primary">View Team Registry</a>
@@ -150,13 +284,13 @@ function renderLanding(){
       <div>
         <div style="font-size:1.1rem;font-weight:700;">Your Teams</div>
         <div style="font-size:0.8rem;margin-top:4px;">
-          ${myTeams.length < maxMemberTeams
-            ? `<span style="color:var(--text2);">${myTeams.length} / ${maxMemberTeams} teams joined</span>`
-            : `<span style="color:var(--red);font-weight:600;">⚠️ Team limit reached (${myTeams.length}/${maxMemberTeams}) — leave a team to join another</span>`
-          }
+          ${myTeams.length<maxMemberTeams
+            ?`<span style="color:var(--text2);">${myTeams.length} / ${maxMemberTeams} teams joined</span>`
+            :`<span style="color:var(--red);font-weight:600;">⚠️ Team limit reached (${myTeams.length}/${maxMemberTeams})</span>`}
         </div>
       </div>
-      <a href="create-team.html" class="btn btn-ghost btn-sm" ${myTeams.length>=maxMemberTeams?"onclick=\"event.preventDefault();toast('You have reached the maximum number of teams. Leave a team to create another.','error');\" style=\"opacity:0.45;cursor:not-allowed;\"":"+"}>+ Create a Team</a>
+      <a href="create-team.html" class="btn btn-ghost btn-sm"
+        ${myTeams.length>=maxMemberTeams?`onclick="event.preventDefault();toast('You have reached the maximum number of teams. Leave a team to create another.','error');" style="opacity:0.45;cursor:not-allowed;"`:""}>+ Create a Team</a>
     </div>
     ${myTeams.map(t=>{
       const members=allMembers.filter(m=>(m.teamIds||[]).includes(t.id));
@@ -175,7 +309,6 @@ function renderLanding(){
           ?`<img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" title="${esc(m.name)}" />`
           :`<div class="pip pip-filled" title="${esc(m.name)}">${(m.name||"?")[0].toUpperCase()}</div>`;
       }).join("");
-
       return `<div class="my-team-card">
         <div class="my-team-card-header">
           <div style="min-width:0;">
@@ -199,32 +332,30 @@ function renderLanding(){
         ${t.description?`<div class="text-sm text-muted mb-sm">${esc(t.description)}</div>`:""}
         <div style="display:flex;flex-direction:column;gap:4px;font-size:0.78rem;margin-bottom:0.875rem;">
           <div class="flex-center gap-sm">
-            <span style="color:var(--text3);width:120px;flex-shrink:0;">Requirements</span>
+            <span style="color:var(--text3);width:110px;flex-shrink:0;">Requirements</span>
             <div class="flex gap-xs flex-wrap">
               ${t.minPower?`<span class="req-pill">⚡ ${formatPower(t.minPower)}+</span>`:""}
               ${t.minLevel?`<span class="req-pill">🎯 Lv.${t.minLevel}+</span>`:""}
               ${!t.minPower&&!t.minLevel?`<span style="color:var(--text3);">None</span>`:""}
             </div>
           </div>
-          ${t.playstyle?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:120px;flex-shrink:0;">Playstyle</span><span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span></div>`:""}
-          ${t.prefLanguage?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:120px;flex-shrink:0;">Language</span><span>${esc(t.prefLanguage)}</span></div>`:""}
+          ${t.playstyle?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:110px;flex-shrink:0;">Playstyle</span><span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span></div>`:""}
+          ${t.prefLanguage?`<div class="flex-center gap-sm"><span style="color:var(--text3);width:110px;flex-shrink:0;">Language</span><span>${esc(t.prefLanguage)}</span></div>`:""}
         </div>
         <div class="flex-between">
-          <div style="display:flex;gap:5px;align-items:center;">
-            ${lineupIcons}
-            
-          </div>
+          <div style="display:flex;gap:5px;align-items:center;">${lineupIcons}</div>
           <div class="flex gap-xs">
-            <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team Profile</a>
-            <button class="btn btn-primary btn-sm" onclick="openMgmt('${t.id}')">Team Management →</button>
+            <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Profile</a>
+            <button class="btn btn-primary btn-sm" onclick="openMgmt('${t.id}')">Manage →</button>
           </div>
         </div>
       </div>`;
-    }).join("")}
-  `;
+    }).join("")}`;
 }
 
-// ── Management view ───────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Management view
+══════════════════════════════════════════════════════════════════ */
 function openMgmt(teamId){
   activeTeamId=teamId;
   hide(el("teams-landing"));
@@ -237,6 +368,8 @@ function openMgmt(teamId){
 function renderMgmt(teamId){
   const t=allTeams.find(x=>x.id===teamId);
   if(!t){ renderLanding(); return; }
+  // Clear any open suggestion panel state so they don't ghost after re-render
+  Object.keys(openSuggPanels).forEach(k=>{ delete openSuggPanels[k]; });
   const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId))
     .sort((a,b)=>{ if(a.id===t.captainId)return -1; if(b.id===t.captainId)return 1; return 0; });
   const isCaptain=t.captainId===session.id;
@@ -248,158 +381,99 @@ function renderMgmt(teamId){
     fgState[teamId]={positions:{...pos},selected:null};
   }
 
+  // Announcement for this team
+  const ann=teamAnnouncements.find(a=>a.teamId===teamId);
+
+  // Count pending suggestions for this team (for tab badge)
+  const mySuggs=pendingSuggestions.filter(s=>s.teamId===teamId);
+
   el("team-mgmt-view").innerHTML=`
-    <!-- Back button + header -->
-    <div class="flex-between mb-md flex-wrap gap-sm">
-      <div>
-        <button class="btn btn-ghost btn-sm mb-sm" onclick="renderLanding()">← Return to Your Teams</button>
-        <div style="font-size:1.15rem;font-weight:700;">${esc(t.name)}</div>
-        <div class="text-xs text-muted">${members.length}/${maxSize} members · <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}" style="font-size:0.65rem;">${esc(t.status)}</span></div>
+    <!-- Header -->
+    <div class="mgmt-header">
+      <div class="mgmt-header-left">
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:6px;" onclick="renderLanding()">← Your Teams</button>
+        <div class="mgmt-team-name">${esc(t.name)}</div>
+        <div class="mgmt-team-meta">
+          ${buildPipRow(members,maxSize)}
+          <span>${members.length}/${maxSize} members</span>
+          <span class="badge badge-${t.status==="open"?"open":t.status==="full"?"full":"closed"}" style="font-size:0.65rem;">${t.status==="open"?"Recruiting":t.status==="full"?"Full":"Closed"}</span>
+          ${t.lookingForCaptain==="TRUE"?`<span class="badge badge-amber" style="font-size:0.65rem;">⚜️ Seeking Captain</span>`:""}
+          ${isCaptain?`<span class="badge badge-captain" style="font-size:0.65rem;">⚜️ You&#39;re the Captain</span>`:""}
+        </div>
       </div>
-      <div class="flex gap-xs flex-wrap">
+      <div class="mgmt-header-actions">
         <a href="team.html?id=${teamId}" class="btn btn-ghost btn-sm">Team Profile</a>
         ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>`:""}
         <button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>
       </div>
     </div>
-    ${isCaptain ? `
-    <div class="flex-center gap-md mb-md flex-wrap" style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:0.75rem 1.25rem;">
+
+    <!-- LFC toggle (captain only) -->
+    ${isCaptain?`
+    <div class="lfc-strip">
       <div class="toggle-row" style="flex:1;min-width:220px;background:transparent;border:none;padding:0;">
         <div>
-          <div class="toggle-label" style="font-size:0.82rem;">Looking for a Captain 
-            <span id="lfc-badge-${teamId}" class="badge ${t.lookingForCaptain==="TRUE"?"badge-amber":"badge-ghost"}" style="font-size:0.6rem;margin-left:4px;">${t.lookingForCaptain==="TRUE"?`<span class="badge-dot"></span>⚜️ Seeking Captain`:"Not Seeking Captain"}</span>
+          <div class="toggle-label" style="font-size:0.82rem;">Looking for a Captain
+            <span id="lfc-badge-${teamId}" class="badge ${t.lookingForCaptain==="TRUE"?"badge-amber":"badge-ghost"}" style="font-size:0.6rem;margin-left:4px;">
+              ${t.lookingForCaptain==="TRUE"?`<span class="badge-dot"></span>⚜️ Seeking Captain`:"Not Seeking Captain"}
+            </span>
           </div>
-          <div class="toggle-sublabel">Mark this team as open to a new captain — visible as a filter in Team Registry</div>
+          <div class="toggle-sublabel">Visible as a filter in Team Registry</div>
         </div>
         <label class="toggle">
           <input type="checkbox" id="lfc-team-${teamId}" ${t.lookingForCaptain==="TRUE"?"checked":""} onchange="toggleTeamLFC('${teamId}',this.checked)" />
           <span class="slider"></span>
         </label>
       </div>
-    </div>` : ""}
+    </div>`:""}
 
-    <!-- Roster + Formation side by side, equal height -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;align-items:stretch;" id="roster-fg-grid-${teamId}">
-      <!-- LEFT: Roster -->
-      <div style="display:flex;flex-direction:column;">
-        ${collapsibleSection("roster-"+teamId, "👥 Roster", `
-          <div class="roster-list">
-            ${members.map(m=>{
-              const isCap=m.id===t.captainId;
-              const av=m.avatarUrl
-                ?`<img src="${esc(m.avatarUrl)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
-                :`<div class="avatar avatar-sm">${initials(m.name)}</div>`;
-              return `<div class="roster-row">
-                <div class="roster-info">
-                  <a href="profile.html?id=${m.id}">${av}</a>
-                  <div>
-                    <div class="flex-center gap-xs">
-                      <a href="profile.html?id=${m.id}" class="font-semibold text-sm">${esc(m.name)}</a>
-                      ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
-                    </div>
-                    <div class="roster-meta">${esc(m.class?CLASS_ICONS[m.class]||"":"")} ${esc(m.class||"")}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
-                  </div>
-                </div>
-                ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${teamId}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
-              </div>`;
-            }).join("")}
-            ${Array.from({length:maxSize-members.length},()=>`
-              <div class="roster-row" style="border-style:dashed;opacity:0.5;cursor:pointer;" onclick="location.href='players.html'">
-                <div class="roster-info"><div class="pip pip-empty"></div>
-                  <span class="text-xs" style="color:var(--blue-bright);">Open Slot — Find a member →</span>
-                </div>
-              </div>`).join("")}
-          </div>
-        `, true)}
+    <!-- Announcement banner -->
+    ${ann&&ann.message?`
+    <div class="announcement-banner">
+      <div class="announcement-icon">📢</div>
+      <div class="announcement-body">
+        <div class="announcement-text"><strong>Captain:</strong> ${esc(ann.message)}</div>
       </div>
-      <!-- RIGHT: Formation -->
-      <div style="display:flex;flex-direction:column;">
-        ${collapsibleSection("fg-"+teamId, "⚔️ Battle Formation", `
-          <div>
-            ${!isCaptain?`<div class="text-xs text-muted mb-md" style="font-style:italic;">Your Team Captain will set up your Battle Formation.</div>`:""}
-            ${isCaptain&&members.length?`
-            <div style="margin-bottom:0.75rem;">
-              <div class="text-xs text-muted mb-sm">Select a member, then click a cell to place them. Click a placed member to move them.</div>
-              <div style="display:flex;gap:5px;flex-wrap:wrap;" id="fg-picker-${teamId}">
-                ${members.map(m=>`<button class="btn btn-ghost btn-xs" id="fg-mbtn-${teamId}-${m.id}" onclick="fgSelectMember('${teamId}','${m.id}')">
-                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;margin-right:3px;" />`:""}
-                  ${esc(m.name.split(" ")[0])}
-                </button>`).join("")}
-              </div>
-            </div>`:""}
-            <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-              <div style="font-size:0.65rem;color:var(--red);font-weight:600;letter-spacing:0.04em;">⚔️ FRONT ROW</div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:240px;" id="fg-grid-${teamId}"></div>
-              <div style="font-size:0.65rem;color:var(--blue-bright);font-weight:600;letter-spacing:0.04em;">🛡️ BACK ROW</div>
-            </div>
-            ${isCaptain?`<div class="mt-md"><button class="btn btn-primary btn-sm" onclick="fgSave('${teamId}')">Save Formation</button></div>`:""}
-          </div>
-        `, true)}
-      </div>
+      ${isCaptain?`<button class="announcement-edit-btn" onclick="openAnnModal('${teamId}','${esc(ann.message).replace(/'/g,"\\'")}')">Edit</button>`:""}
+    </div>`
+    :isCaptain?`
+    <div style="margin-bottom:0.75rem;">
+      <button class="btn btn-ghost btn-sm" onclick="openAnnModal('${teamId}','')">📢 Add Team Announcement</button>
+    </div>`:""}
+
+    <!-- Tabs -->
+    <div class="mgmt-tabs">
+      <button class="mgmt-tab active" id="tab-roster-${teamId}" onclick="switchTab('${teamId}','roster')">👥 Roster</button>
+      <button class="mgmt-tab" id="tab-formation-${teamId}" onclick="switchTab('${teamId}','formation')">⚔️ Formation</button>
+      <button class="mgmt-tab" id="tab-builds-${teamId}" onclick="switchTab('${teamId}','builds')">🗡️ Builds${mySuggs.length?`<span class="tab-notif"></span>`:""}</button>
+      <button class="mgmt-tab" id="tab-chat-${teamId}" onclick="switchTab('${teamId}','chat')">💬 Chat</button>
     </div>
 
-    <!-- Team Builds — full width -->
-    <div>
-      ${collapsibleSection("builds-"+teamId, "🗡️ Team Builds", `
-          ${members.map(m=>{
-            const rawTeamBuilds=m.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
-            const build=rawTeamBuilds[teamId]||{techniques:[],charms:[],fantomon:null};
-            const techs=Array.isArray(build.techniques)?build.techniques:[];
-            const chms=Array.isArray(build.charms)?build.charms:[];
-            const teamFantomon=build.fantomon?AVATAR_PRESETS.find(p=>p.id===build.fantomon):null;
-            const isMe=m.id===session.id;
-            const isCap=m.id===t.captainId;
-            const slotHtml=ids=>Array.from({length:4},(_,i)=>{
-              const sid=ids[i];
-              const sk=sid?SKILLS.find(s=>s.id===sid):null;
-              return sk
-                ?`<div class="build-slot-sm filled" title="${esc(sk.name)}">
-                    <img style="width:32px;height:32px;border-radius:6px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
-                    <div style="font-size:0.55rem;color:var(--text2);text-align:center;line-height:1.2;">${esc(sk.name)}</div>
-                  </div>`
-                :`<div class="build-slot-sm"><div style="font-size:0.6rem;color:var(--text3);">—</div></div>`;
-            }).join("");
-            return `<div class="build-member-card">
-              <div class="flex-between mb-sm">
-                <div class="flex-center gap-xs">
-                  ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" />`:`<div class="avatar avatar-xs">${initials(m.name)}</div>`}
-                  <span class="font-semibold text-sm">${esc(m.name)}</span>
-                  ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
-                  ${m.class?`<span class="badge badge-info" style="font-size:0.65rem;">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
-                </div>
-                ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${teamId}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`:""}
-              </div>
-              <div style="display:flex;gap:1rem;align-items:flex-start;">
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">TECHNIQUES</div>
-                  <div class="build-slots-row mb-sm">${slotHtml(techs)}</div>
-                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">CHARMS</div>
-                  <div class="build-slots-row">${slotHtml(chms)}</div>
-                </div>
-                <div style="width:80px;flex-shrink:0;text-align:center;">
-                  <div style="font-size:0.6rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">FANTOMON</div>
-                  ${teamFantomon
-                    ?`<img src="${esc(teamFantomon.url)}" title="${esc(teamFantomon.label+(teamFantomon.desc?'\n\n'+teamFantomon.desc:''))}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />
-                      <div style="font-size:0.6rem;color:var(--text2);margin-top:3px;">${esc(teamFantomon.label)}</div>`
-                    :`<div style="width:56px;height:56px;border-radius:50%;background:var(--surface3);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin:0 auto;">🐾</div>
-                      <div style="font-size:0.6rem;color:var(--text3);margin-top:3px;">None</div>`}
-                </div>
-              </div>
-            </div>`;
-          }).join("")}
-        `, true)}
+    <!-- Roster pane -->
+    <div class="mgmt-pane active" id="pane-roster-${teamId}">
+      ${renderRosterPane(t,members,isCaptain,maxSize,teamId)}
     </div>
 
-    <!-- Team Chat — full width -->
-    ${collapsibleSection("chat-"+teamId, "💬 Team Chat", `
-      <div class="chat-panel" id="chat-panel-${teamId}" style="height:400px;border:none;border-radius:0;margin-bottom:0;">
+    <!-- Formation pane -->
+    <div class="mgmt-pane" id="pane-formation-${teamId}">
+      ${renderFormationPane(t,members,isCaptain,teamId)}
+    </div>
+
+    <!-- Builds pane -->
+    <div class="mgmt-pane" id="pane-builds-${teamId}">
+      ${renderBuildsPane(t,members,isCaptain,teamId)}
+    </div>
+
+    <!-- Chat pane -->
+    <div class="mgmt-pane" id="pane-chat-${teamId}">
+      <div class="chat-panel" id="chat-panel-${teamId}" style="height:420px;border:none;border-radius:0;margin-bottom:0;">
         <div class="chat-header" style="background:transparent;border-bottom:1px solid var(--border);">
           <span class="chat-refresh-info" id="chat-refresh-label-${teamId}">Auto-refreshes every 15s</span>
           <button class="btn btn-ghost btn-xs" onclick="chatLoad('${teamId}')">↻ Refresh</button>
         </div>
         <div id="chat-disclaimer-${teamId}" style="background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);padding:8px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not a live-chat system. Messages may take up to a minute to appear. Translation services default to English translation. Translation services are an ongoing project — please expect some errors. Chats may be monitored for moderation purposes.</span>
-          <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;" title="Dismiss">✕</button>
+          <span style="font-size:0.75rem;color:var(--amber);line-height:1.4;">ℹ️ This chat is not live. Messages may take up to a minute to appear. Translation defaults to English. Chats may be monitored for moderation.</span>
+          <button onclick="el('chat-disclaimer-${teamId}').remove()" style="background:none;border:none;color:var(--amber);cursor:pointer;font-size:0.8rem;flex-shrink:0;opacity:0.7;padding:0 2px;">✕</button>
         </div>
         <div class="chat-messages" id="chat-messages-${teamId}">
           <div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>Loading…</div></div>
@@ -413,37 +487,386 @@ function renderMgmt(teamId){
           </div>
         </div>
       </div>
-    `, true)}
+    </div>
   `;
 
   renderFgGrid(teamId);
 }
 
-// ── Collapsible helper ────────────────────────────────────
-function collapsibleSection(id, title, bodyHtml, startOpen=false){
-  return `<div class="collapsible-section">
-    <div class="collapsible-header ${startOpen?"open":""}" onclick="toggleCollapsible('${id}')">
-      <span class="collapsible-title">${title}</span>
-      <span class="collapsible-chevron">▼</span>
-    </div>
-    <div class="collapsible-body ${startOpen?"open":""}" id="cb-${id}">${bodyHtml}</div>
+function buildPipRow(members,maxSize){
+  return Array.from({length:maxSize},(_,i)=>{
+    const m=members[i];
+    if(!m) return `<div class="pip pip-empty" title="Open slot"></div>`;
+    return m.avatarUrl
+      ?`<img src="${esc(m.avatarUrl)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" title="${esc(m.name)}" />`
+      :`<div class="pip pip-filled" title="${esc(m.name)}" style="width:22px;height:22px;">${(m.name||"?")[0].toUpperCase()}</div>`;
+  }).join("");
+}
+
+/* ── Tab switching ───────────────────────────────────────────── */
+function switchTab(teamId,tabName){
+  ["roster","formation","builds","chat"].forEach(n=>{
+    el(`tab-${n}-${teamId}`)?.classList.toggle("active",n===tabName);
+    el(`pane-${n}-${teamId}`)?.classList.toggle("active",n===tabName);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Roster pane renderer
+══════════════════════════════════════════════════════════════════ */
+function renderRosterPane(t,members,isCaptain,maxSize,teamId){
+  return `<div class="roster-card">
+    ${members.map(m=>{
+      const isCap=m.id===t.captainId;
+      const av=m.avatarUrl
+        ?`<img src="${esc(m.avatarUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
+        :`<div class="avatar avatar-sm">${initials(m.name)}</div>`;
+      return `<div class="roster-row">
+        <a href="profile.html?id=${m.id}">${av}</a>
+        <div class="roster-row-info">
+          <div class="roster-row-name">
+            <a href="profile.html?id=${m.id}" style="color:var(--text);text-decoration:none;font-weight:600;">${esc(m.name)}</a>
+            ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
+          </div>
+          <div class="roster-row-meta">${esc(m.class?CLASS_ICONS[m.class]||"":"")} ${esc(m.class||"")}${m.power?" · ⚡"+formatPower(m.power):""}${m.level?" · Lv."+esc(String(m.level)):""}</div>
+        </div>
+        ${isCaptain&&!isCap?`<button class="btn btn-danger btn-xs" onclick="confirmKick('${teamId}','${m.id}','${esc(m.name)}')">Kick</button>`:""}
+      </div>`;
+    }).join("")}
+    ${Array.from({length:maxSize-members.length},()=>`
+      <div class="roster-row roster-open-slot" onclick="location.href='players.html'">
+        <div class="roster-info"><div class="pip pip-empty"></div>
+          <span class="text-xs" style="color:var(--blue-bright);">Open Slot — Find a member →</span>
+        </div>
+      </div>`).join("")}
   </div>`;
 }
 
-function toggleCollapsible(id){
-  const header=document.querySelector(`[onclick="toggleCollapsible('${id}')"]`);
-  const body=el("cb-"+id);
-  if(!header||!body)return;
-  header.classList.toggle("open");
-  body.classList.toggle("open");
+/* ══════════════════════════════════════════════════════════════════
+   Formation pane renderer
+══════════════════════════════════════════════════════════════════ */
+function renderFormationPane(t,members,isCaptain,teamId){
+  return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px;">
+    ${!isCaptain?`<p class="captain-hint">Your Team Captain manages the Battle Formation.</p>`:""}
+    ${isCaptain&&members.length?`
+    <div style="margin-bottom:0.75rem;">
+      <div class="text-xs text-muted mb-sm">Select a member, then click a grid cell to place them.</div>
+      <div class="fg-picker-row" id="fg-picker-${teamId}">
+        ${members.map(m=>`<button class="fg-picker-btn" id="fg-mbtn-${teamId}-${m.id}" onclick="fgSelectMember('${teamId}','${m.id}')">
+          ${m.avatarUrl?`<img src="${esc(m.avatarUrl)}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;" />`:""}
+          ${esc(m.name.split(" ")[0])}
+        </button>`).join("")}
+      </div>
+    </div>`:""}
+    <div class="fg-grid-wrap">
+      <div class="fg-zone-bar fg-front-bar">⚔️ FRONT ROW</div>
+      <div class="fg-grid" id="fg-grid-${teamId}"></div>
+      <div class="fg-zone-bar fg-back-bar" style="margin-top:6px;">🛡️ BACK ROW</div>
+    </div>
+    ${isCaptain?`<div class="mt-md"><button class="btn btn-primary btn-sm" onclick="fgSave('${teamId}')">Save Formation</button></div>`:""}
+  </div>`;
 }
 
-// ── Formation ─────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Builds pane renderer
+══════════════════════════════════════════════════════════════════ */
+function renderBuildsPane(t,members,isCaptain,teamId){
+  if(!members.length) return `<div class="empty" style="padding:2rem;"><p>No members yet.</p></div>`;
+
+  return members.map(m=>{
+    const rawBuilds=m.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
+    const build=rawBuilds[teamId]||{techniques:[],charms:[],fantomon:null};
+    const techs=Array.isArray(build.techniques)?build.techniques:[];
+    const chms=Array.isArray(build.charms)?build.charms:[];
+    const isMe=m.id===session.id;
+    const isCap=m.id===t.captainId;
+    const teamFantomon=build.fantomon?AVATAR_PRESETS.find(p=>p.id===build.fantomon):null;
+
+    // Completeness: count filled slots out of 8
+    const filled=[...techs,...chms].filter(Boolean).length;
+    const progressPct=Math.round((filled/8)*100);
+
+    // Build the suggestion panel or picker if applicable
+    const mySuggsForThisMember=pendingSuggestions.filter(s=>s.toId===m.id&&s.teamId===teamId);
+
+    const slotHtml=(ids,slotType)=>Array.from({length:4},(_,i)=>{
+      const sid=ids[i];
+      const sk=sid?SKILLS.find(s=>s.id===sid):null;
+      const panelKey=`${m.id}|${slotType}|${i}`;
+      const hasSugg=isMe&&mySuggsForThisMember.some(s=>s.slotType===slotType&&String(s.slotIndex)===String(i));
+
+      if(isMe){
+        // Own slot — show notif dot if suggestions pending
+        return `<div class="bs ${sk?"filled":""} mine" data-panel-key="${panelKey}"
+          onclick="toggleSuggPanel('${m.id}','${slotType}',${i},'${teamId}')"
+          title="${hasSugg?"Suggestions pending — click to view":(sk?esc(sk.name):"Empty slot")}">
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`
+              :`<div class="bs-empty">+</div>`}
+          ${hasSugg?`<div class="bs-notif"></div>`:""}
+        </div>`;
+      } else {
+        // Others' slots — show suggest tooltip on hover
+        return `<div class="bs ${sk?"filled":""} theirs"
+          onclick="openSuggestPicker('${teamId}','${m.id}','${esc(m.name)}','${slotType}',${i},'${esc(m.class||"")}')"
+          title="${sk?esc(sk.name):"Empty — suggest a skill"}">
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`
+              :`<div class="bs-empty">—</div>`}
+          <div class="bs-suggest-tip">Suggest</div>
+        </div>`;
+      }
+    }).join("");
+
+    return `<div class="build-member-card" id="bcard-${m.id}">
+      <div class="build-card-header">
+        <div class="build-card-identity">
+          ${m.avatarUrl
+            ?`<img src="${esc(m.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" />`
+            :`<div class="avatar avatar-xs">${initials(m.name)}</div>`}
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+              ${esc(m.name)}
+              ${isCap?`<span class="badge badge-captain" style="font-size:0.6rem;">⚜️ Captain</span>`:""}
+              ${m.class?`<span class="badge badge-info" style="font-size:0.62rem;">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:""}
+            </div>
+          </div>
+        </div>
+        ${isMe?`<button class="btn btn-ghost btn-xs" onclick="openTbm('${teamId}','${m.id}','${esc(m.class||"")}')">Edit Build</button>`
+              :`<span style="font-size:0.68rem;color:var(--text3);font-style:italic;">Hover a slot to suggest</span>`}
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <div class="build-slot-row">
+            <div class="build-slot-label">TECHNIQUES</div>
+            <div class="build-slots-wrap">${slotHtml(techs,"technique")}</div>
+          </div>
+          <div class="build-slot-row">
+            <div class="build-slot-label">CHARMS</div>
+            <div class="build-slots-wrap">${slotHtml(chms,"charm")}</div>
+          </div>
+          <div class="build-progress"><div class="build-progress-fill" style="width:${progressPct}%;"></div></div>
+          <div class="build-progress-label">${filled}/8 slots filled</div>
+        </div>
+        <div class="build-fantomon-col">
+          <div style="font-size:0.58rem;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px;">FANTOMON</div>
+          ${teamFantomon
+            ?`<img src="${esc(teamFantomon.url)}" class="build-fantomon-img" title="${esc(teamFantomon.label)}" onerror="this.style.display='none'" />
+               <div style="font-size:0.58rem;color:var(--text2);margin-top:3px;">${esc(teamFantomon.label)}</div>`
+            :`<div class="build-fantomon-empty">🐾</div><div style="font-size:0.58rem;color:var(--text3);margin-top:3px;">None</div>`}
+        </div>
+      </div>
+      <!-- Suggestion panels (one per slot, rendered when toggled) -->
+      <div id="sugg-panels-${m.id}"></div>
+      <!-- Suggest picker (one per member card, shown when you click their slot) -->
+      ${!isMe?`<div id="suggest-picker-${m.id}" style="display:none;"></div>`:""}
+    </div>`;
+  }).join("");
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Suggestion panel (own slots → view suggestions)
+══════════════════════════════════════════════════════════════════ */
+function toggleSuggPanel(memberId,slotType,slotIndex,teamId){
+  const key=`${memberId}|${slotType}|${slotIndex}`;
+  const container=el(`sugg-panels-${memberId}`);
+  if(!container) return;
+
+  // Check if already showing this panel
+  if(openSuggPanels[key]){
+    delete openSuggPanels[key];
+    container.innerHTML="";
+    return;
+  }
+  // Close any other open panel for this member
+  Object.keys(openSuggPanels).filter(k=>k.startsWith(memberId+"|")).forEach(k=>{ delete openSuggPanels[k]; });
+  openSuggPanels[key]=true;
+
+  const t=allTeams.find(x=>x.id===teamId);
+  const suggs=pendingSuggestions.filter(s=>
+    s.toId===memberId&&s.teamId===teamId&&
+    s.slotType===slotType&&String(s.slotIndex)===String(slotIndex)
+  );
+
+  if(!suggs.length){
+    container.innerHTML="";
+    return;
+  }
+
+  container.innerHTML=`<div class="sugg-panel">
+    <div class="sugg-panel-title">${suggs.length} suggestion${suggs.length>1?"s":""} for ${slotType} slot ${Number(slotIndex)+1}</div>
+    ${suggs.map(s=>{
+      const sk=SKILLS.find(x=>x.id===s.skillId);
+      const isSuggCap=s.fromId===t?.captainId;
+      return `<div class="sugg-item ${isSuggCap?"is-captain":""}">
+        <div class="sugg-skill-thumb">
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`:"❓"}
+        </div>
+        <div class="sugg-body">
+          <div class="sugg-who">
+            ${esc(s.fromName||"Unknown")}
+            ${isSuggCap?`<span class="sugg-cap-label">⚜️ Captain</span>`:""}
+          </div>
+          <div class="sugg-skill-name">${sk?esc(sk.name):"Unknown skill"}</div>
+          ${s.reason?`<div class="sugg-reason">"${esc(s.reason)}"</div>`:""}
+          <div class="sugg-actions">
+            <button class="sugg-accept" onclick="respondSuggestion('${s.id}','accept','${memberId}','${teamId}')">✓ Accept</button>
+            <button class="sugg-dismiss" onclick="respondSuggestion('${s.id}','dismiss','${memberId}','${teamId}')">✕ Dismiss</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+async function respondSuggestion(suggestionId,decision,memberId,teamId){
+  try{
+    await apiPost({action:"respondBuildSuggestion",memberId:session.id,captainKey:session.captainKey,suggestionId,decision});
+    // Remove from local pending list
+    const idx=pendingSuggestions.findIndex(s=>s.id===suggestionId);
+    if(idx>-1) pendingSuggestions.splice(idx,1);
+    // If accepted, refresh allMembers build data from server
+    if(decision==="accept"){
+      const d=await apiGet({action:"getAll",memberId:session.id});
+      allMembers=d.members||[];
+      pendingSuggestions=d.pendingSuggestions||[];
+      teamAnnouncements=d.teamAnnouncements||[];
+    }
+    toast(decision==="accept"?"Build updated!":"Suggestion dismissed.");
+    renderMgmt(teamId);
+    switchTab(teamId,"builds");
+  }catch(e){ toast(e.message,"error"); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Suggest picker (others' slots → send suggestion)
+══════════════════════════════════════════════════════════════════ */
+function openSuggestPicker(teamId,toId,toName,slotType,slotIndex,memberClass){
+  // Close any other open picker
+  document.querySelectorAll('[id^="suggest-picker-"]').forEach(el=>{ el.style.display="none"; el.innerHTML=""; });
+  spState={teamId,toId,toName,slotType,slotIndex,selectedSkillId:null,memberClass};
+
+  const container=el(`suggest-picker-${toId}`);
+  if(!container) return;
+
+  const skills=SKILLS.filter(s=>{
+    if(s.type!==slotType) return false;
+    if(memberClass&&s.classes&&s.classes.length&&!s.classes.includes(memberClass)) return false;
+    return true;
+  });
+
+  container.style.display="block";
+  container.innerHTML=`<div class="suggest-picker">
+    <div class="suggest-picker-title">Suggest a ${slotType} for ${esc(toName)} — Slot ${Number(slotIndex)+1}</div>
+    <input class="search-input" id="sp-search-${toId}" placeholder="Search skills…" oninput="spRenderGrid('${toId}')" style="margin-bottom:8px;width:100%;"/>
+    <div class="suggest-skill-grid" id="sp-grid-${toId}"></div>
+    <textarea class="suggest-reason-input" id="sp-reason-${toId}" placeholder="Optional reason… (max 200 chars)" maxlength="200" rows="2"></textarea>
+    <div class="suggest-picker-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeSuggestPicker('${toId}')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="submitSuggestion('${toId}')">Send Suggestion</button>
+    </div>
+  </div>`;
+
+  spRenderGrid(toId);
+}
+
+function spRenderGrid(toId){
+  const grid=el(`sp-grid-${toId}`);
+  if(!grid) return;
+  const q=(el(`sp-search-${toId}`)?.value||"").toLowerCase();
+  const skills=SKILLS.filter(s=>{
+    if(s.type!==spState.slotType) return false;
+    if(spState.memberClass&&s.classes&&s.classes.length&&!s.classes.includes(spState.memberClass)) return false;
+    if(q&&!s.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  grid.innerHTML=skills.length
+    ?skills.map(s=>`<div class="suggest-skill-card ${s.id===spState.selectedSkillId?"selected":""}"
+      onclick="spSelectSkill('${s.id}','${toId}')" title="${esc(s.name)}">
+      <img src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp" onerror="this.style.display='none'" />
+      <div class="suggest-skill-card-name">${esc(s.name)}</div>
+    </div>`).join("")
+    :`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:1.5rem;font-size:0.8rem;">No skills found</div>`;
+}
+
+function spSelectSkill(skillId,toId){
+  spState.selectedSkillId=skillId;
+  spRenderGrid(toId);
+}
+
+function closeSuggestPicker(toId){
+  const c=el(`suggest-picker-${toId}`);
+  if(c){ c.style.display="none"; c.innerHTML=""; }
+  spState={teamId:null,toId:null,toName:null,slotType:null,slotIndex:null,selectedSkillId:null,memberClass:null};
+}
+
+async function submitSuggestion(toId){
+  if(!spState.selectedSkillId){ toast("Select a skill first.","amber"); return; }
+  const reason=el(`sp-reason-${toId}`)?.value.trim()||"";
+  try{
+    await apiPost({
+      action:"suggestBuild",
+      memberId:session.id,captainKey:session.captainKey,
+      teamId:spState.teamId,toId:spState.toId,
+      slotType:spState.slotType,slotIndex:spState.slotIndex,
+      skillId:spState.selectedSkillId,reason
+    });
+    toast(`Suggestion sent to ${spState.toName}!`);
+    closeSuggestPicker(toId);
+  }catch(e){ toast(e.message,"error"); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Announcement modal
+══════════════════════════════════════════════════════════════════ */
+let annTeamId=null;
+function openAnnModal(teamId,currentMsg){
+  annTeamId=teamId;
+  el("ann-input").value=currentMsg||"";
+  el("ann-char").textContent=`${(currentMsg||"").length} / 300`;
+  el("ann-clear-btn").style.display=currentMsg?"":"none";
+  el("ann-modal").classList.add("open");
+  el("ann-input").oninput=function(){ el("ann-char").textContent=`${this.value.length} / 300`; };
+}
+function closeAnnModal(){
+  el("ann-modal").classList.remove("open");
+  annTeamId=null;
+}
+async function saveAnnouncement(){
+  const msg=el("ann-input").value.trim();
+  showProcessing("Saving announcement…");
+  try{
+    await apiPost({action:"setTeamAnnouncement",memberId:session.id,captainKey:session.captainKey,teamId:annTeamId,message:msg});
+    const existing=teamAnnouncements.find(a=>a.teamId===annTeamId);
+    if(existing) existing.message=msg;
+    else teamAnnouncements.push({teamId:annTeamId,captainId:session.id,message:msg});
+    closeAnnModal();
+    hideProcessing();
+    toast("Announcement saved!");
+    if(activeTeamId===annTeamId){ renderMgmt(activeTeamId); switchTab(activeTeamId,"roster"); }
+  }catch(e){ hideProcessing(); toast(e.message,"error"); }
+}
+async function clearAnnouncement(){
+  confirm_("Clear Announcement","Remove the pinned announcement for this team?",async()=>{
+    showProcessing("Clearing…");
+    try{
+      await apiPost({action:"setTeamAnnouncement",memberId:session.id,captainKey:session.captainKey,teamId:annTeamId,message:""});
+      const idx=teamAnnouncements.findIndex(a=>a.teamId===annTeamId);
+      if(idx>-1) teamAnnouncements.splice(idx,1);
+      closeAnnModal();
+      hideProcessing();
+      toast("Announcement cleared.");
+      if(activeTeamId===annTeamId){ renderMgmt(activeTeamId); switchTab(activeTeamId,"roster"); }
+    }catch(e){ hideProcessing(); toast(e.message,"error"); }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Formation grid
+══════════════════════════════════════════════════════════════════ */
 const ROW_LABELS=["Front L","Front C","Front R","Mid L","Mid C","Mid R","Back L","Back C","Back R"];
 
 function renderFgGrid(teamId){
   const gridEl=el(`fg-grid-${teamId}`);
-  if(!gridEl)return;
+  if(!gridEl) return;
   const state=fgState[teamId];
   const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId));
   const team=allTeams.find(t=>t.id===teamId);
@@ -454,27 +877,26 @@ function renderFgGrid(teamId){
     const m=memberId?members.find(x=>x.id===memberId):null;
     const label=ROW_LABELS[i];
     if(m){
-      const av=m.avatarUrl
-        ?`<img src="${esc(m.avatarUrl)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" />`
-        :`<div style="font-size:1.1rem;">${esc(CLASS_ICONS[m.class]||"👤")}</div>`;
-      return `<div class="formation-cell filled" onclick="fgCellClick('${teamId}',${i})" title="${label}" style="aspect-ratio:1;border-radius:8px;background:var(--blue-dim);border:1px solid var(--blue-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px;">
-        ${av}
-        <div style="font-size:0.55rem;color:var(--text2);text-align:center;">${esc(m.name.split(" ")[0])}</div>
+      const face=m.avatarUrl
+        ?`<img src="${esc(m.avatarUrl)}" onerror="this.style.display='none'" />`
+        :`${esc(CLASS_ICONS[m.class]||"👤")}`;
+      return `<div class="fg-cell filled" onclick="fgCellClick('${teamId}',${i})" title="${label}">
+        <div class="fg-member-face">${face}</div>
+        <div class="fg-label">${esc(m.name.split(" ")[0])}</div>
       </div>`;
     }
-    return `<div onclick="fgCellClick('${teamId}',${i})" title="${label}" style="aspect-ratio:1;border-radius:8px;background:var(--surface2);border:1px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:4px;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--blue-mid)'" onmouseout="this.style.borderColor='var(--border2)'">
-      <div style="font-size:0.5rem;color:var(--text3);text-align:center;">${label}</div>
+    return `<div class="fg-cell" onclick="fgCellClick('${teamId}',${i})" title="${label}">
+      <div class="fg-label">${label}</div>
     </div>`;
   }).join("");
 
+  // Update picker button styles
   members.forEach(m=>{
     const btn=el(`fg-mbtn-${teamId}-${m.id}`);
-    if(!btn)return;
+    if(!btn) return;
     const isSelected=state.selected===m.id;
     const isPlaced=Object.values(state.positions).includes(m.id);
-    btn.className="btn btn-xs "+(isSelected?"btn-primary":isPlaced?"btn-success":"btn-ghost");
-    btn.style.outline=isSelected?"2px solid var(--blue-bright)":"";
-    btn.style.boxShadow=isSelected?"0 0 8px rgba(79,142,247,0.5)":"";
+    btn.className="fg-picker-btn"+(isSelected?" selected":isPlaced?" placed":"");
   });
 }
 
@@ -486,12 +908,12 @@ function fgSelectMember(teamId,memberId){
 
 function fgCellClick(teamId,cellIndex){
   const team=allTeams.find(t=>t.id===teamId);
-  if(!team||team.captainId!==session.id)return;
+  if(!team||team.captainId!==session.id) return;
   const state=fgState[teamId];
   if(state.positions[cellIndex]){
     delete state.positions[cellIndex];
-  }else if(state.selected){
-    Object.keys(state.positions).forEach(k=>{ if(state.positions[k]===state.selected)delete state.positions[k]; });
+  } else if(state.selected){
+    Object.keys(state.positions).forEach(k=>{ if(state.positions[k]===state.selected) delete state.positions[k]; });
     state.positions[cellIndex]=state.selected;
     state.selected=null;
   }
@@ -504,11 +926,13 @@ async function fgSave(teamId){
   try{
     await apiPost({action:"captainEditTeam",memberId:session.id,captainKey:session.captainKey,teamId,formation:state.positions});
     toast("Formation saved!");
-  }catch(e){toast(e.message,"error");}
-  finally{hideProcessing();}
+  }catch(e){ toast(e.message,"error"); }
+  finally{ hideProcessing(); }
 }
 
-// ── Team build modal ──────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Team Build Modal (own build editor)
+══════════════════════════════════════════════════════════════════ */
 function openTbm(teamId,memberId,memberClass){
   const m=allMembers.find(x=>x.id===memberId);
   const rawTeamBuilds=m?.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
@@ -525,14 +949,13 @@ function openTbm(teamId,memberId,memberClass){
   hide(el("tbm-browser"));
   el("team-build-modal").classList.add("open");
 }
-function closeTbm(){el("team-build-modal").classList.remove("open");}
+function closeTbm(){ el("team-build-modal").classList.remove("open"); }
 
 function tbmRenderFantomon(){
   const list=el("tbm-fantomon-list");
   const imgWrap=el("tbm-fantomon-img-wrap");
   const label=el("tbm-fantomon-label");
-  if(!list)return;
-  // Render selected fantomon display
+  if(!list) return;
   const sel=AVATAR_PRESETS.find(p=>p.id===tbmState.fantomon);
   if(sel){
     imgWrap.innerHTML=`<img src="${esc(sel.url)}" title="${esc(sel.label+(sel.desc?'\n\n'+sel.desc:''))}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);" onerror="this.style.display='none'" />`;
@@ -542,25 +965,26 @@ function tbmRenderFantomon(){
     label.textContent="None selected";
   }
   list.innerHTML=AVATAR_PRESETS.map(p=>`
-    <button onclick="tbmSelectFantomon('${p.id}')" title="${esc(p.label+(p.desc?'\n\n'+p.desc:''))}" style="display:flex;align-items:center;gap:7px;background:${p.id===tbmState.fantomon?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${p.id===tbmState.fantomon?"var(--blue-mid)":"var(--border2)"};border-radius:6px;padding:5px 8px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;">
+    <button onclick="tbmSelectFantomon('${p.id}')" title="${esc(p.label+(p.desc?'\n\n'+p.desc:''))}"
+      style="display:flex;align-items:center;gap:7px;background:${p.id===tbmState.fantomon?"var(--blue-dim)":"var(--surface2)"};border:1px solid ${p.id===tbmState.fantomon?"var(--blue-mid)":"var(--border2)"};border-radius:6px;padding:5px 8px;cursor:pointer;width:100%;text-align:left;transition:all 0.15s;font-family:inherit;">
       <img src="${esc(p.url)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'" />
       <span style="font-size:0.78rem;color:var(--text);font-weight:${p.id===tbmState.fantomon?"700":"400"};">${esc(p.label)}</span>
     </button>`).join("");
 }
 function tbmSelectFantomon(id){
-  tbmState.fantomon = tbmState.fantomon === id ? null : id;
+  tbmState.fantomon=tbmState.fantomon===id?null:id;
   tbmRenderFantomon();
 }
 function tbmRenderSlots(){
   const mk=(ids,type,cid)=>{
     el(cid).innerHTML=Array.from({length:4},(_,i)=>{
-      const id=ids[i];const sk=id?SKILLS.find(s=>s.id===id):null;
+      const id=ids[i]; const sk=id?SKILLS.find(s=>s.id===id):null;
       const isActive=tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===i;
-      if(sk)return`<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
+      if(sk) return `<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
         <button class="build-slot-remove" onclick="event.stopPropagation();tbmClearSlot('${type}',${i})">✕</button>
         <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
         <div class="skill-name" style="font-size:0.6rem;">${esc(sk.name)}</div></div>`;
-      return`<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
+      return `<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
         <div style="font-size:1.2rem;opacity:0.2;">+</div>
         <div style="font-size:0.6rem;color:var(--text3);">${isActive?"Selecting…":"Empty"}</div></div>`;
     }).join("");
@@ -569,26 +993,26 @@ function tbmRenderSlots(){
   mk(tbmState.charms,"charm","tbm-charm-slots");
 }
 function tbmSlotClick(type,index){
-  if(tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===index){tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();return;}
-  tbmState.activeSlot={type,index};tbmState.activeTab=type;show(el("tbm-browser"));tbmSetTab(type);tbmRenderSlots();
+  if(tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===index){ tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots(); return; }
+  tbmState.activeSlot={type,index}; tbmState.activeTab=type; show(el("tbm-browser")); tbmSetTab(type); tbmRenderSlots();
 }
 function tbmClearSlot(type,index){
-  if(type==="technique")tbmState.techniques[index]=null;else tbmState.charms[index]=null;
-  tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();
+  if(type==="technique") tbmState.techniques[index]=null; else tbmState.charms[index]=null;
+  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
 }
 function tbmSetTab(tab){
   tbmState.activeTab=tab;
   el("tbm-tab-t").classList.toggle("active",tab==="technique");
   el("tbm-tab-c").classList.toggle("active",tab==="charm");
-  el("tbm-search").value="";tbmRenderBrowser();
+  el("tbm-search").value=""; tbmRenderBrowser();
 }
 function tbmRenderBrowser(){
-  if(!tbmState.activeSlot)return;
+  if(!tbmState.activeSlot) return;
   const q=(el("tbm-search").value||"").toLowerCase();
   const skills=SKILLS.filter(s=>{
-    if(s.type!==tbmState.activeTab)return false;
-    if(tbmState.memberClass&&s.classes.length&&!s.classes.includes(tbmState.memberClass))return false;
-    if(q&&!s.name.toLowerCase().includes(q))return false;
+    if(s.type!==tbmState.activeTab) return false;
+    if(tbmState.memberClass&&s.classes&&s.classes.length&&!s.classes.includes(tbmState.memberClass)) return false;
+    if(q&&!s.name.toLowerCase().includes(q)) return false;
     return true;
   });
   const selArr=tbmState.activeTab==="technique"?tbmState.techniques:tbmState.charms;
@@ -600,10 +1024,10 @@ function tbmRenderBrowser(){
     ||`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>`;
 }
 function tbmSelectSkill(skillId){
-  if(!tbmState.activeSlot)return;
+  if(!tbmState.activeSlot) return;
   const{type,index}=tbmState.activeSlot;
-  if(type==="technique")tbmState.techniques[index]=skillId;else tbmState.charms[index]=skillId;
-  tbmState.activeSlot=null;hide(el("tbm-browser"));tbmRenderSlots();
+  if(type==="technique") tbmState.techniques[index]=skillId; else tbmState.charms[index]=skillId;
+  tbmState.activeSlot=null; hide(el("tbm-browser")); tbmRenderSlots();
 }
 async function saveTbm(){
   const build={techniques:tbmState.techniques.filter(Boolean),charms:tbmState.charms.filter(Boolean),fantomon:tbmState.fantomon||null};
@@ -612,58 +1036,60 @@ async function saveTbm(){
     showProcessing("Saving Team Build…");
     try{
       const m=allMembers.find(x=>x.id===tbmState.memberId);
-      // Load existing teamBuilds, merge this team's build in
       const existing=m?.teamBuilds?(typeof m.teamBuilds==="string"?JSON.parse(m.teamBuilds||"{}"):m.teamBuilds):{};
       const updated={...existing,[tbmState.teamId]:build};
       await apiPost({action:"updateProfile",memberId:session.id,captainKey:session.captainKey,teamBuilds:JSON.stringify(updated)});
-      if(m){m.teamBuilds=updated;}
-      if(activeTeamId)renderMgmt(activeTeamId);toast("Team build saved!");
-    }catch(e){toast(e.message,"error");}
-    finally{hideProcessing();}
+      if(m){ m.teamBuilds=updated; }
+      if(activeTeamId){ renderMgmt(activeTeamId); switchTab(activeTeamId,"builds"); }
+      toast("Team build saved!");
+    }catch(e){ toast(e.message,"error"); }
+    finally{ hideProcessing(); }
   },false);
 }
 
-// ── Roster actions ────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Roster actions
+══════════════════════════════════════════════════════════════════ */
 function openTransfer(teamId){
   const team=allTeams.find(t=>t.id===teamId);
   const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId)&&m.id!==session.id);
-  if(!members.length){toast("No other members to transfer to.","amber");return;}
+  if(!members.length){ toast("No other members to transfer to.","amber"); return; }
   const name=prompt(`Transfer captaincy of "${team?.name}".\nEnter the Player ID of the new captain:\n${members.map(m=>m.gamertag).join(", ")}`);
-  if(!name)return;
+  if(!name) return;
   const target=members.find(m=>(m.gamertag||"").toLowerCase()===name.toLowerCase());
-  if(!target){toast("Player ID not found in this team.","error");return;}
+  if(!target){ toast("Player ID not found in this team.","error"); return; }
   confirm_("Transfer Captaincy",`Transfer captain role to ${target.name}?`,async()=>{
     try{
       await apiPost({action:"transferCaptaincy",memberId:session.id,captainKey:session.captainKey,teamId,newCaptainId:target.id});
-      const t=allTeams.find(x=>x.id===teamId);if(t){t.captainId=target.id;t.captainName=target.name;}
-      toast("Captaincy transferred!");renderMgmt(teamId);
-    }catch(e){toast(e.message,"error");}
+      const t=allTeams.find(x=>x.id===teamId); if(t){ t.captainId=target.id; t.captainName=target.name; }
+      toast("Captaincy transferred!"); renderMgmt(teamId);
+    }catch(e){ toast(e.message,"error"); }
   });
 }
+
 function confirmLeave(teamId,teamName){
   confirm_(`Leave ${teamName}`,"Are you sure? Transfer captaincy first if other members remain.",async()=>{
     try{
       await apiPost({action:"leaveTeam",memberId:session.id,captainKey:session.captainKey,teamId});
-      const me=allMembers.find(m=>m.id===session.id);if(me)me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
-      toast("Left team.");renderLanding();
-    }catch(e){toast(e.message,"error");}
+      const me=allMembers.find(m=>m.id===session.id); if(me) me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
+      toast("Left team."); renderLanding();
+    }catch(e){ toast(e.message,"error"); }
   });
 }
-async function toggleTeamLFC(teamId, checked) {
+
+async function toggleTeamLFC(teamId,checked){
   showProcessing("Updating Captain Preference…");
-  try {
+  try{
     await apiPost({action:"updateTeamLFC",memberId:session.id,captainKey:session.captainKey,teamId,lookingForCaptain:checked});
-    const t = allTeams.find(x=>x.id===teamId);
-    if (t) t.lookingForCaptain = checked ? "TRUE" : "FALSE";
-    // Update the LFC badge if it exists in the DOM
-    const badge = el("lfc-badge-" + teamId);
-    if (badge) {
-      badge.innerHTML = checked ? `<span class="badge-dot"></span>⚜️ Seeking Captain` : "Not Seeking Captain";
-      badge.className = "badge " + (checked ? "badge-amber" : "badge-ghost");
+    const t=allTeams.find(x=>x.id===teamId); if(t) t.lookingForCaptain=checked?"TRUE":"FALSE";
+    const badge=el("lfc-badge-"+teamId);
+    if(badge){
+      badge.innerHTML=checked?`<span class="badge-dot"></span>⚜️ Seeking Captain`:"Not Seeking Captain";
+      badge.className="badge "+(checked?"badge-amber":"badge-ghost");
     }
-    toast(checked ? "Team marked as seeking a captain." : "Captain preference removed.");
-  } catch(e) { toast(e.message,"error"); }
-  finally { hideProcessing(); }
+    toast(checked?"Team marked as seeking a captain.":"Captain preference removed.");
+  }catch(e){ toast(e.message,"error"); }
+  finally{ hideProcessing(); }
 }
 
 function confirmKick(teamId,memberId,memberName){
@@ -671,55 +1097,57 @@ function confirmKick(teamId,memberId,memberName){
     showProcessing(`Removing ${memberName}…`);
     try{
       await apiPost({action:"kickMember",memberId:session.id,captainKey:session.captainKey,teamId,targetId:memberId});
-      const m=allMembers.find(x=>x.id===memberId);if(m)m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
-      hideProcessing(`${memberName} removed.`);renderMgmt(teamId);
-    }catch(e){hideProcessing();toast(e.message,"error");}
+      const m=allMembers.find(x=>x.id===memberId); if(m) m.teamIds=(m.teamIds||[]).filter(id=>id!==teamId);
+      hideProcessing(`${memberName} removed.`); renderMgmt(teamId);
+    }catch(e){ hideProcessing(); toast(e.message,"error"); }
   });
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Processing overlay (local — mirrors app.js global but safe to redefine)
+══════════════════════════════════════════════════════════════════ */
 function showProcessing(title="Processing…"){
-  // Use global overlay from app.js
-  let ov = document.getElementById("global-processing-overlay");
-  if (!ov) {
-    ov = document.createElement("div");
-    ov.id = "global-processing-overlay";
-    ov.style.cssText = "display:none;position:fixed;inset:0;background:rgba(11,13,18,0.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem;";
-    ov.innerHTML = `<div style="width:48px;height:48px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+  let ov=document.getElementById("global-processing-overlay");
+  if(!ov){
+    ov=document.createElement("div");
+    ov.id="global-processing-overlay";
+    ov.style.cssText="display:none;position:fixed;inset:0;background:rgba(11,13,18,0.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem;";
+    ov.innerHTML=`<div style="width:48px;height:48px;border:3px solid rgba(120,160,255,0.2);border-top-color:#4f8ef7;border-radius:50%;animation:spin 0.7s linear infinite;"></div>
       <div id="gpo-title" style="font-size:1rem;font-weight:600;color:#e8edf5;"></div>
       <div style="font-size:0.82rem;color:#8b98b5;">Please wait and stay on this page.</div>`;
     document.body.appendChild(ov);
   }
-  const ti = ov.querySelector("#gpo-title");
-  if (ti) ti.textContent = title;
-  ov.style.display = "flex";
+  const ti=ov.querySelector("#gpo-title"); if(ti) ti.textContent=title;
+  ov.style.display="flex";
 }
 function hideProcessing(successMsg){
-  const ov = document.getElementById("global-processing-overlay");
-  if (ov) ov.style.display = "none";
-  if (successMsg) toast(successMsg, "success", 3500);
+  const ov=document.getElementById("global-processing-overlay");
+  if(ov) ov.style.display="none";
+  if(successMsg) toast(successMsg,"success",3500);
 }
 
-// ── Chat ──────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════
+   Chat
+══════════════════════════════════════════════════════════════════ */
 function chatStartPolling(teamId){
-  if(chatIntervals[teamId])clearInterval(chatIntervals[teamId]);
+  if(chatIntervals[teamId]) clearInterval(chatIntervals[teamId]);
   chatIntervals[teamId]=setInterval(()=>chatLoad(teamId,true),15000);
 }
 async function chatLoad(teamId,silent=false){
-  if(!session)return;
+  if(!session) return;
   const label=el(`chat-refresh-label-${teamId}`);
   try{
     const d=await apiGet({action:"getMessages",teamId,memberId:session.id,captainKey:session.captainKey});
-    const messages=d.messages||[];
-    chatRender(teamId,messages);
+    chatRender(teamId,d.messages||[]);
     const now=new Date();
-    if(label)label.textContent=`Updated ${now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
+    if(label) label.textContent=`Updated ${now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
   }catch(e){
-    if(!silent&&label)label.textContent="Failed to load";
+    if(!silent&&label) label.textContent="Failed to load";
   }
 }
 function chatRender(teamId,messages){
   const container=el(`chat-messages-${teamId}`);
-  if(!container)return;
+  if(!container) return;
   const team=allTeams.find(t=>t.id===teamId);
   const captainId=team?.captainId;
   const wasAtBottom=container.scrollHeight-container.scrollTop<=container.clientHeight+40;
@@ -737,7 +1165,6 @@ function chatRender(teamId,messages){
     const isMe=msg.memberId===session.id;
     const isCap=msg.memberId===captainId;
     const canDelete=isMe||session.id===captainId;
-    // Use live member data so name/avatar always reflect the current profile
     const liveMember=allMembers.find(x=>x.id===msg.memberId);
     const displayName=liveMember?.name||msg.memberName||"?";
     const displayAvatar=liveMember?.avatarUrl||msg.avatarUrl||"";
@@ -755,116 +1182,92 @@ function chatRender(teamId,messages){
         </div>
         <div class="chat-msg-text">${esc(msg.text).replace(/\n/g,"<br>")}</div>
       </div>
-        <div style="display:flex;gap:6px;margin-top:5px;">
-          <button class="chat-translate-btn" onclick="chatTranslate('${msg.id}','${esc(msg.text).replace(/'/g,"\'")}')" >🌐 Translate</button>
-          ${canDelete?`<button class="chat-msg-delete" onclick="chatDeleteConfirm('${teamId}','${msg.id}')" >🗑 Delete</button>`:""}
-        </div>
+      <div style="display:flex;gap:6px;margin-top:5px;">
+        <button class="chat-translate-btn" onclick="chatTranslate('${msg.id}','${esc(msg.text).replace(/'/g,"\\'")}')">🌐 Translate</button>
+        ${canDelete?`<button class="chat-msg-delete" onclick="chatDeleteConfirm('${teamId}','${msg.id}')">🗑 Delete</button>`:""}
       </div>
     </div>`;
   }).join("");
-  if(isNew||wasAtBottom)container.scrollTop=container.scrollHeight;
-  // Re-inject any active translations that survived a re-render
+  if(isNew||wasAtBottom) container.scrollTop=container.scrollHeight;
   Object.entries(chatTranslations).forEach(([msgId,trans])=>{
     const msgEl=el("msg-"+msgId);
-    if(!msgEl)return;
-    if(msgEl.querySelector(".chat-translation"))return; // already present
+    if(!msgEl) return;
+    if(msgEl.querySelector(".chat-translation")) return;
     const div=document.createElement("div");
     div.className="chat-translation";
     div.innerHTML=`<div class="chat-translation-label">🌐 ${esc(trans.label)}</div>${esc(trans.text)}`;
     const body=msgEl.querySelector(".chat-msg-body");
-    if(body)body.appendChild(div);
+    if(body) body.appendChild(div);
   });
 }
 async function chatSend(teamId){
-  if(!session)return;
-  const input=el(`chat-input-${teamId}`);const btn=el(`chat-send-${teamId}`);
-  const text=input.value.trim();if(!text)return;
-  btn.disabled=true;input.disabled=true;
+  if(!session) return;
+  const input=el(`chat-input-${teamId}`); const btn=el(`chat-send-${teamId}`);
+  const text=input.value.trim(); if(!text) return;
+  btn.disabled=true; input.disabled=true;
   try{
     await apiPost({action:"sendMessage",memberId:session.id,captainKey:session.captainKey,teamId,text});
-    input.value="";input.style.height="";await chatLoad(teamId);
-  }catch(e){toast(e.message,"error");}
-  finally{btn.disabled=false;input.disabled=false;input.focus();}
+    input.value=""; input.style.height=""; await chatLoad(teamId);
+  }catch(e){ toast(e.message,"error"); }
+  finally{ btn.disabled=false; input.disabled=false; input.focus(); }
 }
 async function chatDelete(teamId,messageId){
-  if(!session)return;
+  if(!session) return;
   try{
     await apiPost({action:"deleteMessage",memberId:session.id,captainKey:session.captainKey,teamId,messageId});
-    const m=el(`msg-${messageId}`);if(m)m.remove();
-    if(chatCache[teamId])chatCache[teamId]--;
-  }catch(e){toast(e.message,"error");}
+    const m=el(`msg-${messageId}`); if(m) m.remove();
+    if(chatCache[teamId]) chatCache[teamId]--;
+  }catch(e){ toast(e.message,"error"); }
 }
 function chatDeleteConfirm(teamId,messageId){
   confirm_("Delete Message","Are you sure you want to delete this message? This cannot be undone.",()=>chatDelete(teamId,messageId));
 }
-function chatKeydown(e,teamId){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();chatSend(teamId);}}
-function chatAutoResize(el){el.style.height="";el.style.height=Math.min(el.scrollHeight,100)+"px";}
-function chatUpdateCount(inputEl, teamId){
+function chatKeydown(e,teamId){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); chatSend(teamId); } }
+function chatAutoResize(el){ el.style.height=""; el.style.height=Math.min(el.scrollHeight,100)+"px"; }
+function chatUpdateCount(inputEl,teamId){
   const len=inputEl.value.length;
   const cc=el("chat-char-"+teamId);
-  if(!cc)return;
+  if(!cc) return;
   cc.textContent=len+" / 500";
   cc.className="chat-char-count"+(len>450?(len>=500?" over":" warn"):"");
-  if(len>500)inputEl.value=inputEl.value.substring(0,500);
+  if(len>500) inputEl.value=inputEl.value.substring(0,500);
 }
-
-// ── Chat translation ──────────────────────────────────────
-async function chatTranslate(msgId, text) {
-  const session = getSession();
-  if (!session) return;
-  const msgEl = el("msg-" + msgId);
-  if (!msgEl) return;
-
-  // Toggle: remove if already showing
-  if (chatTranslations[msgId]) {
+async function chatTranslate(msgId,text){
+  const session=getSession();
+  if(!session) return;
+  const msgEl=el("msg-"+msgId);
+  if(!msgEl) return;
+  if(chatTranslations[msgId]){
     delete chatTranslations[msgId];
-    const existing = msgEl.querySelector(".chat-translation");
-    if (existing) existing.remove();
+    const existing=msgEl.querySelector(".chat-translation");
+    if(existing) existing.remove();
     return;
   }
-
-  const btn = msgEl.querySelector(".chat-translate-btn");
-  if (btn) btn.textContent = "⏳";
-
-  const myMember = allMembers.find(m=>m.id===session.id);
-  const prefLang = (myMember?.prefLanguage || "English").split(",")[0].trim();
-
-  try {
-    const translated = await translateText(text, prefLang);
-    if (translated === null) {
-      toast("Message appears to already be in " + prefLang, "info");
-      if(btn) btn.textContent = "🌐";
-      return;
+  const btn=msgEl.querySelector(".chat-translate-btn");
+  if(btn) btn.textContent="⏳";
+  const myMember=allMembers.find(m=>m.id===session.id);
+  const prefLang=(myMember?.prefLanguage||"English").split(",")[0].trim();
+  try{
+    const translated=await translateText(text,prefLang);
+    if(translated===null){ toast("Message appears to already be in "+prefLang,"info"); if(btn) btn.textContent="🌐"; return; }
+    chatTranslations[msgId]={label:prefLang,text:translated};
+    const msgEl2=el("msg-"+msgId);
+    if(msgEl2){
+      const existing=msgEl2.querySelector(".chat-translation"); if(existing) existing.remove();
+      const div=document.createElement("div"); div.className="chat-translation";
+      div.innerHTML=`<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
+      const body=msgEl2.querySelector(".chat-msg-body"); if(body) body.appendChild(div);
     }
-    // Store in cache so re-renders can restore it
-    chatTranslations[msgId] = { label: prefLang, text: translated };
-    // Inject into DOM
-    const msgEl2 = el("msg-" + msgId); // re-fetch in case DOM changed during await
-    if (msgEl2) {
-      const existing = msgEl2.querySelector(".chat-translation");
-      if (existing) existing.remove();
-      const div = document.createElement("div");
-      div.className = "chat-translation";
-      div.innerHTML = `<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
-      const body = msgEl2.querySelector(".chat-msg-body");
-      if (body) body.appendChild(div);
-    }
-    // Auto-dismiss after 10 seconds
     setTimeout(()=>{
       delete chatTranslations[msgId];
-      const me = el("msg-" + msgId);
-      if (me) { const t = me.querySelector(".chat-translation"); if(t) t.remove(); }
-    }, 10000);
-  } catch(e) {
-    toast(e.message, "error");
-  } finally {
-    if (btn) btn.textContent = "🌐";
-  }
+      const me=el("msg-"+msgId); if(me){ const t=me.querySelector(".chat-translation"); if(t) t.remove(); }
+    },10000);
+  }catch(e){ toast(e.message,"error"); }
+  finally{ if(btn) btn.textContent="🌐"; }
 }
-
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061514"></script>
+<script src="js/build-maker.js?v=2026061901"></script>
 </body>
 </html>
