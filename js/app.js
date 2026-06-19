@@ -372,6 +372,10 @@ function buildNav(activePage, opts = {}) {
       if (nav) nav.insertAdjacentElement("afterend", banner);
     }).catch(() => {});
   }
+  // Register push notifications for logged-in users (silently, no-op if already registered)
+  if (session) {
+    setTimeout(() => registerPushNotifications(), 3000);
+  }
   if (session && activePage !== "messages.html") {
     apiGet({ action: "getAll", memberId: session.id }).then(d => {
       if (d.unreadDMs > 0) {
