@@ -247,7 +247,8 @@ function buildNav(activePage, opts = {}) {
     { href: "guests.html",    label: "Guests",         requiresAuth: true },
     { href: "invites.html",   label: "Your Invites",   requiresAuth: true },
     { href: "messages.html",  label: "Your Messages",  requiresAuth: true },
-    { href: "your-team.html", label: "Your Teams",     requiresAuth: true },
+    { href: "your-team.html",    label: "Your Teams",   requiresAuth: true },
+    { href: "helpful-info.html", label: "Helpful Info", requiresAuth: false },
   ];
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
@@ -626,4 +627,20 @@ async function translateText(text, targetLang) {
   if (d.responseStatus === 429) throw new Error("Translation limit reached for today.");
   const result = d.responseData.translatedText;
   if (!result || result.toUpperCase().includes("INVALID LANGUAGE") || result.toUpperCase().includes("PLEASE SELECT")) {
-    throw new Error("Translations default to English. Translation t
+    throw new Error("Translation unavailable for this language.");
+  }
+  return result;
+}
+// ── Language code map ─────────────────────────────────────
+function getLangCode(lang) {
+  const MAP = {
+    "English":"en","Spanish":"es","Portuguese":"pt","French":"fr","German":"de",
+    "Italian":"it","Dutch":"nl","Russian":"ru","Polish":"pl","Turkish":"tr",
+    "Arabic":"ar","Hebrew":"he","Hindi":"hi","Bengali":"bn","Japanese":"ja",
+    "Korean":"ko","Chinese (Simplified)":"zh","Chinese (Traditional)":"zh-TW",
+    "Vietnamese":"vi","Thai":"th","Indonesian":"id","Malay":"ms","Filipino":"tl",
+    "Swedish":"sv","Norwegian":"no","Danish":"da","Finnish":"fi","Czech":"cs",
+    "Slovak":"sk","Romanian":"ro","Hungarian":"hu","Greek":"el","Other":"en",
+  };
+  return MAP[lang] || "en";
+}
