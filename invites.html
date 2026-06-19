@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Invites — Berserk Guild</title>
+<link rel="stylesheet" href="css/style.css?v=2026061512" />
+<style>
+/* ── Page layout ─────────────────────────────────────────────── */
+.inv-page{max-width:900px;margin:0 auto;}
+.inv-hero{display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border2);}
+.inv-hero-icon{font-size:2rem;line-height:1;}
+.inv-hero-title{font-size:1.4rem;font-weight:800;letter-spacing:-0.01em;}
+.inv-hero-sub{font-size:0.8rem;color:var(--text3);margin-top:2px;}
+
+/* ── Summary strip ───────────────────────────────────────────── */
+.inv-summary{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:2rem;}
+.inv-stat{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:0.9rem 1.1rem;display:flex;align-items:center;gap:0.75rem;}
+.inv-stat-icon{font-size:1.4rem;flex-shrink:0;}
+.inv-stat-val{font-size:1.4rem;font-weight:800;line-height:1;}
+.inv-stat-label{font-size:0.7rem;color:var(--text3);margin-top:2px;}
+.inv-stat.has-items{border-color:var(--amber-mid);background:var(--amber-dim);}
+.inv-stat.has-items .inv-stat-val{color:var(--amber);}
+
+/* ── Section cards ───────────────────────────────────────────── */
+.inv-section{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:1.5rem;overflow:hidden;}
+.inv-section-hd{display:flex;align-items:center;gap:10px;padding:1rem 1.25rem;background:var(--surface2);border-bottom:1px solid var(--border2);cursor:pointer;user-select:none;}
+.inv-section-hd:hover{background:var(--surface3);}
+.inv-section-title{font-family:var(--mono);font-size:0.72rem;font-weight:700;color:var(--blue-bright);text-transform:uppercase;letter-spacing:0.1em;flex:1;}
+.inv-section-badge{background:var(--amber);color:#000;font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center;}
+.inv-chevron{color:var(--text3);font-size:0.7rem;transition:transform 0.2s;}
+.inv-section.collapsed .inv-chevron{transform:rotate(-90deg);}
+.inv-section.collapsed .inv-section-bd{display:none;}
+.inv-section-bd{padding:1rem 1.25rem;}
+
+/* ── Invite / request rows ───────────────────────────────────── */
+.inv-row{display:flex;align-items:center;gap:1rem;padding:1rem 1.1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:0.6rem;transition:opacity 0.2s;}
+.inv-row:last-child{margin-bottom:0;}
+.inv-row-avatar{flex-shrink:0;}
+.inv-row-info{flex:1;min-width:0;}
+.inv-row-name{font-size:0.95rem;font-weight:700;margin-bottom:3px;}
+.inv-row-sub{font-size:0.76rem;color:var(--text2);display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+.inv-row-actions{display:flex;gap:0.5rem;flex-shrink:0;}
+.inv-row-feedback{flex:1;display:flex;align-items:center;gap:8px;font-size:0.88rem;color:var(--text2);}
+
+/* Team composition pills inline */
+.comp-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+
+/* Awaiting badge */
+.inv-waiting{display:inline-flex;align-items:center;gap:4px;font-size:0.7rem;color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-mid);padding:2px 8px;border-radius:10px;font-weight:600;}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.inv-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;color:var(--text3);text-align:center;}
+.inv-empty-icon{font-size:1.75rem;margin-bottom:0.5rem;opacity:0.35;}
+.inv-empty-text{font-size:0.84rem;}
+
+/* ── Activity rows ───────────────────────────────────────────── */
+.act-row{display:flex;align-items:flex-start;gap:10px;padding:0.8rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:0.6rem;transition:opacity 0.3s;}
+.act-row:last-child{margin-bottom:0;}
+.act-row.dismissed{display:none;}
+.act-row-icon{font-size:1rem;flex-shrink:0;margin-top:2px;}
+.act-row-body{flex:1;min-width:0;}
+.act-row-main{font-size:0.84rem;line-height:1.4;}
+.act-row-meta{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.act-row-time{font-size:0.7rem;color:var(--text3);}
+.act-dismiss{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:0.75rem;line-height:1;flex-shrink:0;margin-left:auto;opacity:0.5;transition:opacity 0.15s;}
+.act-dismiss:hover{opacity:1;color:var(--red);}
+
+/* ── Status pills ────────────────────────────────────────────── */
+.act-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:0.62rem;font-weight:700;letter-spacing:0.04em;vertical-align:middle;margin-left:4px;}
+.act-pill-new{background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);}
+.act-pill-accepted{background:var(--green-dim);border:1px solid var(--green-mid);color:var(--green);}
+.act-pill-declined{background:var(--red-dim);border:1px solid var(--red-mid);color:var(--red);}
+.act-pill-cancelled{background:var(--surface3);border:1px solid var(--border2);color:var(--text3);}
+
+/* ── Not a captain CTA ───────────────────────────────────────── */
+.cap-cta{text-align:center;padding:1.5rem 1rem;}
+.cap-cta-icon{font-size:2rem;margin-bottom:0.5rem;opacity:0.35;}
+.cap-cta-title{font-size:0.92rem;font-weight:600;color:var(--text2);margin-bottom:0.25rem;}
+.cap-cta-sub{font-size:0.8rem;color:var(--text3);margin-bottom:1rem;}
+.cap-cta-actions{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media(max-width:600px){
+  .inv-row{flex-wrap:wrap;}
+  .inv-row-actions{width:100%;justify-content:flex-end;}
+  .inv-summary{flex-direction:column;}
+  .inv-stat{min-width:0;}
+}
+</style>
+</head>
+<body>
+<script src="js/app.js?v=2026061512"></script>
+<script>onReady(()=>buildNav("invites.html"));</script>
+<main>
+<div class="inv-page">
+
+  <div id="inv-loading" class="loading"><span class="spinner"></span></div>
+
+  <!-- Login fallback -->
+  <div id="login-box" style="display:none;">
+    <div class="card mb-md">
+      <div class="form-title mb-sm">Log In to View Your Invites</div>
+      <p class="text-sm text-muted mb-md">Enter your credentials to view your pending invites and join requests.</p>
+      <div class="login-row">
+        <div class="field"><label>Player ID</label><input id="sl-tag" placeholder="Your Player ID" type="number" /></div>
+        <div class="field"><label>Secret Key</label><input id="sl-key" type="password" placeholder="••••••••" /></div>
+        <button class="btn btn-primary" onclick="doLogin()">Load</button>
+      </div>
+      <div id="sl-error" class="alert alert-error alert-hidden mt-sm"></div>
+    </div>
+  </div>
+
+  <div id="inv-content" style="display:none;">
+
+    <!-- Hero -->
+    <div class="inv-hero">
+      <div class="inv-hero-icon">📬</div>
+      <div>
+        <div class="inv-hero-title">Your Invites</div>
+        <div class="inv-hero-sub" id="inv-hero-sub">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Summary strip -->
+    <div class="inv-summary">
+      <div class="inv-stat" id="stat-invites">
+        <div class="inv-stat-icon">📨</div>
+        <div>
+          <div class="inv-stat-val" id="stat-inv-val">0</div>
+          <div class="inv-stat-label">Team Invites</div>
+        </div>
+      </div>
+      <div class="inv-stat" id="stat-requests">
+        <div class="inv-stat-icon">📤</div>
+        <div>
+          <div class="inv-stat-val" id="stat-req-val">0</div>
+          <div class="inv-stat-label">Pending Requests</div>
+        </div>
+      </div>
+      <div class="inv-stat" id="stat-joinreqs">
+        <div class="inv-stat-icon">⚜️</div>
+        <div>
+          <div class="inv-stat-val" id="stat-jrq-val">0</div>
+          <div class="inv-stat-label">Requests to Your Team</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Invites -->
+    <div class="inv-section" id="sec-invites">
+      <div class="inv-section-hd" onclick="toggleSec('sec-invites')">
+        <span class="inv-section-title">📨 Team Invites</span>
+        <span id="inv-badge" class="inv-section-badge" style="display:none;"></span>
+        <span class="inv-chevron">▼</span>
+      </div>
+      <div class="inv-section-bd" id="bd-invites"></div>
+    </div>
+
+    <!-- Your Join Requests -->
+    <div class="inv-section" id="sec-requests">
+      <div class="inv-section-hd" onclick="toggleSec('sec-requests')">
+        <span class="inv-section-title">📤 Your Join Requests</span>
+        <span id="req-badge" class="inv-section-badge" style="display:none;"></span>
+        <span class="inv-chevron">▼</span>
+      </div>
+      <div class="inv-section-bd" id="bd-requests"></div>
+    </div>
+
+    <!-- Captain: Join Requests to Your Teams -->
+    <div class="inv-section" id="sec-joinreqs">
+      <div class="inv-section-hd" onclick="toggleSec('sec-joinreqs')">
+        <span class="inv-section-title">⚜️ Join Requests to Your Team(s)</span>
+        <span id="jrq-badge" class="inv-section-badge" style="display:none;"></span>
+        <span class="inv-chevron">▼</span>
+      </div>
+      <div class="inv-section-bd" id="bd-joinreqs"></div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="inv-section" id="sec-activity">
+      <div class="inv-section-hd" onclick="toggleSec('sec-activity')">
+        <span class="inv-section-title">🕐 Recent Activity</span>
+        <span id="act-badge" class="inv-section-badge" style="display:none;"></span>
+        <span class="inv-chevron">▼</span>
+      </div>
+      <div class="inv-section-bd" id="bd-activity"></div>
+    </div>
+
+  </div>
+</div>
+</main>
+
+<script>
+let allTeams=[],allMembers=[],allRequests=[],settings={};
+let invMember=null;
+
+function toggleSec(id){
+  const s=document.getElementById(id);
+  if(s)s.classList.toggle("collapsed");
+}
+
+// ── localStorage helpers ──────────────────────────────────────
+function getSeenActivity(memberId){
+  try{return JSON.parse(localStorage.getItem("inv_seen_"+memberId))||[];}
+  catch{return[];}
+}
+function markActivitySeen(memberId,ids){
+  try{
+    const seen=getSeenActivity(memberId);
+    localStorage.setItem("inv_seen_"+memberId,JSON.stringify([...new Set([...seen,...ids])]));
+  }catch{}
+}
+function getDismissed(memberId){
+  try{return JSON.parse(localStorage.getItem("inv_dismissed_"+memberId))||[];}
+  catch{return[];}
+}
+function dismissActivity(memberId,reqId){
+  try{
+    const d=getDismissed(memberId);
+    if(!d.includes(reqId)){d.push(reqId);}
+    localStorage.setItem("inv_dismissed_"+memberId,JSON.stringify(d));
+  }catch{}
+  const row=document.getElementById("act-"+reqId);
+  if(row){row.style.opacity="0";setTimeout(()=>row.classList.add("dismissed"),300);}
+}
+
+// ── Time formatter ────────────────────────────────────────────
+function relTime(iso){
+  if(!iso)return"";
+  const d=new Date(iso);if(isNaN(d))return iso;
+  const diff=Date.now()-d.getTime();
+  if(diff<60000)return"just now";
+  if(diff<3600000)return Math.floor(diff/60000)+"m ago";
+  if(diff<86400000)return Math.floor(diff/3600000)+"h ago";
+  if(diff<7*86400000)return Math.floor(diff/86400000)+"d ago";
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+
+// ── Avatar helper ─────────────────────────────────────────────
+function memberAvatar(m,size=32){
+  if(!m)return`<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*0.38)}px;color:var(--blue-bright);">?</div>`;
+  return m.avatarUrl
+    ?`<img src="${esc(m.avatarUrl)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:1px solid var(--blue-mid);" onerror="this.style.display='none'" />`
+    :`<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--surface2);border:1px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:${Math.floor(size*0.38)}px;font-weight:700;color:var(--blue-bright);">${initials(m.name)}</div>`;
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+onReady(async()=>{
+  try{
+    const d=await apiGet({action:"getAll"});
+    allTeams=d.teams||[];allMembers=d.members||[];allRequests=d.requests||[];settings=d.settings||{};
+  }catch(e){}
+  hide(el("inv-loading"));
+  const session=getSession();
+  if(session){
+    const m=allMembers.find(mb=>mb.id===session.id);
+    if(m){invMember=m;showInvites();return;}
+  }
+  el("login-box").style.display="block";
+});
+
+async function doLogin(){
+  const tag=el("sl-tag").value.trim(),key=el("sl-key").value.trim();
+  clearAlert("sl-error");
+  if(!tag||!key){showAlert("sl-error","Enter your Player ID and key.");return;}
+  const btn=document.querySelector("#login-box .btn-primary");
+  if(btn){btn.disabled=true;btn.textContent="Loading…";}
+  try{
+    const d=await apiPost({action:"loginMember",gamertag:tag,captainKey:key});
+    const remote=d.member;
+    invMember=allMembers.find(mb=>mb.id===remote.id)||remote;
+    setSession({id:remote.id,gamertag:remote.gamertag,name:remote.name,
+      captainKey:key,isCaptain:remote.isCaptain,avatarUrl:remote.avatarUrl||""});
+    showInvites();
+  }catch(e){
+    showAlert("sl-error",e.message||"Player ID or key not found.");
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent="Load";}
+  }
+}
+
+function showInvites(){hide(el("login-box"));show(el("inv-content"));renderInvites();}
+
+function setStat(statId,val){
+  const el2=document.getElementById(statId);
+  const valEl=el2?.querySelector(".inv-stat-val");
+  if(valEl)valEl.textContent=val;
+  if(val>0)el2?.classList.add("has-items");
+  else el2?.classList.remove("has-items");
+}
+
+function renderInvites(){
+  const m=invMember;if(!m)return;
+
+  const capTeams=allTeams.filter(t=>t.captainId===m.id);
+  const capTeamIds=capTeams.map(t=>t.id);
+
+  // ── Hero subtitle ─────────────────────────────────────────────
+  const pending=allRequests.filter(r=>r.status==="pending"&&(
+    (r.type==="invite"&&r.toId===m.id)||
+    (r.type==="join"&&r.fromId===m.id)||
+    (r.type==="join"&&capTeamIds.includes(r.teamId))
+  )).length;
+  el("inv-hero-sub").textContent=pending
+    ? `${pending} item${pending!==1?"s":""} need${pending===1?"s":""} your attention`
+    : "You're all caught up";
+
+  // ── Team Invites ──────────────────────────────────────────────
+  const invites=allRequests.filter(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending");
+  setStat("stat-invites",invites.length);
+  const invBadge=el("inv-badge");
+  if(invites.length){
+    invBadge.textContent=invites.length;show(invBadge);
+    el("bd-invites").innerHTML=invites.map(r=>{
+      const team=allTeams.find(t=>t.id===r.teamId);
+      const capMember=team?allMembers.find(mb=>mb.id===team.captainId):null;
+      const comp=Array.isArray(team?.composition)?team.composition:[];
+      return`<div class="inv-row" data-req-id="${r.id}">
+        <div class="inv-row-avatar">${memberAvatar(capMember,40)}</div>
+        <div class="inv-row-info">
+          <div class="inv-row-name">${esc(r.teamName)}</div>
+          <div class="inv-row-sub">
+            ${capMember?`<span>${esc(capMember.name)}</span><span style="color:var(--border2);">·</span>`:""}
+            <span>Invited you to join</span>
+          </div>
+          ${comp.length?`<div class="comp-row">${comp.map(x=>`<span class="comp-pill comp-${x.toLowerCase()}">${x}</span>`).join("")}</div>`:""}
+        </div>
+        <div class="inv-row-actions">
+          <button class="btn btn-success btn-sm" onclick="respondInvite('${r.id}','accept')">Accept</button>
+          <button class="btn btn-danger btn-sm" onclick="respondInvite('${r.id}','decline')">Decline</button>
+        </div>
+      </div>`;
+    }).join("");
+  }else{
+    hide(invBadge);
+    el("bd-invites").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📭</div><div class="inv-empty-text">No pending team invites.</div></div>`;
+  }
+
+  // ── Your Join Requests ────────────────────────────────────────
+  const reqs=allRequests.filter(r=>r.type==="join"&&r.fromId===m.id&&r.status==="pending");
+  setStat("stat-requests",reqs.length);
+  const reqBadge=el("req-badge");
+  if(reqs.length){
+    reqBadge.textContent=reqs.length;show(reqBadge);
+    el("bd-requests").innerHTML=reqs.map(r=>{
+      const team=allTeams.find(t=>t.id===r.teamId);
+      const capMember=team?allMembers.find(mb=>mb.id===team.captainId):null;
+      return`<div class="inv-row" data-req-id="${r.id}">
+        <div class="inv-row-avatar">${memberAvatar(capMember,40)}</div>
+        <div class="inv-row-info">
+          <div class="inv-row-name">${esc(r.teamName)}</div>
+          <div class="inv-row-sub">
+            <span class="inv-waiting">⏳ Awaiting captain approval</span>
+          </div>
+        </div>
+        <div class="inv-row-actions">
+          <button class="btn btn-ghost btn-sm" onclick="cancelRequest('${r.id}')">Cancel</button>
+        </div>
+      </div>`;
+    }).join("");
+  }else{
+    hide(reqBadge);
+    el("bd-requests").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📤</div><div class="inv-empty-text">No pending join requests.</div></div>`;
+  }
+
+  // ── Captain: Join Requests ────────────────────────────────────
+  const jrqBadge=el("jrq-badge");
+  if(!capTeams.length){
+    hide(jrqBadge);setStat("stat-joinreqs",0);
+    el("bd-joinreqs").innerHTML=`<div class="cap-cta">
+      <div class="cap-cta-icon">⚜️</div>
+      <div class="cap-cta-title">You're not currently a captain.</div>
+      <div class="cap-cta-sub">Create or lead a team to manage join requests here.</div>
+      <div class="cap-cta-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">🔍 Browse Teams</a>
+        <a href="create-team.html" class="btn btn-primary btn-sm">⚔️ Create a Team</a>
+      </div>
+    </div>`;
+  }else{
+    const capReqs=allRequests.filter(r=>r.type==="join"&&capTeamIds.includes(r.teamId)&&r.status==="pending");
+    setStat("stat-joinreqs",capReqs.length);
+    if(capReqs.length){
+      jrqBadge.textContent=capReqs.length;show(jrqBadge);
+      el("bd-joinreqs").innerHTML=capReqs.map(r=>{
+        const ap=allMembers.find(mb=>mb.id===r.fromId)||{name:"Unknown",gamertag:"",class:"",power:"",level:"",avatarUrl:""};
+        const classBit=ap.class?`${esc(CLASS_ICONS[ap.class]||"")} ${esc(ap.class)}`:"";
+        const powerBit=ap.power?`⚡ ${formatPower(ap.power)}`:"";
+        const levelBit=ap.level?`Lv.${esc(String(ap.level))}`:"";
+        const subParts=[classBit,powerBit,levelBit].filter(Boolean);
+        return`<div class="inv-row" data-req-id="${r.id}">
+          <div class="inv-row-avatar">${memberAvatar(ap,44)}</div>
+          <div class="inv-row-info">
+            <div class="inv-row-name">${esc(ap.name)}</div>
+            <div class="inv-row-sub">
+              ${subParts.length?`<span>${subParts.join(" · ")}</span><span style="color:var(--border2);">·</span>`:""}
+              <span>Wants to join <strong style="color:var(--text);">${esc(r.teamName)}</strong></span>
+            </div>
+          </div>
+          <div class="inv-row-actions">
+            <button class="btn btn-success btn-sm" onclick="respondJoin('${r.id}','accept')">Accept</button>
+            <button class="btn btn-danger btn-sm" onclick="respondJoin('${r.id}','decline')">Decline</button>
+          </div>
+        </div>`;
+      }).join("");
+    }else{
+      hide(jrqBadge);
+      el("bd-joinreqs").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">⚜️</div><div class="inv-empty-text">No pending join requests to your teams.</div></div>`;
+    }
+  }
+
+  // ── Recent Activity ───────────────────────────────────────────
+  const ACTIVITY_DAYS=14;
+  const cutoff=Date.now()-ACTIVITY_DAYS*24*60*60*1000;
+  const seen=getSeenActivity(m.id);
+  const dismissed=getDismissed(m.id);
+
+  const actItems=allRequests.filter(r=>{
+    if(r.status==="pending")return false;
+    const ts=new Date(r.createdAt).getTime();
+    if(isNaN(ts)||ts<cutoff)return false;
+    if(dismissed.includes(r.id))return false;
+    if(r.type==="join"&&r.fromId===m.id)return true;
+    if(r.type==="invite"&&r.toId===m.id)return true;
+    if(r.type==="join"&&capTeamIds.includes(r.teamId))return true;
+    return false;
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  const newIds=actItems.filter(r=>!seen.includes(r.id)).map(r=>r.id);
+  const actBadge=el("act-badge");
+
+  if(actItems.length){
+    markActivitySeen(m.id,actItems.map(r=>r.id));
+    if(newIds.length){actBadge.textContent=newIds.length;show(actBadge);}
+    else hide(actBadge);
+
+    const statusMap={
+      accepted:{cls:"act-pill-accepted",icon:"✅",label:"Accepted"},
+      declined: {cls:"act-pill-declined", icon:"❌",label:"Declined"},
+      cancelled:{cls:"act-pill-cancelled",icon:"✗", label:"Cancelled"},
+    };
+
+    el("bd-activity").innerHTML=actItems.map(r=>{
+      const isNew=newIds.includes(r.id);
+      const newPill=isNew?`<span class="act-pill act-pill-new">NEW</span>`:"";
+      const sm=statusMap[r.status]||statusMap.cancelled;
+      const statusPill=`<span class="act-pill ${sm.cls}">${sm.icon} ${sm.label}</span>`;
+      let icon="📋",mainText="";
+
+      if(r.type==="join"&&r.fromId===m.id){
+        icon="📤";
+        mainText=`Your join request to <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
+      }else if(r.type==="invite"&&r.toId===m.id){
+        icon="📨";
+        const action=r.status==="accepted"?"You accepted":"You declined";
+        mainText=`${action} an invite from <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
+      }else if(r.type==="join"&&capTeamIds.includes(r.teamId)){
+        icon="⚜️";
+        const applicant=allMembers.find(mb=>mb.id===r.fromId);
+        const aName=applicant?esc(applicant.name):"A member";
+        mainText=`${aName} — request to join <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
+      }
+
+      return`<div class="act-row" id="act-${r.id}">
+        <div class="act-row-icon">${icon}</div>
+        <div class="act-row-body">
+          <div class="act-row-main">${mainText}</div>
+          <div class="act-row-meta">
+            <span class="act-row-time">${relTime(r.createdAt)}</span>
+          </div>
+        </div>
+        <button class="act-dismiss" onclick="dismissActivity('${m.id}','${r.id}')" title="Dismiss">✕</button>
+      </div>`;
+    }).join("");
+  }else{
+    hide(actBadge);
+    el("bd-activity").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">🕐</div><div class="inv-empty-text">No activity in the last ${ACTIVITY_DAYS} days.</div></div>`;
+  }
+
+  if(newIds.length>0&&!sessionStorage.getItem("inv_toasted_"+m.id)){
+    sessionStorage.setItem("inv_toasted_"+m.id,"1");
+    toast(`${newIds.length} new update${newIds.length===1?"":"s"} in Recent Activity`,"amber",4000);
+  }
+}
+
+// ── Row feedback ──────────────────────────────────────────────
+function showRowFeedback(reqId,msg){
+  const rowEl=document.querySelector(`[data-req-id="${reqId}"]`);
+  if(!rowEl)return;
+  rowEl.innerHTML=`<div class="inv-row-feedback"><span>${msg}</span></div>`;
+  rowEl.style.opacity="0.6";
+}
+
+// ── Actions ───────────────────────────────────────────────────
+async function respondInvite(reqId,decision){
+  const session=getSession();if(!session)return;
+  const isAccept=decision==="accept";
+  showRowFeedback(reqId,"Sending…");
+  try{
+    await apiPost({action:"respondInvite",memberId:session.id,captainKey:session.captainKey,requestId:reqId,decision});
+    const r=allRequests.find(x=>x.id===reqId);
+    if(r){r.status=isAccept?"accepted":"declined";if(isAccept&&invMember)invMember.teamIds=[...(invMember.teamIds||[]),r.teamId];}
+    toast(isAccept?"You joined the team!":"Invite declined.",isAccept?"success":"info",2500);
+    setTimeout(()=>renderInvites(),1200);
+  }catch(e){renderInvites();toast(e.message,"error");}
+}
+
+async function respondJoin(reqId,decision){
+  const session=getSession();if(!session)return;
+  const isAccept=decision==="accept";
+  showRowFeedback(reqId,"Sending…");
+  try{
+    await apiPost({action:"respondRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId,accept:isAccept});
+    const r=allRequests.find(x=>x.id===reqId);
+    if(r){
+      r.status=isAccept?"accepted":"declined";
+      if(isAccept)allRequests.filter(x=>x.id!==reqId&&x.status==="pending"&&x.teamId===r.teamId&&(x.fromId===r.fromId||x.toId===r.fromId)).forEach(x=>x.status="cancelled");
+    }
+    const applicant=r?allMembers.find(mb=>mb.id===r.fromId):null;
+    toast(isAccept?`${applicant?.name||"Member"} added to the team!`:"Request declined.",isAccept?"success":"info",2500);
+    setTimeout(()=>renderInvites(),1200);
+  }catch(e){renderInvites();toast(e.message,"error");}
+}
+
+async function cancelRequest(reqId){
+  const session=getSession();if(!session)return;
+  showRowFeedback(reqId,"Cancelling…");
+  try{
+    await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
+    const r=allRequests.find(x=>x.id===reqId);
+    if(r)r.status="cancelled";
+    toast("Request cancelled.","info",2000);
+    setTimeout(()=>renderInvites(),1200);
+  }catch(e){renderInvites();toast(e.message,"error");}
+}
+</script>
+</body>
+</html>

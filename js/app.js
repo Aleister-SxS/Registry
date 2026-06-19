@@ -269,14 +269,14 @@ function buildNav(activePage, opts = {}) {
   const pages = [
     { href: "index.html",    label: "Team Registry",  requiresAuth: true },
     { href: "players.html",  label: "Guild Members",  requiresAuth: true },
-    { href: "status.html",   label: "Your Invites",   requiresAuth: true },
+    { href: "invites.html",   label: "Your Invites",   requiresAuth: true },
     { href: "messages.html", label: "Your Messages",  requiresAuth: true },
     { href: "your-team.html",label: "Your Teams",     requiresAuth: true },
   ];
 
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "status.html" ? `<span id="nav-inv-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
+    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "invites.html" ? `<span id="nav-inv-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
     return `<a href="${p.href}" class="nav-link${active}">${p.label}${badge}</a>`;
   }).join("");
 
@@ -300,7 +300,7 @@ function buildNav(activePage, opts = {}) {
   // Mobile hamburger menu items
   const mobileLinks = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "status.html" ? `<span id="nav-inv-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
+    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "invites.html" ? `<span id="nav-inv-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
     return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}${mbadge}</a>`;
   }).join("");
 
@@ -429,8 +429,8 @@ function buildNav(activePage, opts = {}) {
         if (badge)    badge.style.display    = "inline";
         if (badgeMob) badgeMob.style.display = "inline";
       }
-      // ── Invite/request badge (skip on status.html — user is already there) ──
-      if (activePage !== "status.html") {
+      // ── Invite/request badge (skip on invites.html — user is already there) ──
+      if (activePage !== "invites.html") {
         const requests = d.requests || [];
         const teams    = d.teams    || [];
         // Pending invites received by this user
