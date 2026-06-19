@@ -2,10 +2,8 @@
    TEAM REGISTRY — Build Maker (js/build-maker.js)
    Skills sourced from lootandwaifus.com
    ============================================================ */
-
 const SKILL_BASE = "https://lootandwaifus.com/skills/swordxstaff/";
 const CLASS_ICON_BASE = "https://lootandwaifus.com/skills/swordxstaff/classes/";
-
 // ── Skill database ────────────────────────────────────────
 // Each entry: { id, name, type, classes[] }
 // type: "technique" | "charm"
@@ -245,17 +243,11 @@ const SKILLS = [
   {id:"10631",name:"Ring of Omen",type:"charm",classes:["Prophet"]},
   {id:"10632",name:"Rejuvenating Elixir",type:"charm",classes:["Prophet"]},
 ];
-
 function skillIconUrl(id) {
   return `${SKILL_BASE}skill_${id}.png`;
 }
-
-// ── Skill image fallback ──────────────────────────────────
-// Called via onerror when a skill webp doesn't exist on the server.
-// Replaces the broken <img> with a styled abbreviation tile so the
-// slot never looks empty — always shows e.g. "RS" for "Ricocheting Shield".
 function skillImgFallback(img) {
-  img.onerror = null; // prevent re-triggering
+  img.onerror = null;
   const sz = img.style.width || img.getAttribute("width") || "32px";
   const name = img.alt || img.title || "?";
   const abbr = name.split(" ").map(function(w){ return w[0]; }).join("").slice(0, 2).toUpperCase();
@@ -272,8 +264,6 @@ function skillImgFallback(img) {
   fb.title = name;
   img.replaceWith(fb);
 }
-
-// ── Build Maker class ─────────────────────────────────────
 class BuildMaker {
   constructor(opts = {}) {
     this.containerId   = opts.containerId   || "build-maker";
@@ -285,10 +275,9 @@ class BuildMaker {
     this.currentClass  = opts.currentClass   || "";
     this.currentTab    = "technique";
     this.searchQuery   = "";
-    this.techniques    = []; // selected skill ids
-    this.charms        = []; // selected skill ids
+    this.techniques    = [];
+    this.charms        = [];
   }
-
   skillsForTab() {
     return SKILLS.filter(s => {
       if (s.type !== this.currentTab) return false;
@@ -300,11 +289,9 @@ class BuildMaker {
       return true;
     });
   }
-
   isSelected(id) {
     return this.techniques.includes(id) || this.charms.includes(id);
   }
-
   toggle(skillId) {
     if (this.readOnly) return;
     const skill = SKILLS.find(s => s.id === skillId);
@@ -317,24 +304,20 @@ class BuildMaker {
     else { toast(`Max ${max} ${skill.type}s allowed`, "amber"); return; }
     this.render();
   }
-
   load(techniques = [], charms = []) {
     this.techniques = [...techniques];
     this.charms     = [...charms];
     this.render();
   }
-
   getBuild() {
     return { techniques: [...this.techniques], charms: [...this.charms] };
   }
-
   render() {
     const container = document.getElementById(this.containerId);
     if (!container) return;
     const skills = this.skillsForTab();
     const selectedArr = this.currentTab === "technique" ? this.techniques : this.charms;
     const maxSlots    = this.currentTab === "technique" ? this.maxTechniques : this.maxCharms;
-
     container.innerHTML = `
       <div class="flex-between mb-md" style="flex-wrap:wrap;gap:0.75rem;">
         <div class="flex gap-xs">
@@ -350,8 +333,6 @@ class BuildMaker {
             oninput="window._bm_${this.containerId}.setSearch(this.value)" />
         </div>
       </div>
-
-      <!-- Selected slots -->
       <div style="margin-bottom:1rem;">
         <div class="section-title mb-sm">
           Selected ${this.currentTab === "technique" ? "Techniques" : "Charms"}
@@ -376,8 +357,6 @@ class BuildMaker {
           }).join("")}
         </div>
       </div>
-
-      <!-- Skill browser -->
       ${!this.readOnly ? `
       <div class="section-title mb-sm">
         ${skills.length} skill${skills.length!==1?"s":""} available
@@ -395,7 +374,6 @@ class BuildMaker {
         ${skills.length === 0 ? `<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>` : ""}
       </div>
       ` : ""}
-
       ${!this.readOnly && this.onSave ? `
         <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:flex-end;">
           <button class="btn btn-ghost btn-sm" onclick="window._bm_${this.containerId}.clear()">Clear</button>
@@ -404,39 +382,26 @@ class BuildMaker {
       ` : ""}
     `;
   }
-
   setTab(tab)    { this.currentTab = tab; this.render(); }
   setSearch(q)   { this.searchQuery = q; this.render(); }
   clear()        { this.techniques = []; this.charms = []; this.render(); }
-
-  save() {
-    if (this.onSave) this.onSave(this.getBuild());
-  }
-
-  mount() {
-    window[`_bm_${this.containerId}`] = this;
-    this.render();
-    return this;
-  }
+  save()         { if (this.onSave) this.onSave(this.getBuild()); }
+  mount()        { window[`_bm_${this.containerId}`] = this; this.render(); return this; }
 }
-
-// ── Formation grid ────────────────────────────────────────
 class FormationGrid {
   constructor(opts = {}) {
-    this.containerId = opts.containerId || "formation-grid";
-    this.members     = opts.members     || []; // [{id,name,class}]
-    this.readOnly    = opts.readOnly    || false;
-    this.positions   = opts.positions   || {}; // {cellIndex: memberId}
-    this.onSave      = opts.onSave      || null;
+    this.containerId    = opts.containerId || "formation-grid";
+    this.members        = opts.members     || [];
+    this.readOnly       = opts.readOnly    || false;
+    this.positions      = opts.positions   || {};
+    this.onSave         = opts.onSave      || null;
     this.selectedMember = null;
   }
-
   cellLabel(idx) {
     const rows = ["Back","Mid","Front"];
     const cols = ["Left","Center","Right"];
     return `${rows[Math.floor(idx/3)]} ${cols[idx%3]}`;
   }
-
   render() {
     const container = document.getElementById(this.containerId);
     if (!container) return;
@@ -455,7 +420,6 @@ class FormationGrid {
           </div>
         </div>
       ` : ""}
-
       <div style="margin-bottom:0.5rem;display:flex;gap:1rem;align-items:center;">
         <div class="formation-grid" id="${this.containerId}-cells">
           ${Array.from({length:9},(_,i) => {
@@ -476,7 +440,6 @@ class FormationGrid {
           <div>➡️ Front row</div>
         </div>
       </div>
-
       ${!this.readOnly && this.onSave ? `
         <div class="flex gap-xs mt-md">
           <button class="btn btn-ghost btn-sm" onclick="window._fg_${this.containerId}.clearAll()">Clear Formation</button>
@@ -485,19 +448,15 @@ class FormationGrid {
       ` : ""}
     `;
   }
-
   selectMember(id) {
     this.selectedMember = this.selectedMember === id ? null : id;
     this.render();
   }
-
   clickCell(idx) {
     if (this.readOnly) return;
     if (this.positions[idx]) {
-      // clear cell
       delete this.positions[idx];
     } else if (this.selectedMember) {
-      // remove member from any existing cell first
       Object.keys(this.positions).forEach(k => {
         if (this.positions[k] === this.selectedMember) delete this.positions[k];
       });
@@ -506,18 +465,8 @@ class FormationGrid {
     }
     this.render();
   }
-
-  clearAll()    { this.positions = {}; this.render(); }
-  save()        { if (this.onSave) this.onSave({...this.positions}); }
-
-  load(positions = {}) {
-    this.positions = {...positions};
-    this.render();
-  }
-
-  mount() {
-    window[`_fg_${this.containerId}`] = this;
-    this.render();
-    return this;
-  }
+  clearAll() { this.positions = {}; this.render(); }
+  save()     { if (this.onSave) this.onSave({...this.positions}); }
+  load(positions = {}) { this.positions = {...positions}; this.render(); }
+  mount()    { window[`_fg_${this.containerId}`] = this; this.render(); return this; }
 }

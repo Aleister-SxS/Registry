@@ -1,13 +1,9 @@
 /* ============================================================
    TEAM REGISTRY — Shared App Logic (js/app.js)
    ============================================================ */
-
 // ── Config ────────────────────────────────────────────────
-// Set this to the date you last deployed to GitHub Pages
 const DEPLOY_DATE = "June 2026";
-
 const API_URL = "https://script.google.com/macros/s/AKfycbwK6orjm0KV2Kw9oOesh26WEI1pTUkXtwBQVFhAZ56bfZ47tf3bIa1w9d_9QOKv6_kI/exec";
-
 // ── Class data ────────────────────────────────────────────
 const CLASS_TREE = {
   T1: { label: "T1", subclasses: ["Mage","Warrior"] },
@@ -16,7 +12,6 @@ const CLASS_TREE = {
   T4: { label: "T4", subclasses: ["Conqueror","Guardian","Destroyer","Dominator"] },
   T5: { label: "T5", subclasses: ["Ravager","Templar","Magister","Prophet"] },
 };
-
 const CLASS_ICONS = {
   Mage:"🔮", Warrior:"⚔️", Duelist:"🗡️", Knight:"🛡️",
   Sorcerer:"✨", Sage:"📿", Berserker:"🪓", Paladin:"⚜️",
@@ -24,7 +19,6 @@ const CLASS_ICONS = {
   Destroyer:"💥", Dominator:"⚡", Ravager:"🔥", Templar:"✝️",
   Magister:"📖", Prophet:"🌟",
 };
-
 const TIMEZONES = [
   "UTC-12:00","UTC-11:00","UTC-10:00","UTC-09:00","UTC-08:00 (PST)",
   "UTC-07:00 (MST)","UTC-06:00 (CST)","UTC-05:00 (EST)","UTC-04:00",
@@ -33,7 +27,6 @@ const TIMEZONES = [
   "UTC+06:00","UTC+07:00","UTC+08:00 (CST)","UTC+09:00 (JST)",
   "UTC+10:00 (AEST)","UTC+11:00","UTC+12:00",
 ];
-
 const LANGUAGES = [
   "English","Spanish","Portuguese","French","German","Italian","Dutch",
   "Russian","Polish","Turkish","Arabic","Hindi","Bengali","Japanese",
@@ -41,29 +34,22 @@ const LANGUAGES = [
   "Thai","Indonesian","Malay","Filipino","Swedish","Norwegian","Danish",
   "Finnish","Czech","Slovak","Romanian","Hungarian","Greek","Other",
 ];
-
 // ── Session management ────────────────────────────────────
 const SESSION_KEY = "tr_session";
-
 function getSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }
   catch { return null; }
 }
-
 function setSession(data) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
-
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
-  // Clear broadcast collapse state so the banner shows expanded on next login
   Object.keys(sessionStorage).filter(k => k.startsWith("broadcast_collapsed_")).forEach(k => sessionStorage.removeItem(k));
 }
-
 function isLoggedIn() {
   return !!getSession();
 }
-
 // ── API calls ─────────────────────────────────────────────
 async function apiGet(params = {}) {
   if (API_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
@@ -71,7 +57,7 @@ async function apiGet(params = {}) {
   }
   const qs = new URLSearchParams(params).toString();
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
     const r = await fetch(`${API_URL}?${qs}`, { redirect: "follow", signal: controller.signal });
     clearTimeout(timeout);
@@ -87,7 +73,6 @@ async function apiGet(params = {}) {
     throw e;
   }
 }
-
 async function apiPost(body) {
   if (API_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
     throw new Error("API not configured. Please set your Apps Script URL in js/app.js");
@@ -95,7 +80,7 @@ async function apiPost(body) {
   const r = await fetch(API_URL, {
     method: "POST",
     redirect: "follow",
-    headers: { "Content-Type": "text/plain" }, // Apps Script requires text/plain to avoid CORS preflight
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(body),
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -103,9 +88,7 @@ async function apiPost(body) {
   if (!d.ok) throw new Error(d.error || "Request failed");
   return d;
 }
-
 // ── Power rating parser ───────────────────────────────────
-// Accepts "180k", "1.5m", "1800", etc. Returns integer.
 function parsePower(str) {
   if (!str && str !== 0) return "";
   const s = String(str).trim().toLowerCase();
@@ -116,10 +99,8 @@ function parsePower(str) {
   if (s.endsWith("k")) return Math.round(num * 1_000);
   return Math.round(num);
 }
-
 function formatPower(n) {
   if (!n && n !== 0) return "—";
-  // Handle strings like "180k", "1.5m" stored directly from user input
   let num = Number(n);
   if (isNaN(num)) {
     const s = String(n).trim().toLowerCase();
@@ -132,37 +113,30 @@ function formatPower(n) {
   if (num >= 1_000)     return (num / 1_000).toFixed(1).replace(/\.0$/,"") + "k";
   return String(num);
 }
-
 // ── Composition helpers ───────────────────────────────────
 function compClass(role) {
   return { Tank:"comp-tank", Support:"comp-support", DPS:"comp-dps" }[role] || "";
 }
-
 function renderComposition(comp) {
   if (!comp || !comp.length) return "";
   const arr = Array.isArray(comp) ? comp : String(comp).split(",").filter(Boolean);
   return arr.map(r => `<span class="comp-pill ${compClass(r)}">${esc(r)}</span>`).join("");
 }
-
 // ── Avatar initials ───────────────────────────────────────
 function initials(name) {
   return (name || "?").split(" ").map(w => w[0]).join("").toUpperCase().substring(0,2);
 }
-
 // ── Escape HTML ───────────────────────────────────────────
 function esc(s) {
   return String(s ?? "")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-
 // ── Show/hide element ─────────────────────────────────────
 function show(el)  { if (el) { el.classList.remove("hidden"); el.style.display = ""; } }
 function hide(el)  { if (el) { el.classList.add("hidden");    el.style.display = "none"; } }
 function toggle(el){ if (el) { if (el.style.display === "none" || el.classList.contains("hidden")) { show(el); } else { hide(el); } } }
-
 function el(id)    { return document.getElementById(id); }
-
 // ── Alert helpers ─────────────────────────────────────────
 function showAlert(id, msg, type = "error") {
   const el_ = typeof id === "string" ? el(id) : id;
@@ -175,13 +149,10 @@ function clearAlert(id) {
   const el_ = typeof id === "string" ? el(id) : id;
   if (el_) { el_.textContent = ""; el_.classList.add("hidden"); }
 }
-
 // ── Toast ─────────────────────────────────────────────────
 let toastTimer = null;
 let _processingTimer = null;
 let _processingStart = 0;
-
-// Global processing overlay — auto-creates if not present on the page
 function showProcessing(title = "Processing…", sub = "Please wait and stay on this page.") {
   let ov = document.getElementById("global-processing-overlay");
   if (!ov) {
@@ -198,10 +169,9 @@ function showProcessing(title = "Processing…", sub = "Please wait and stay on 
   ov.style.display = "flex";
   _processingStart = Date.now();
 }
-
 function hideProcessing(successMsg, successType = "success") {
   const elapsed = Date.now() - _processingStart;
-  const minHold = 2000; // 2 second minimum
+  const minHold = 2000;
   const delay   = Math.max(0, minHold - elapsed);
   clearTimeout(_processingTimer);
   _processingTimer = setTimeout(() => {
@@ -235,10 +205,8 @@ function toast(msg, type = "success", duration = 3500) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.style.opacity = "0"; }, duration);
 }
-
 // ── Confirm modal ─────────────────────────────────────────
 let confirmCallback = null;
-
 function confirm_(title, body, cb, danger = true) {
   const overlay = el("confirm-modal");
   if (!overlay) { if (window.confirm(`${title}\n${body}`)) cb(); return; }
@@ -250,36 +218,35 @@ function confirm_(title, body, cb, danger = true) {
   confirmCallback = cb;
   overlay.classList.add("open");
 }
-
 function closeConfirmModal() {
   const overlay = el("confirm-modal");
   if (overlay) overlay.classList.remove("open");
   confirmCallback = null;
 }
-
 // ── Nav builder ───────────────────────────────────────────
 function buildNav(activePage, opts = {}) {
   const session = getSession();
-  // Redirect unauthenticated users away from protected pages
   const alwaysPublic = ['register.html', 'admin.html', 'team.html', ''];
   if (!session && !alwaysPublic.includes(activePage)) {
     window.location.replace('register.html');
     return;
   }
   const pages = [
-    { href: "index.html",    label: "Team Registry",  requiresAuth: true },
-    { href: "players.html",  label: "Guild Members",  requiresAuth: true },
+    { href: "index.html",     label: "Team Registry",  requiresAuth: true },
+    { href: "players.html",   label: "Guild Members",  requiresAuth: true },
     { href: "invites.html",   label: "Your Invites",   requiresAuth: true },
-    { href: "messages.html", label: "Your Messages",  requiresAuth: true },
-    { href: "your-team.html",label: "Your Teams",     requiresAuth: true },
+    { href: "messages.html",  label: "Your Messages",  requiresAuth: true },
+    { href: "your-team.html", label: "Your Teams",     requiresAuth: true },
   ];
-
   const links = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const badge  = p.href === "messages.html" ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "invites.html" ? `<span id="nav-inv-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
+    const badge  = p.href === "messages.html"
+      ? `<span id="nav-dm-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>`
+      : p.href === "invites.html"
+      ? `<span id="nav-inv-badge" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>`
+      : "";
     return `<a href="${p.href}" class="nav-link${active}">${p.label}${badge}</a>`;
   }).join("");
-
   const rightHtml = session
     ? `<div class="nav-dropdown-wrap" id="nav-user-wrap">
         <button class="session-tag" onclick="toggleNavDropdown()" title="Account menu"
@@ -296,14 +263,15 @@ function buildNav(activePage, opts = {}) {
         </div>
       </div>`
     : "";
-
-  // Mobile hamburger menu items
   const mobileLinks = pages.filter(p => !p.requiresAuth || session).map(p => {
     const active = p.href === activePage ? " active" : "";
-    const mbadge = p.href === "messages.html" ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>` : p.href === "invites.html" ? `<span id="nav-inv-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>` : "";
+    const mbadge = p.href === "messages.html"
+      ? `<span id="nav-dm-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:8px;vertical-align:middle;">●</span>`
+      : p.href === "invites.html"
+      ? `<span id="nav-inv-badge-mobile" style="display:none;margin-left:5px;background:#e24b4a;color:#fff;font-size:0.55rem;font-weight:700;padding:2px 5px;border-radius:8px;vertical-align:middle;min-width:16px;text-align:center;">0</span>`
+      : "";
     return `<a href="${p.href}" class="mobile-nav-link${active}">${p.label}${mbadge}</a>`;
   }).join("");
-
   const mobileUserSection = session
     ? `<div class="mobile-nav-user">
         ${session.avatarUrl
@@ -318,7 +286,6 @@ function buildNav(activePage, opts = {}) {
       <a href="profile.html?id=${session.id}" class="mobile-nav-link">👤 View Profile</a>
       <div class="mobile-nav-link mobile-nav-danger" onclick="navLogout()">🚪 Log Out</div>`
     : `<a href="register.html" class="mobile-nav-link">Log In / Register</a>`;
-
   const navHtml = `
     <nav id="site-nav">
       <a href="${session ? 'index.html' : 'register.html'}" class="nav-logo">
@@ -332,7 +299,6 @@ function buildNav(activePage, opts = {}) {
         </button>
       </div>
     </nav>
-    <!-- Mobile drawer -->
     <div class="mobile-nav-overlay" id="mobile-nav-overlay" onclick="closeHamburger()"></div>
     <div class="mobile-nav-drawer" id="mobile-nav-drawer">
       <div class="mobile-nav-header">
@@ -357,7 +323,6 @@ function buildNav(activePage, opts = {}) {
       </div>
     </div>
   `;
-
   const footerHtml = `
     <footer id="site-footer" style="margin-top:auto;background:var(--bg2);border-top:1px solid var(--border);
       padding:0.875rem 2rem;font-size:0.72rem;color:var(--text3);
@@ -368,34 +333,25 @@ function buildNav(activePage, opts = {}) {
       <a href="admin.html" style="color:var(--text3);font-size:0.65rem;opacity:0.5;transition:opacity 0.15s;"
         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">Admin</a>
     </footer>`;
-
-  // Guard: only inject nav/footer once — prevents duplication on repeated buildNav calls
   if (!document.getElementById("site-nav")) {
     document.body.insertAdjacentHTML("afterbegin", navHtml);
   }
   if (!document.getElementById("site-footer")) {
     document.body.insertAdjacentHTML("beforeend", footerHtml);
   }
-  // Make body flex-column so footer sticks to bottom
   document.body.style.display = "flex";
   document.body.style.flexDirection = "column";
   document.body.style.minHeight = "100vh";
   const mainEl = document.querySelector("main");
   if (mainEl) mainEl.style.flex = "1";
-
-  // ── Active broadcast banner ──────────────────────────────
-  // Only show to logged-in members; skip on admin page
   if (!document.getElementById("broadcast-banner") && activePage !== "admin.html" && getSession()) {
     apiGet({ action: "getActiveBroadcast" }).then(d => {
       if (!d.broadcast || !d.broadcast.message) return;
       const broadcastId = d.broadcast.id || "broadcast";
       const collapseKey = "broadcast_collapsed_" + broadcastId;
-      const isCollapsed = sessionStorage.getItem(collapseKey) === "1";
-
       const banner = document.createElement("div");
       banner.id = "broadcast-banner";
       banner.style.cssText = "background:var(--amber-dim);border-bottom:1px solid var(--amber-mid);color:var(--amber);font-size:0.84rem;";
-
       function renderBanner() {
         const collapsed = sessionStorage.getItem(collapseKey) === "1";
         if (collapsed) {
@@ -409,35 +365,27 @@ function buildNav(activePage, opts = {}) {
           </div>`;
         }
       }
-
       window._broadcastCollapse = () => { sessionStorage.setItem(collapseKey, "1"); renderBanner(); };
       window._broadcastExpand   = () => { sessionStorage.removeItem(collapseKey); renderBanner(); };
-
       renderBanner();
       const nav = document.getElementById("site-nav");
       if (nav) nav.insertAdjacentElement("afterend", banner);
     }).catch(() => {});
   }
-
-  // ── Nav badges: unread DMs + pending invites/requests ────────
   if (session && activePage !== "messages.html") {
     apiGet({ action: "getAll", memberId: session.id }).then(d => {
-      // ── DM badge ──
       if (d.unreadDMs > 0) {
         const badge    = document.getElementById("nav-dm-badge");
         const badgeMob = document.getElementById("nav-dm-badge-mobile");
         if (badge)    badge.style.display    = "inline";
         if (badgeMob) badgeMob.style.display = "inline";
       }
-      // ── Invite/request badge (skip on invites.html — user is already there) ──
       if (activePage !== "invites.html") {
         const requests = d.requests || [];
         const teams    = d.teams    || [];
-        // Pending invites received by this user
         const pendingInvites = requests.filter(r =>
           r.type === "invite" && r.toId === session.id && r.status === "pending"
         ).length;
-        // Pending join requests to teams this user captains
         const pendingJoins = requests.filter(r =>
           r.type === "join" && r.status === "pending" &&
           teams.some(t => t.captainId === session.id && t.id === r.teamId)
@@ -453,17 +401,13 @@ function buildNav(activePage, opts = {}) {
     }).catch(() => {});
   }
 }
-
 // ── Cascading class selector ──────────────────────────────
 function buildClassSelector(tierSelId, subSelId) {
   const tierSel = el(tierSelId);
   const subSel  = el(subSelId);
   if (!tierSel || !subSel) return;
-
-  // populate tier
   tierSel.innerHTML = `<option value="">— Select Tier —</option>` +
     Object.keys(CLASS_TREE).map(t => `<option value="${t}">${t}</option>`).join("");
-
   tierSel.addEventListener("change", () => {
     const tier = tierSel.value;
     if (!tier) {
@@ -476,46 +420,36 @@ function buildClassSelector(tierSelId, subSelId) {
       subs.map(s => `<option value="${s}">${s}</option>`).join("");
     subSel.disabled = false;
   });
-
-  // reset sub if user blurs without picking
   tierSel.addEventListener("blur", () => {
     if (!tierSel.value) {
       subSel.innerHTML = `<option value="">— Select Class —</option>`;
       subSel.disabled = true;
     }
   });
-
   subSel.disabled = true;
 }
-
 // ── Composition selector ──────────────────────────────────
 function buildCompSelector(containerId, maxSlots = 4) {
   const container = el(containerId);
   if (!container) return;
-  let selected = []; // array of role strings, can repeat
-
+  let selected = [];
   const roles = ["Tank","Support","DPS"];
   const classMap = { Tank:"sel-tank", Support:"sel-support", DPS:"sel-dps" };
-
   function render() {
     const countEl = el(containerId + "-count");
     if (countEl) countEl.textContent = `${selected.length} / ${maxSlots} selected`;
   }
-
   container.innerHTML = roles.map(r =>
     `<button type="button" class="comp-btn" data-role="${r}"
        onclick="window._compToggle_${containerId}('${r}')">${r}</button>`
   ).join("");
-
   window[`_compToggle_${containerId}`] = function(role) {
     const idx = selected.lastIndexOf(role);
     if (idx >= 0 && selected.filter(r=>r===role).length > 0) {
-      // remove one instance
       selected.splice(idx,1);
     } else if (selected.length < maxSlots) {
       selected.push(role);
     }
-    // update button visual
     roles.forEach(r => {
       const btn = container.querySelector(`[data-role="${r}"]`);
       if (!btn) return;
@@ -525,12 +459,10 @@ function buildCompSelector(containerId, maxSlots = 4) {
     });
     render();
   };
-
   return {
     get: () => [...selected],
     set: (arr) => {
       selected = arr ? [...arr] : [];
-      // replay toggles
       selected.forEach(r => {
         const btn = container.querySelector(`[data-role="${r}"]`);
         if (btn) {
@@ -543,7 +475,6 @@ function buildCompSelector(containerId, maxSlots = 4) {
     },
   };
 }
-
 // ── Populate select with array ────────────────────────────
 function populateSelect(selId, options, placeholder = "— Select —") {
   const s = el(selId);
@@ -554,36 +485,29 @@ function populateSelect(selId, options, placeholder = "— Select —") {
       : `<option value="${esc(o.value)}">${esc(o.label)}</option>`
     ).join("");
 }
-
 // ── Page ready helper ─────────────────────────────────────
 function onReady(fn) {
   if (document.readyState !== "loading") fn();
   else document.addEventListener("DOMContentLoaded", fn);
 }
-
 function toggleNavDropdown() {
   const dd = document.getElementById("nav-dropdown");
   if (dd) dd.classList.toggle("open");
 }
-
 function toggleHamburger() {
   document.getElementById("mobile-nav-drawer").classList.toggle("open");
   document.getElementById("mobile-nav-overlay").classList.toggle("open");
 }
-
 function closeHamburger() {
   document.getElementById("mobile-nav-drawer")?.classList.remove("open");
   document.getElementById("mobile-nav-overlay")?.classList.remove("open");
 }
-
 function navLogout() {
   confirm_("Log Out", "Are you sure you want to log out?", () => {
     clearSession();
     location.href = "register.html";
   }, false);
 }
-
-// Close dropdown when clicking outside
 document.addEventListener("click", e => {
   const wrap = document.getElementById("nav-user-wrap");
   if (wrap && !wrap.contains(e.target)) {
@@ -591,9 +515,7 @@ document.addEventListener("click", e => {
     if (dd) dd.classList.remove("open");
   }
 });
-
 // ── Avatar presets ────────────────────────────────────────
-// Fantomon portrait images from EOG.GG
 const AVATAR_PRESETS = [
   { id: "aegiswing",  label: "Aegiswing",  url: "https://eog.gg/assets/sxs/fantomons/aegiswing.webp",  desc: "RAINBOW · At the start of battle, grants the character Guardian Angel for 3 turns. When this status expires, restores 50% of their lost HP and grants them Power Unsealed for the entire battle. Reduces DMG taken from Taunted enemies." },
   { id: "nyxarchon",  label: "Nyxarchon",  url: "https://eog.gg/assets/sxs/fantomons/nyxarchon.webp",  desc: "RAINBOW · When a damaging Technique is used on enemies, deals Dark DMG once to one of the targets and all enemies 2 grids around, with a 100% chance to inflict 1 stack of 10% DEF Reduction (max 3 stacks) for 2 turns. Killing an enemy deals additional Dark DMG once to all enemies within 2 grids of the target." },
@@ -602,15 +524,13 @@ const AVATAR_PRESETS = [
   { id: "boaro",      label: "Boaro",      url: "https://eog.gg/assets/sxs/fantomons/boaro.webp",      desc: "SR · Triggers when the caster cumulatively loses 15% of max HP, granting a shield based on the caster's DEF. Can trigger up to 5 times per battle. Crash deals Physical DMG once to 1 enemy within 1 grid. Mountain Charge deals Physical DMG once to 1 enemy within 1 grid with a 100% base chance to knock them back by 1 grid." },
   { id: "armopi",     label: "Armopi",     url: "https://eog.gg/assets/sxs/fantomons/armopi.webp",     desc: "SSR · Grants 1 stack of DEF Up at the end of the caster's turn. At 3 stacks, removes all stacks to grant a shield based on the caster's DEF. Dash deals Physical DMG once to 1 enemy within 1 grid. Heavy Protection grants a shield based on the Fantomon's DEF to the owner within 2 grids, lasting 2 turns." },
   { id: "falko",      label: "Falko",      url: "https://eog.gg/assets/sxs/fantomons/falko.webp",      desc: "SR · When a damaging Technique is used on enemies, deals Physical DMG once to one of the targets and all enemies 1 grid around. Golden Feather deals Physical DMG once to 1 enemy within 4 grids. Golden Storm deals Physical DMG 3 times to all enemies within a 1-grid square area around a target grid within 4 grids." },
-  { id: "zeioletus",  label: "Zeioletus",  url: "https://eog.gg/assets/sxs/fantomons/zeioletus.webp",  desc: "SSR · When a damaging Technique is used on enemies, deals Light DMG once to one of the targets and all enemies 1 grid around, knocking them airborne. Can trigger only twice every 2 turns. Aura Shot deals Light DMG once to 1 enemy within 4 grids. Bolt from the Blue deals Light DMG once to all enemies within a 1-grid square area around a target grid within 6 grids and knocks them airborne. (Deals 20% more DMG to large targets.)" },
+  { id: "zeioletus",  label: "Zeioletus",  url: "https://eog.gg/assets/sxs/fantomons/zeioletus.webp",  desc: "SSR · When a damaging Technique is used on enemies, deals Light DMG once to one of the targets and all enemies 1 grid around, knocking them airborne. Can trigger only twice every 2 turns. Aura Shot deals Light DMG once to 1 enemy within 4 grids. Bolt from the Blue deals Light DMG once to all enemies within a 1-grid square area around a target grid within 6 grids and knocks them airborne." },
   { id: "kels",       label: "Kels",       url: "https://eog.gg/assets/sxs/fantomons/kels.webp",       desc: "SSR · When a damaging Technique is used on enemies, deals Water DMG once to one of the targets and randomly dispels 1 buff. Can trigger only once per turn. Water Orb deals Water DMG once to 1 enemy within 4 grids. Water Drill deals Water DMG once to all enemies in a 1×4 grid area in front of the caster, with a 50% base chance to reduce their DEF by 20% for 2 turns." },
   { id: "sylvaerie",  label: "Sylvaerie",  url: "https://eog.gg/assets/sxs/fantomons/sylvaerie.webp",  desc: "SSR · Increases the caster's ATK and SPD for 1 turn after the caster's turn ends. Glow Glob deals Wind DMG once to 1 enemy within 4 grids. Slow Wind Shot deals Wind DMG once to 1 enemy within 4 grids, with a 60% base chance to delay the target's action by 15%." },
   { id: "terragon",   label: "Terragon",   url: "https://eog.gg/assets/sxs/fantomons/terragon.webp",   desc: "SSR · When a damaging Technique is used on enemies, deals Physical DMG once to one of the targets, with a 50% base chance to reduce their ATK by 25% for 1 turn. Can trigger only once per turn. Tail Lash deals Physical DMG once to 1 enemy within 1 grid. Falling Sand deals Physical DMG once to all enemies in a 3×2 grid area in front, with a 50% base chance to reduce their DMG by 15% for 2 turns." },
   { id: "chomosuke",  label: "Chomosuke",  url: "https://eog.gg/assets/sxs/fantomons/chomusuke.webp",  desc: "SR · When a character casts a damaging Technique on enemy targets, Chomosuke enables the character to launch an extra attack, dealing Physical DMG once to all enemies within 1 grid of a hit target, with a 50% base chance to reduce their DEF by 15% for 1 turn. Can trigger only once per turn." },
   { id: "pandarial",  label: "Pandarial",  url: "https://eog.gg/assets/sxs/fantomons/pandarial.webp",  desc: "RAINBOW · At the start of battle, reduces the CD of all Techniques by 1 turn and grants a DMG Boost for the entire battle. Bamboo Gale deals Physical DMG once to 1 enemy within 4 grids, with a 50% chance to deal 1.5x DMG. Verdant Spikes deals Physical DMG once to all enemies within 1 grid of a target within 4 grids, with a 100% base chance to inflict Fragility for 1 turn. Heals allies within 4 grids once at turn start." },
 ];
-
-// Render an avatar — image if set, initials fallback
 function renderAvatar(member, sizeClass) {
   if (member && member.avatarUrl) {
     return `<img src="${esc(member.avatarUrl)}" alt="${esc(member.name||'')}"
@@ -620,17 +540,13 @@ function renderAvatar(member, sizeClass) {
   }
   return `<div class="avatar ${sizeClass}">${initials(member ? member.name : "?")}</div>`;
 }
-
-// Build the avatar picker modal HTML — call once, append to body
 function buildAvatarPicker(onSelect) {
   const existing = document.getElementById("avatar-picker-modal");
   if (existing) existing.remove();
-
   const html = `
     <div class="modal-overlay" id="avatar-picker-modal">
       <div class="modal" style="max-width:520px;">
         <div class="modal-title" style="margin-bottom:1rem;">Choose Your Avatar</div>
-        
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">
           ${AVATAR_PRESETS.map(p => `
             <div onclick="window._avatarPickerSelect('${p.id}')"
@@ -650,13 +566,10 @@ function buildAvatarPicker(onSelect) {
         </div>
       </div>
     </div>`;
-
   document.body.insertAdjacentHTML("beforeend", html);
   window._avatarPickerCurrent = null;
   window._avatarPickerCallback = onSelect;
-
   window._avatarPickerSelect = (id) => {
-    // Clear previous selection
     AVATAR_PRESETS.forEach(p => {
       const opt = document.getElementById("ap-opt-" + p.id);
       if (opt) opt.style.borderColor = "var(--border)";
@@ -667,17 +580,14 @@ function buildAvatarPicker(onSelect) {
     document.getElementById("ap-confirm-btn").disabled = false;
   };
 }
-
 function openAvatarPicker(onSelect) {
   buildAvatarPicker(onSelect);
   document.getElementById("avatar-picker-modal").classList.add("open");
 }
-
 function closeAvatarPicker() {
   const m = document.getElementById("avatar-picker-modal");
   if (m) m.remove();
 }
-
 function confirmAvatarPick() {
   const id = window._avatarPickerCurrent;
   if (!id) return;
@@ -687,29 +597,23 @@ function confirmAvatarPick() {
   }
   closeAvatarPicker();
 }
-
 // ── Translation via MyMemory (free, no key needed) ───────
 async function translateText(text, targetLang) {
-  // Take first language if comma-separated (e.g. "French,English,Spanish" → "French")
   const firstLang = (targetLang || "English").split(",")[0].trim();
   const targetCode = getLangCode(firstLang);
-  // MyMemory: autodetect|targetCode for source auto-detection
   const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=autodetect|${targetCode}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error("Translation service unavailable.");
   const d = await r.json();
   if (!d.responseData) throw new Error("Translation failed.");
   if (d.responseStatus === 429) throw new Error("Translation limit reached for today.");
-  // Check for API error messages returned as text
   const result = d.responseData.translatedText;
   if (!result || result.toUpperCase().includes("INVALID LANGUAGE") || result.toUpperCase().includes("PLEASE SELECT")) {
     throw new Error("Translations default to English. Translation to other languages is not currently available.");
   }
-  // If result matches input, already in target language
   if (result.trim().toLowerCase() === text.trim().toLowerCase()) return null;
   return result;
 }
-
 function getLangCode(langName) {
   const map = {
     "English":"en","Spanish":"es","Portuguese":"pt","French":"fr","German":"de",
@@ -722,4 +626,61 @@ function getLangCode(langName) {
     "Hungarian":"hu","Greek":"el","Other":"en",
   };
   return map[langName] || "en";
+}
+
+// ── Firebase Cloud Messaging (Push Notifications) ─────────
+const FCM_VAPID_KEY = "BDti-1Md7DxmA-s6jtzWFUX7Jda7QRKjjZCDAKJUiwvPIFTE7sGUXhGiDBtmuH_QKq5nKP0OIg25snDbEhLgmT0";
+const FCM_CONFIG = {
+  apiKey: "AIzaSyAZ_kiSp1apPNv_nNRVYJClPEjYat9cnoU",
+  authDomain: "berserk-guild-13995.firebaseapp.com",
+  projectId: "berserk-guild-13995",
+  storageBucket: "berserk-guild-13995.firebasestorage.app",
+  messagingSenderId: "997019575170",
+  appId: "1:997019575170:web:d03514993128ef69b4a59b",
+};
+
+// Call once after login/register to request permission and register FCM token
+async function registerPushNotifications() {
+  try {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    const session = getSession();
+    if (!session) return;
+
+    // Load Firebase scripts dynamically
+    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
+    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+
+    if (!firebase.apps.length) firebase.initializeApp(FCM_CONFIG);
+    const messaging = firebase.messaging();
+
+    // Register service worker
+    const reg = await navigator.serviceWorker.register("/Registry/firebase-messaging-sw.js");
+
+    // Request permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+
+    // Get FCM token
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!token) return;
+
+    // Only save if token changed
+    const savedToken = localStorage.getItem("fcm_token");
+    if (token === savedToken) return;
+
+    await apiPost({ action: "saveFcmToken", memberId: session.id, captainKey: session.captainKey, fcmToken: token });
+    localStorage.setItem("fcm_token", token);
+  } catch(e) {
+    // Silently fail — push is non-critical
+    console.warn("FCM registration failed:", e);
+  }
+}
+
+function _loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }

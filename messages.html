@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <title>Your Messages — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061514" />
+<link rel="stylesheet" href="css/style.css?v=2026061901" />
 <style>
 /* ── Full-bleed layout ─────────────────────────────────────────── */
 main{max-width:100% !important;margin:0 !important;padding:0 !important;
@@ -178,7 +178,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061514"></script>
+<script src="js/app.js?v=2026061901"></script>
 <script>onReady(() => buildNav("messages.html"));</script>
 <main style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
 
@@ -270,6 +270,7 @@ onReady(async ()=>{
   renderConvoList();
 
   if(toId) await openThread(toId);
+  startPolling();
 });
 
 // ── Conversations ──────────────────────────────────────────────
@@ -460,6 +461,60 @@ function dmNewSearch(){
   }).join("");
 }
 function startDM(memberId){closeDMNewModal();openThread(memberId);}
+
+// ── Auto-refresh polling ───────────────────────────────────
+let _pollTimer = null;
+const POLL_INTERVAL_MS = 15000; // 15 seconds
+
+function startPolling() {
+  stopPolling();
+  _pollTimer = setInterval(pollForUpdates, POLL_INTERVAL_MS);
+}
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+async function pollForUpdates() {
+  if (!session) return;
+  try {
+    // Refresh inbox for unread counts
+    const d = await apiPost({ action: "getInbox", memberId: session.id, captainKey: session.captainKey });
+    const fresh = d.convos || [];
+
+    // Check if active thread has new messages
+    if (activeWithId) {
+      const freshConvo = fresh.find(c => c.withId === activeWithId);
+      const oldConvo   = convos.find(c => c.withId === activeWithId);
+      const hadUnread  = oldConvo?.unread || 0;
+      const nowUnread  = freshConvo?.unread || 0;
+      if (nowUnread > hadUnread || (freshConvo && freshConvo.lastTime !== oldConvo?.lastTime)) {
+        // Fetch the actual new messages
+        try {
+          const td = await apiPost({ action: "getDMs", memberId: session.id, captainKey: session.captainKey, withMemberId: activeWithId });
+          const newMsgs = td.dms || [];
+          const oldCount = (dmCache[activeWithId] || []).length;
+          dmCache[activeWithId] = newMsgs;
+          if (newMsgs.length > oldCount) {
+            renderThread();
+          }
+          if (freshConvo) freshConvo.unread = 0;
+        } catch(_) {}
+      }
+    }
+
+    // Update sidebar unread badges for non-active convos
+    convos = fresh;
+    if (activeWithId) {
+      const ac = convos.find(c => c.withId === activeWithId);
+      if (ac) ac.unread = 0;
+    }
+    renderConvoList();
+  } catch(_) {}
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopPolling();
+  else startPolling();
+});
 </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Create a Team — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512" />
+<link rel="stylesheet" href="css/style.css?v=2026061901" />
 <style>
   .comp-role-btn {
     display: flex; align-items: center; gap: 8px;
@@ -54,30 +54,26 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061512"></script>
+<script src="js/app.js?v=2026061901"></script>
 <script>onReady(() => buildNav(""));</script>
 <main>
 <div class="form-wrap">
-
   <div id="access-denied" class="empty" style="display:none;">
     <div class="empty-icon">🔒</div>
     <h3>Not logged in</h3>
     <p>You need to be logged in to create a team.</p>
     <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
-
   <div id="create-form" style="display:none;">
     <div class="form-card">
       <div class="form-title">Create a Team</div>
       <div class="form-subtitle">Set up your team. You'll be the default Team Captain and can manage membership after creation.</div>
-
       <div class="form-section-label">Team Identity</div>
       <div class="field">
         <label>Team Name</label>
         <input id="ct-name" placeholder="Team Phantom"
           style="background:var(--surface2);border-color:var(--border3);" />
       </div>
-
       <div class="form-section-label">Ideal Composition</div>
       <div class="field">
         <label>Add roles to build your lineup <span class="optional">(up to 4 total)</span></label>
@@ -89,7 +85,6 @@
         <div class="comp-slots" id="comp-slots"></div>
         <div class="comp-note mt-sm" id="comp-count">0 / 4 roles selected</div>
       </div>
-
       <div class="form-section-label">Playstyle &amp; Requirements</div>
       <div class="field">
         <label>Team Playstyle</label>
@@ -114,7 +109,6 @@
           <input id="ct-level" type="number" placeholder="e.g. 40" min="1" />
         </div>
       </div>
-
       <div class="form-section-label">Preferences</div>
       <div class="field">
         <div class="toggle-row">
@@ -138,19 +132,16 @@
         <label>Preferred Language</label>
         <select id="ct-lang"><option value="">— No preference —</option></select>
       </div>
-
       <div id="ct-error" class="alert alert-error alert-hidden mt-md"></div>
       <button class="btn btn-primary btn-full mt-md" onclick="doCreateTeam()">Create Team</button>
     </div>
   </div>
-
   <!-- Success -->
   <div id="create-success" style="display:none;">
     <div class="form-card">
       <div class="alert alert-success mb-md">🎉 Team created! You are the Team Captain.</div>
       <div style="font-size:1.15rem;font-weight:700;margin-bottom:0.3rem;" id="new-team-name-display"></div>
       <p class="text-sm text-muted mb-lg">Your team is now live. Here's what you can do next:</p>
-
       <a id="btn-view-team" href="#" class="success-option">
         <div class="success-option-icon">🏆</div>
         <div><div class="success-option-label">Visit Team Profile</div><div class="success-option-sub">See how your team looks to other members</div></div>
@@ -169,24 +160,20 @@
       </a>
     </div>
   </div>
-
 </div>
 </main>
-
 <!-- Submission lock overlay -->
 <div class="submit-overlay" id="submit-overlay">
   <div class="submit-spinner"></div>
   <div class="submit-overlay-title">Processing Your Submission</div>
   <div class="submit-overlay-sub">Stay on this page…</div>
 </div>
-
 <script>
 const compSelected = [];
 const MAX_COMP = 4;
 const ROLE_ICONS  = { Tank:"🛡️", Support:"➕", DPS:"⚔️" };
 const ROLE_CLASS  = { Tank:"tank", Support:"support", DPS:"dps" };
 const ROLE_BTN_CLS= { Tank:"active-tank", Support:"active-support", DPS:"active-dps" };
-
 function compAdd(role) {
   if (compSelected.length >= MAX_COMP) return;
   compSelected.push(role);
@@ -210,7 +197,6 @@ function compRender() {
     </div>`
   ).join("");
 }
-
 onReady(() => {
   populateSelect("ct-lang", LANGUAGES, "— No preference —");
   const session = getSession();
@@ -218,12 +204,10 @@ onReady(() => {
   show(el("create-form"));
   compRender();
 });
-
 async function doCreateTeam() {
   clearAlert("ct-error");
   const session = getSession();
   if (!session) { showAlert("ct-error","You must be logged in."); return; }
-
   const name        = el("ct-name").value.trim();
   const playstyle   = el("ct-playstyle").value;
   const rawDesc     = el("ct-desc").value.trim();
@@ -234,9 +218,7 @@ async function doCreateTeam() {
   const needCaptain = el("ct-need-captain").checked;
   const rawLang     = el("ct-lang").value;
   const prefLang    = rawLang || "Any Language";
-
   if (!name) { showAlert("ct-error","Team name is required."); return; }
-
   showProcessing("Creating Your Team…");
   try {
     const res = await apiPost({

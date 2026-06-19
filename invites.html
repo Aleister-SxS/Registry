@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Your Invites — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061512" />
+<link rel="stylesheet" href="css/style.css?v=2026061901" />
 <style>
 /* ── Page layout ─────────────────────────────────────────────── */
 .inv-page{max-width:900px;margin:0 auto;}
@@ -90,7 +90,7 @@
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061512"></script>
+<script src="js/app.js?v=2026061901"></script>
 <script>onReady(()=>buildNav("invites.html"));</script>
 <main>
 <div class="inv-page">
@@ -128,7 +128,14 @@
         <div class="inv-stat-icon">📨</div>
         <div>
           <div class="inv-stat-val" id="stat-inv-val">0</div>
-          <div class="inv-stat-label">Team Invites</div>
+          <div class="inv-stat-label">Team Invites Received</div>
+        </div>
+      </div>
+      <div class="inv-stat" id="stat-outinvites">
+        <div class="inv-stat-icon">📮</div>
+        <div>
+          <div class="inv-stat-val" id="stat-outinv-val">0</div>
+          <div class="inv-stat-label">Invites You've Sent</div>
         </div>
       </div>
       <div class="inv-stat" id="stat-requests">
@@ -165,6 +172,16 @@
         <span class="inv-chevron">▼</span>
       </div>
       <div class="inv-section-bd" id="bd-requests"></div>
+    </div>
+
+    <!-- Outgoing Invites (captain sent) -->
+    <div class="inv-section" id="sec-outinvites">
+      <div class="inv-section-hd" onclick="toggleSec('sec-outinvites')">
+        <span class="inv-section-title">📮 Invites You've Sent</span>
+        <span id="outinv-badge" class="inv-section-badge" style="display:none;"></span>
+        <span class="inv-chevron">▼</span>
+      </div>
+      <div class="inv-section-bd" id="bd-outinvites"></div>
     </div>
 
     <!-- Captain: Join Requests to Your Teams -->
@@ -364,6 +381,35 @@ function renderInvites(){
     el("bd-requests").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📤</div><div class="inv-empty-text">No pending join requests.</div></div>`;
   }
 
+  // ── Outgoing Invites (captain sent) ────────────────────────
+  const outInvites=allRequests.filter(r=>r.type==="invite"&&r.fromId===m.id&&r.status==="pending");
+  setStat("stat-outinvites",outInvites.length);
+  const outInvBadge=el("outinv-badge");
+  if(outInvites.length){
+    outInvBadge.textContent=outInvites.length;show(outInvBadge);
+    el("bd-outinvites").innerHTML=outInvites.map(r=>{
+      const toMember=allMembers.find(mb=>mb.id===r.toId);
+      const team=allTeams.find(t=>t.id===r.teamId);
+      return`<div class="inv-row" data-req-id="${r.id}">
+        <div class="inv-row-avatar">${memberAvatar(toMember,40)}</div>
+        <div class="inv-row-info">
+          <div class="inv-row-name">${toMember?esc(toMember.name):"Unknown Member"}</div>
+          <div class="inv-row-sub">
+            ${toMember?.gamertag?`<span style="font-family:var(--mono);font-size:0.7rem;color:var(--text3);">${esc(String(toMember.gamertag))}</span><span style="color:var(--border2);">·</span>`:""}
+            <span>Invited to <strong style="color:var(--text);">${esc(r.teamName||team?.name||"your team")}</strong></span>
+            <span class="inv-waiting">⏳ Awaiting response</span>
+          </div>
+        </div>
+        <div class="inv-row-actions">
+          <button class="btn btn-ghost btn-sm" onclick="cancelOutInvite('${r.id}')">Revoke</button>
+        </div>
+      </div>`;
+    }).join("");
+  }else{
+    hide(outInvBadge);
+    el("bd-outinvites").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📮</div><div class="inv-empty-text">No pending outgoing invites.</div></div>`;
+  }
+
   // ── Captain: Join Requests ────────────────────────────────────
   const jrqBadge=el("jrq-badge");
   if(!capTeams.length){
@@ -531,6 +577,18 @@ async function cancelRequest(reqId){
     if(r)r.status="cancelled";
     toast("Request cancelled.","info",2000);
     setTimeout(()=>renderInvites(),1200);
+  }catch(e){renderInvites();toast(e.message,"error");}
+}
+
+async function cancelOutInvite(reqId){
+  const session=getSession();if(!session)return;
+  showRowFeedback(reqId,"Revoking…");
+  try{
+    await apiPost({action:"cancelRequest",memberId:session.id,captainKey:session.captainKey,requestId:reqId});
+    const r=allRequests.find(x=>x.id===reqId);
+    if(r)r.status="cancelled";
+    toast("Invite revoked.","info",2000);
+    setTimeout(()=>renderInvites(),1000);
   }catch(e){renderInvites();toast(e.message,"error");}
 }
 </script>
