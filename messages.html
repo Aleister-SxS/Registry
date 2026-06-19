@@ -76,6 +76,9 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
   color:var(--text);border-bottom-left-radius:3px;}
 .dm-bubble.mine{background:var(--blue);color:#fff;border-bottom-right-radius:3px;}
 .dm-bubble-time{font-size:0.62rem;color:var(--text3);margin-top:2px;}
+.dm-bubble.emoji-only{background:none !important;border:none !important;
+  padding:2px 4px;font-size:2.2rem;line-height:1.2;}
+
 
 /* ── Compose area — sticky to bottom, survives virtual keyboard ── */
 .dm-compose-area{padding:10px 14px;border-top:1px solid var(--border2);
@@ -398,7 +401,7 @@ function renderThread(){
     html+=`<div class="dm-msg-row${isMe?" mine":""}">
       ${av}
       <div style="display:flex;flex-direction:column;${isMe?"align-items:flex-end":""}">
-        <div class="dm-bubble ${isMe?"mine":"theirs"}">${esc(msg.text).replace(/\n/g,"<br>")}</div>
+        <div class="dm-bubble ${isMe?"mine":"theirs"}${isEmojiOnly(msg.text)?" emoji-only":""}">${esc(msg.text).replace(/\n/g,"<br>")}</div>
         <div class="dm-bubble-time" style="${isMe?"text-align:right":""}">${esc(timeStr)}${isMe&&!msg.readAt?" · Delivered":""}</div>
       </div>
     </div>`;
@@ -544,6 +547,14 @@ async function pollForUpdates() {
     }
     renderConvoList();
   } catch(_) {}
+}
+
+// Returns true if the string contains only emoji characters (and whitespace)
+function isEmojiOnly(text) {
+  if (!text || !text.trim()) return false;
+  // Strip emoji + variation selectors + ZWJ + whitespace and see if anything remains
+  const stripped = text.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{200D}\s]/gu, "");
+  return stripped.length === 0;
 }
 
 // ── Emoji picker ───────────────────────────────────────────────
