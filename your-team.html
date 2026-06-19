@@ -141,6 +141,21 @@
   .bs{width:36px;height:36px;}
   .bs img{width:24px;height:24px;}
 }
+
+/* ── Emoji picker ──────────────────────────────────────────────── */
+.emoji-picker{position:absolute;bottom:100%;left:0;right:0;
+  background:var(--surface);border-top:1px solid var(--border2);
+  z-index:50;display:none;flex-direction:column;box-shadow:0 -4px 16px rgba(0,0,0,0.25);}
+.emoji-picker.open{display:flex;}
+.emoji-picker-tabs{display:flex;border-bottom:1px solid var(--border2);flex-shrink:0;}
+.emoji-tab{flex:1;padding:6px 4px;background:none;border:none;font-size:1rem;
+  cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;transition:all 0.12s;}
+.emoji-tab.active,.emoji-tab:hover{color:var(--text);border-bottom-color:var(--blue);}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;
+  padding:6px 8px;overflow-y:auto;max-height:200px;}
+.emoji-btn{background:none;border:none;font-size:1.35rem;cursor:pointer;
+  padding:4px;border-radius:6px;line-height:1;transition:background 0.1s;}
+.emoji-btn:hover{background:var(--surface2);}
 </style>
 </head>
 <body>
@@ -476,11 +491,13 @@ function renderMgmt(teamId){
         <div class="chat-messages" id="chat-messages-${teamId}">
           <div class="chat-empty-msg"><div style="font-size:1.8rem;opacity:0.3;">💬</div><div>Loading…</div></div>
         </div>
-        <div class="chat-input-area">
+        <div class="chat-input-area" style="position:relative;">
+          <div class="emoji-picker" id="chat-input-${teamId}-emoji-picker"><div class="emoji-picker-tabs"><button class="emoji-tab active" onclick="renderEmojiTab(0,'chat-input-${teamId}')">😀</button><button class="emoji-tab" onclick="renderEmojiTab(1,'chat-input-${teamId}')">👍</button><button class="emoji-tab" onclick="renderEmojiTab(2,'chat-input-${teamId}')">⚔️</button><button class="emoji-tab" onclick="renderEmojiTab(3,'chat-input-${teamId}')">🎉</button></div><div class="emoji-grid"></div></div>
           <div class="chat-char-count" id="chat-char-${teamId}">0 / 500</div>
           <div class="chat-input-row">
             <textarea class="chat-input" id="chat-input-${teamId}" placeholder="Message your team…" rows="1"
               onkeydown="chatKeydown(event,'${teamId}')" oninput="chatAutoResize(this);chatUpdateCount(this,'${teamId}')"></textarea>
+            <button class="emoji-picker-btn" id="chat-input-${teamId}-emoji-btn" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;" title="Emoji" onclick="toggleEmojiPicker('chat-input-${teamId}',this)">😊</button>
             <button class="chat-send-btn" id="chat-send-${teamId}" onclick="chatSend('${teamId}')">Send</button>
           </div>
         </div>
@@ -1202,6 +1219,7 @@ async function chatSend(teamId){
   if(!session) return;
   const input=el(`chat-input-${teamId}`); const btn=el(`chat-send-${teamId}`);
   const text=input.value.trim(); if(!text) return;
+  closeEmojiPicker(`chat-input-${teamId}`);
   btn.disabled=true; input.disabled=true;
   try{
     await apiPost({action:"sendMessage",memberId:session.id,captainKey:session.captainKey,teamId,text});
@@ -1266,6 +1284,71 @@ async function chatTranslate(msgId,text){
 </script>
 
 <!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061903"></script>
+<script src="js/build-maker.js?v=2026061903">
+// ── Emoji picker ───────────────────────────────────────────────
+const EMOJI_DATA = [{'label': '😀 Reactions', 'emojis': ['😀', '😂', '🤣', '😍', '😎', '🤔', '😤', '😢', '😭', '🤯', '🥳', '😏', '😒', '🙄', '😬', '😅', '😆', '\U0001fae1', '😤', '\U0001fae0']}, {'label': '👍 Gestures', 'emojis': ['👍', '👎', '👏', '🙌', '🤝', '🙏', '💪', '🤌', '👀', '\U0001faf6', '✌️', '🤞', '\U0001faf5', '💯', '❤️', '🔥', '✨', '💀', '⭐', '💥']}, {'label': '⚔️ Gaming', 'emojis': ['⚔️', '🛡️', '🏹', '🗡️', '🔮', '💎', '🏆', '🎯', '⚡', '🐉', '💰', '🧪', '🔑', '💣', '🪄', '⚙️', '🎮', '👾', '🌟', '🎲']}, {'label': '🎉 Misc', 'emojis': ['🎉', '🎊', '🚀', '🌙', '☀️', '🌊', '🍀', '💬', '📢', '⏱️', '🔔', '📌', '🏅', '🥇', '🎖️', '🛠️', '🌀', '💤', '❓', '‼️']}];
+let _emojiPickerTarget = null;
+let _emojiPickerVisible = false;
+let _emojiActiveTab = 0;
+
+function toggleEmojiPicker(textareaId, btnEl) {
+  if (_emojiPickerTarget === textareaId && _emojiPickerVisible) {
+    closeEmojiPicker(); return;
+  }
+  _emojiPickerTarget = textareaId;
+  _emojiPickerVisible = true;
+  const pickerId = textareaId + "-emoji-picker";
+  const picker = el(pickerId);
+  if (!picker) return;
+  picker.classList.add("open");
+  btnEl.classList.add("active");
+  renderEmojiTab(_emojiActiveTab, textareaId);
+}
+
+function closeEmojiPicker(textareaId) {
+  _emojiPickerVisible = false;
+  if (textareaId) {
+    el(textareaId + "-emoji-picker")?.classList.remove("open");
+    el(textareaId + "-emoji-btn")?.classList.remove("active");
+  } else {
+    document.querySelectorAll(".emoji-picker").forEach(p => p.classList.remove("open"));
+    document.querySelectorAll(".emoji-picker-btn").forEach(b => b.classList.remove("active"));
+  }
+}
+
+function renderEmojiTab(tabIdx, textareaId) {
+  _emojiActiveTab = tabIdx;
+  const pickerId = textareaId + "-emoji-picker";
+  const picker = el(pickerId);
+  if (!picker) return;
+  const tabs = picker.querySelectorAll(".emoji-tab");
+  tabs.forEach((t, i) => t.classList.toggle("active", i === tabIdx));
+  const grid = picker.querySelector(".emoji-grid");
+  if (!grid) return;
+  grid.innerHTML = EMOJI_DATA[tabIdx].emojis.map(em =>
+    `<button class="emoji-btn" onclick="insertEmoji('${textareaId}','${em}')" title="${em}">${em}</button>`
+  ).join("");
+}
+
+function insertEmoji(textareaId, emoji) {
+  const ta = el(textareaId);
+  if (!ta) return;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.substring(0, start) + emoji + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + emoji.length;
+  ta.focus();
+  ta.dispatchEvent(new Event("input"));
+}
+
+document.addEventListener("click", (e) => {
+  if (!_emojiPickerVisible) return;
+  if (e.target.closest(".emoji-picker") || e.target.closest(".emoji-picker-btn")) return;
+  closeEmojiPicker();
+  _emojiPickerVisible = false;
+});
+
+</script>
 </body>
 </html>
