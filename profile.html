@@ -423,31 +423,12 @@ ${isOwn ? `
         </div>` : ""}
 
         ${isOwn ? `
-        <div class="card" id="notif-prefs-card">
-          <div class="section-title mb-sm">🔔 Notification Preferences</div>
-          <div class="field mb-sm">
-            <label style="font-size:0.8rem;">Email Address <span class="optional">(optional)</span></label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input id="np-email" type="email" placeholder="you@example.com" autocomplete="email"
-                style="flex:1;background:var(--surface2);border:1px solid var(--border3);border-radius:var(--radius);padding:7px 10px;font-size:0.85rem;color:var(--text);" />
-              <button class="btn btn-ghost btn-sm" onclick="saveNotifPrefs()">Save</button>
-            </div>
-            <p style="margin:4px 0 0;font-size:0.75rem;color:var(--text3);line-height:1.4;">Used only for the channels you enable below. Never shared publicly.</p>
+        <div class="card" id="notif-prefs-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div class="section-title" style="margin-bottom:2px;">🔔 Notifications</div>
+            <div style="font-size:0.8rem;color:var(--text3);">Manage your email and push notification preferences.</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
-              <input type="checkbox" id="np-invites" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
-              <span>Team invites <span style="font-size:0.75rem;color:var(--text3);">— notify me when I receive a team invite or someone responds to mine</span></span>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
-              <input type="checkbox" id="np-join" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
-              <span>Join requests <span style="font-size:0.75rem;color:var(--text3);">— notify me when someone requests to join my team or my request is answered</span></span>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
-              <input type="checkbox" id="np-dms" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
-              <span>Direct messages <span style="font-size:0.75rem;color:var(--text3);">— notify me when I receive a new direct message</span></span>
-            </label>
-          </div>
+          <a href="notifications.html" class="btn btn-ghost btn-sm" style="flex-shrink:0;">Manage →</a>
         </div>` : ""}
       </div>
 

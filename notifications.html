@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notification Preferences — Berserk Guild</title>
+<link rel="stylesheet" href="css/style.css?v=2026061901" />
+<script src="js/app.js?v=2026061901"></script>
+</head>
+<body>
+<nav id="nav-root"></nav>
+<script>onReady(() => buildNav("notifications.html"));</script>
+
+<div class="page-shell">
+  <div class="page-header">
+    <div class="page-header-inner">
+      <h1 class="page-title">🔔 Notification Preferences</h1>
+      <p class="page-subtitle">Choose how and when Berserk Guild contacts you.</p>
+    </div>
+  </div>
+
+  <div class="content-wrap" style="max-width:560px;">
+    <div id="alert-area"></div>
+
+    <div class="card" style="padding:28px;">
+      <div class="section-title mb-md">Email Notifications</div>
+
+      <div class="field mb-md">
+        <label class="form-label">Email Address <span class="optional">(optional)</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="np-email" type="email" placeholder="you@example.com" autocomplete="email"
+            style="flex:1;background:var(--surface2);border:1px solid var(--border3);border-radius:var(--radius);padding:9px 12px;font-size:0.88rem;color:var(--text);width:100%;box-sizing:border-box;" />
+        </div>
+        <p style="margin:6px 0 0;font-size:0.75rem;color:var(--text3);line-height:1.5;">
+          Used only for the channels you enable below. Never shared publicly or with third parties.
+        </p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;">
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Team Invites</div>
+            <div class="toggle-sublabel">When you receive a team invite or someone responds to yours</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="np-invites" /><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Join Requests</div>
+            <div class="toggle-sublabel">When someone requests to join your team, or your request is answered</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="np-join" /><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Direct Messages</div>
+            <div class="toggle-sublabel">When you receive a new direct message (max one email per 15 minutes)</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="np-dms" /><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border2);">
+        <div class="section-title mb-md">Browser Push Notifications</div>
+        <p style="font-size:0.85rem;color:var(--text2);margin:0 0 14px;">
+          Get instant notifications in your browser — even when the tab is in the background.
+        </p>
+        <div id="push-status" style="font-size:0.82rem;color:var(--text3);margin-bottom:12px;"></div>
+        <button class="btn btn-ghost btn-sm" id="btn-push" onclick="handlePushToggle()">Enable Push Notifications</button>
+      </div>
+
+      <div style="margin-top:28px;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="saveNotifPrefs()">Save Preferences</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let _notifMember = null;
+
+onReady(async () => {
+  const session = getSession();
+  if (!session) { location.replace("register.html"); return; }
+
+  try {
+    const d = await apiGet({ action: "getAll", memberId: session.id });
+    _notifMember = (d.members || []).find(m => m.id === session.id) || {};
+    if (d.ownMember) {
+      _notifMember.email      = d.ownMember.email      || "";
+      _notifMember.notifPrefs = d.ownMember.notifPrefs || "{}";
+    }
+    loadNotifPrefs();
+    updatePushStatus();
+  } catch(e) {
+    showAlert("alert-area", "Failed to load preferences: " + e.message, "error");
+  }
+});
+
+function loadNotifPrefs() {
+  const m = _notifMember;
+  if (!m) return;
+  let prefs = {};
+  try { prefs = JSON.parse(m.notifPrefs || "{}"); } catch(e) {}
+  const emailEl = document.getElementById("np-email");
+  if (emailEl) emailEl.value = m.email || "";
+  const invEl = document.getElementById("np-invites");
+  if (invEl) invEl.checked = prefs.invites !== false;
+  const joinEl = document.getElementById("np-join");
+  if (joinEl) joinEl.checked = prefs.joinRequests !== false;
+  const dmEl = document.getElementById("np-dms");
+  if (dmEl) dmEl.checked = prefs.dms !== false;
+}
+
+async function saveNotifPrefs() {
+  const session = getSession();
+  if (!session) return;
+  const email = (document.getElementById("np-email")?.value || "").trim();
+  const prefs = {
+    invites:      document.getElementById("np-invites")?.checked ?? true,
+    joinRequests: document.getElementById("np-join")?.checked    ?? true,
+    dms:          document.getElementById("np-dms")?.checked     ?? true,
+  };
+  try {
+    await apiPost({ action: "updateNotifPrefs", memberId: session.id, captainKey: session.captainKey, email, prefs });
+    if (_notifMember) { _notifMember.email = email; _notifMember.notifPrefs = JSON.stringify(prefs); }
+    showAlert("alert-area", "Preferences saved.", "success");
+    setTimeout(() => clearAlert("alert-area"), 3000);
+  } catch(e) {
+    showAlert("alert-area", "Failed to save: " + e.message, "error");
+  }
+}
+
+function updatePushStatus() {
+  const statusEl = document.getElementById("push-status");
+  const btn = document.getElementById("btn-push");
+  if (!("Notification" in window)) {
+    statusEl.textContent = "Push notifications are not supported in this browser.";
+    btn.disabled = true;
+    return;
+  }
+  const perm = Notification.permission;
+  if (perm === "granted") {
+    statusEl.textContent = "✅ Push notifications are enabled.";
+    btn.textContent = "Disable Push Notifications";
+  } else if (perm === "denied") {
+    statusEl.textContent = "❌ Push notifications are blocked. To enable, update your browser's site permissions for this page.";
+    btn.disabled = true;
+  } else {
+    statusEl.textContent = "Push notifications are not yet enabled.";
+    btn.textContent = "Enable Push Notifications";
+  }
+}
+
+async function handlePushToggle() {
+  if (Notification.permission === "granted") {
+    // Can't programmatically revoke — direct user to browser settings
+    toast("To disable push notifications, go to your browser's site settings and block notifications for this site.", "info", 5000);
+    return;
+  }
+  await registerPushNotifications();
+  updatePushStatus();
+}
+</script>
+</body>
+</html>

@@ -259,6 +259,7 @@ function buildNav(activePage, opts = {}) {
         </button>
         <div class="nav-dropdown" id="nav-dropdown">
           <a href="profile.html?id=${session.id}" class="nav-dropdown-item">👤 View Profile</a>
+          <a href="notifications.html" class="nav-dropdown-item">🔔 Notifications</a>
           <div class="nav-dropdown-item nav-dropdown-danger" onclick="navLogout()">🚪 Log Out</div>
         </div>
       </div>`
@@ -284,6 +285,7 @@ function buildNav(activePage, opts = {}) {
         </div>
       </div>
       <a href="profile.html?id=${session.id}" class="mobile-nav-link">👤 View Profile</a>
+      <a href="notifications.html" class="mobile-nav-link">🔔 Notifications</a>
       <div class="mobile-nav-link mobile-nav-danger" onclick="navLogout()">🚪 Log Out</div>`
     : `<a href="register.html" class="mobile-nav-link">Log In / Register</a>`;
   const navHtml = `

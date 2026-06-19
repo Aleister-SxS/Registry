@@ -346,6 +346,8 @@ async function openThread(withId){
     const c=convos.find(x=>x.withId===withId);
     if(c)c.unread=0;
     renderConvoList();
+    // Mark all messages in this thread as read
+    apiPost({action:"markDMRead",memberId:session.id,captainKey:session.captainKey,withMemberId:withId}).catch(()=>{});
   }catch(e){hideProcessing();toast(e.message,"error");}
 }
 
