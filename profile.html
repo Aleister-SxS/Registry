@@ -471,7 +471,6 @@ ${isOwn ? `
   `;
 
   renderBuildDisplay();
-  if (isOwn) loadNotifPrefs();
 }
 
 
@@ -495,41 +494,6 @@ function parsePower(val) {
   if (!val) return 0;
   const s = String(val).replace(/,/g, "").replace(/[Kk]$/, "000").replace(/[Mm]$/, "000000").trim();
   return parseInt(s, 10) || 0;
-}
-
-// ── Notification Preferences ──────────────────────────────
-function loadNotifPrefs() {
-  const m = profileMember;
-  if (!m) return;
-  let prefs = {};
-  try { prefs = JSON.parse(m.notifPrefs || "{}"); } catch(e) {}
-  const emailEl = document.getElementById("np-email");
-  if (emailEl) emailEl.value = m.email || "";
-  const invEl = document.getElementById("np-invites");
-  if (invEl) invEl.checked = prefs.invites !== false;
-  const joinEl = document.getElementById("np-join");
-  if (joinEl) joinEl.checked = prefs.joinRequests !== false;
-  const dmEl = document.getElementById("np-dms");
-  if (dmEl) dmEl.checked = prefs.dms !== false;
-}
-
-async function saveNotifPrefs() {
-  const session = getSession();
-  if (!session) return;
-  const email = (document.getElementById("np-email")?.value || "").trim();
-  const prefs = {
-    invites:      document.getElementById("np-invites")?.checked ?? true,
-    joinRequests: document.getElementById("np-join")?.checked    ?? true,
-    dms:          document.getElementById("np-dms")?.checked     ?? true,
-  };
-  try {
-    await apiPost({ action:"updateNotifPrefs", memberId:session.id, captainKey:session.captainKey, email, prefs });
-    profileMember.email = email;
-    profileMember.notifPrefs = JSON.stringify(prefs);
-    toast("Notification preferences saved!");
-  } catch(e) {
-    toast("Failed to save preferences: " + e.message, "error");
-  }
 }
 
 // ── Build display (read-only slots) ──────────────────────
