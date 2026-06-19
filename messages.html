@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <title>Your Messages — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061902" />
+<link rel="stylesheet" href="css/style.css?v=2026061903" />
 <style>
 /* ── Full-bleed layout ─────────────────────────────────────────── */
 main{max-width:100% !important;margin:0 !important;padding:0 !important;
@@ -178,7 +178,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061902"></script>
+<script src="js/app.js?v=2026061903"></script>
 <script>onReady(() => buildNav("messages.html"));</script>
 <main style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
 
@@ -475,6 +475,18 @@ function startPolling() {
 function stopPolling() {
   if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
 }
+// Pause polling when tab is hidden, resume when visible
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  } else {
+    if (!_pollTimer) {
+      pollForUpdates();
+      _pollTimer = setInterval(pollForUpdates, POLL_INTERVAL_MS);
+    }
+  }
+});
+
 async function pollForUpdates() {
   if (!session) return;
   try {

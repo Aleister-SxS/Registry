@@ -644,3 +644,50 @@ function getLangCode(lang) {
   };
   return MAP[lang] || "en";
 }
+// ── Firebase / FCM config (public — key is domain-restricted in GCP) ──────
+const FCM_CONFIG = {
+  apiKey: "AIzaSyAZ_kiSp1apPNv_nNRVYJClPEjYat9cnoU",
+  authDomain: "berserk-guild-13995.firebaseapp.com",
+  projectId: "berserk-guild-13995",
+  storageBucket: "berserk-guild-13995.firebasestorage.app",
+  messagingSenderId: "997019575170",
+  appId: "1:997019575170:web:d03514993128ef69b4a59b",
+};
+const FCM_VAPID_KEY = "BDti-1Md7DxmA-s6jtzWFUX7Jda7QRKjjZCDAKJUiwvPIFTE7sGUXhGiDBtmuH_QKq5nKP0OIg25snDbEhLgmT0";
+// ── Push notification registration ────────────────────────────────────────
+async function registerPushNotifications() {
+  try {
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    const session = getSession();
+    if (!session) return;
+    // Load Firebase scripts dynamically
+    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
+    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+    if (!firebase.apps.length) firebase.initializeApp(FCM_CONFIG);
+    const messaging = firebase.messaging();
+    // Register service worker
+    const reg = await navigator.serviceWorker.register("/Registry/firebase-messaging-sw.js");
+    // Request permission
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") return;
+    // Get FCM token
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!token) return;
+    // Only save if token changed (avoids repeated API calls)
+    const savedToken = localStorage.getItem("fcm_token");
+    if (token === savedToken) return;
+    await apiPost({ action: "saveFcmToken", memberId: session.id, captainKey: session.captainKey, fcmToken: token });
+    localStorage.setItem("fcm_token", token);
+  } catch(e) {
+    // Silently fail — push notifications are non-critical
+    console.warn("FCM registration failed:", e);
+  }
+}
+function _loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
