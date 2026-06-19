@@ -210,17 +210,22 @@ onReady(async () => {
   if (!memberId) { renderError("No profile ID specified."); return; }
 
   try {
-    const d = await apiGet({ action: "getAll" });
+    const session = getSession();
+    const d = await apiGet({ action: "getAll", memberId: session ? session.id : "" });
     allTeams   = d.teams   || [];
     allMembers = d.members || [];
     settings   = d.settings || {};
     profileMember = allMembers.find(m => m.id === memberId);
+    // Merge own email/notifPrefs back in (stripped from public list but returned separately)
+    if (profileMember && session && session.id === memberId && d.ownMember) {
+      profileMember.email      = d.ownMember.email      || "";
+      profileMember.notifPrefs = d.ownMember.notifPrefs || "{}";
+    }
     // Parse pvpBuild if it came back as a string
     if (profileMember && typeof profileMember.pvpBuild === "string" && profileMember.pvpBuild) {
       try { profileMember.pvpBuild = JSON.parse(profileMember.pvpBuild); } catch { profileMember.pvpBuild = {techniques:[],charms:[]}; }
     }
     // Sync avatarUrl and pvpFantomon into session if viewing own profile
-    const session = getSession();
     if (session && profileMember && session.id === profileMember.id) {
       let changed = false;
       if (profileMember.avatarUrl && session.avatarUrl !== profileMember.avatarUrl) {
@@ -1004,10 +1009,8 @@ function validateEpTag(input) {
     hint.style.color = "var(--green)";
     hint.textContent = "✓ 12 digits — looks good!";
   }
-}
 
-
-// ── Alert helpers ─────────────────────────────────────────
+// ── Alert helpers ────────────────────────────
 function showAlert(id, msg) {
   const el2 = document.getElementById(id);
   if (!el2) return;
@@ -1019,48 +1022,6 @@ function clearAlert(id) {
   if (!el2) return;
   el2.textContent = "";
   el2.style.display = "none";
-}
-
-// ── parsePower helper ─────────────────────────────────────
-function parsePower(val) {
-  if (!val) return 0;
-  const s = String(val).replace(/,/g, "").replace(/[Kk]$/, "000").replace(/[Mm]$/, "000000").trim();
-  return parseInt(s, 10) || 0;
-}
-
-// ── Notification Preferences ──────────────────────────────
-function loadNotifPrefs() {
-  const m = profileMember;
-  if (!m) return;
-  let prefs = {};
-  try { prefs = JSON.parse(m.notifPrefs || "{}"); } catch(e) {}
-  const emailEl = document.getElementById("np-email");
-  if (emailEl) emailEl.value = m.email || "";
-  const invEl = document.getElementById("np-invites");
-  if (invEl) invEl.checked = prefs.invites !== false;
-  const joinEl = document.getElementById("np-join");
-  if (joinEl) joinEl.checked = prefs.joinRequests !== false;
-  const dmEl = document.getElementById("np-dms");
-  if (dmEl) dmEl.checked = prefs.dms !== false;
-}
-
-async function saveNotifPrefs() {
-  const session = getSession();
-  if (!session) return;
-  const email = (document.getElementById("np-email")?.value || "").trim();
-  const prefs = {
-    invites:      document.getElementById("np-invites")?.checked ?? true,
-    joinRequests: document.getElementById("np-join")?.checked    ?? true,
-    dms:          document.getElementById("np-dms")?.checked     ?? true,
-  };
-  try {
-    await apiPost({ action:"updateNotifPrefs", memberId:session.id, captainKey:session.captainKey, email, prefs });
-    profileMember.email = email;
-    profileMember.notifPrefs = JSON.stringify(prefs);
-    toast("Notification preferences saved!");
-  } catch(e) {
-    toast("Failed to save preferences: " + e.message, "error");
-  }
 }
 
 </script>
