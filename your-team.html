@@ -1059,8 +1059,8 @@ async function saveTbm(){
 ══════════════════════════════════════════════════════════════════ */
 function openTransfer(teamId){
   const team=allTeams.find(t=>t.id===teamId);
-  const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId)&&m.id!==session.id);
-  if(!members.length){ toast("No other members to transfer to.","amber"); return; }
+  const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId)&&m.id!==session.id&&String(m.guildMember).toUpperCase()==="TRUE");
+  if(!members.length){ toast("No eligible guild members to transfer to. Only Berserk Guild members can be captains.","amber"); return; }
   const name=prompt(`Transfer captaincy of "${team?.name}".\nEnter the Player ID of the new captain:\n${members.map(m=>m.gamertag).join(", ")}`);
   if(!name) return;
   const target=members.find(m=>(m.gamertag||"").toLowerCase()===name.toLowerCase());

@@ -311,6 +311,9 @@ function renderProfile() {
           ${isLFT ? `<span class="badge badge-lfg"><span class="badge-dot"></span>Looking for Team</span>` : ""}
           ${m.playstyle ? `<span class="badge badge-${m.playstyle==='Competitive'?'competitive':'casual'}">${esc(m.playstyle)}</span>` : ""}
           ${String(m.lookingForCaptainRole).toUpperCase()==="TRUE" ? `<span class="badge badge-amber">⚜️ Wants to Captain</span>` : ""}
+          ${String(m.guildMember).toUpperCase()==="TRUE"
+            ? `<span class="badge" style="background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-size:0.67rem;">⚔️ Berserk</span>`
+            : `<span class="badge" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);font-size:0.67rem;">👤 Guest</span>`}
           ${atLimit && isOwn ? `<span class="badge badge-full">Team Limit Reached</span>` : ""}
         </div>
         <div class="tags-row mb-sm">

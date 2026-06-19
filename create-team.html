@@ -64,6 +64,16 @@
     <p>You need to be logged in to create a team.</p>
     <div class="empty-actions"><a href="register.html" class="btn btn-primary">Log In / Register</a></div>
   </div>
+  <div id="guest-denied" class="empty" style="display:none;">
+    <div class="empty-icon">⚔️</div>
+    <h3>Guild Members Only</h3>
+    <p>Only <strong style="color:var(--amber);">Berserk Guild</strong> members can create teams. Guests can join and be invited to existing teams.</p>
+    <p style="font-size:0.82rem;color:var(--text3);">If your membership status has changed, contact an admin to update your account.</p>
+    <div class="empty-actions">
+      <a href="index.html" class="btn btn-primary">Browse Teams</a>
+      <a href="players.html" class="btn btn-ghost">Guild Members</a>
+    </div>
+  </div>
   <div id="create-form" style="display:none;">
     <div class="form-card">
       <div class="form-title">Create a Team</div>
@@ -201,6 +211,7 @@ onReady(() => {
   populateSelect("ct-lang", LANGUAGES, "— No preference —");
   const session = getSession();
   if (!session) { show(el("access-denied")); return; }
+  if (String(session.guildMember).toUpperCase() !== "TRUE") { show(el("guest-denied")); return; }
   show(el("create-form"));
   compRender();
 });

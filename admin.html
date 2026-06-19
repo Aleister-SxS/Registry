@@ -353,6 +353,9 @@ function renderAdminMembers(){
             <button class="btn btn-xs ${m.suspended==='TRUE'?'btn-success':'btn-amber'}" onclick="toggleSuspend('${m.id}','${esc(m.name)}','${m.suspended}')">
               ${m.suspended==='TRUE'?'Unsuspend':'Suspend'}
             </button>
+            <button class="btn btn-xs ${m.guildMember==='TRUE'?'btn-ghost':'btn-amber'}" onclick="toggleGuildMember('${m.id}','${esc(m.name)}','${m.guildMember}')">
+              ${m.guildMember==='TRUE'?'⚔️ Berserk':'👤 Guest'}
+            </button>
             <button class="btn btn-xs btn-danger" onclick="confirmDeleteMember('${m.id}','${esc(m.name)}')">Delete</button></td>
           </tr>`).join("")}
         </tbody>
@@ -564,6 +567,27 @@ async function toggleSuspend(memberId,memberName,currentStatus){
         const m=allMembers.find(x=>x.id===memberId);if(m)m.suspended=suspend?"TRUE":"FALSE";
         renderAdminMembers();hideProcessing(suspend?"Member suspended.":"Member unsuspended.");
       }catch(e){hideProcessing();toast(e.message,"error");}
+    }
+  );
+}
+
+async function toggleGuildMember(memberId,memberName,currentStatus){
+  const makeGuest=currentStatus==="TRUE";
+  const newStatus=makeGuest?"Guest":"Guild Member";
+  const newLabel=makeGuest?"👤 Guest":"⚔️ Berserk";
+  confirm_(`${makeGuest?"Demote":"Promote"} ${memberName}`,
+    makeGuest
+      ? `Set ${memberName} to Guest? They will lose guild member status and cannot create or captain teams.`
+      : `Set ${memberName} as a Berserk Guild member? They will gain the ⚔️ Berserk badge and appear in the Guild Members list.`,
+    async()=>{
+      showProcessing(`Updating ${memberName}…`);
+      try{
+        await apiPost({action:"adminSetGuildMember",adminPassword:_adminPw,memberId,guildMember:!makeGuest});
+        const m=allMembers.find(x=>x.id===memberId);
+        if(m) m.guildMember=makeGuest?"FALSE":"TRUE";
+        hideProcessing(`${memberName} set to ${newStatus}!`);
+        renderAdminMembers();
+      }catch(e){ hideProcessing(); toast(e.message,"error"); }
     }
   );
 }
