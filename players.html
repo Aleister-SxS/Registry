@@ -204,6 +204,7 @@ function renderPlayers(){
   const maxSize=Number(settings.maxTeamSize)||4;
   const myCaptainTeams=session?allTeams.filter(t=>t.captainId===session.id):[];
   const members=allMembers.filter(m=>{
+    if(String(m.guildMember).toUpperCase()!=="TRUE") return false;
     if(_sf.has("lft")&&String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
     if(_sf.has("captain")&&String(m.isCaptain).toUpperCase()!=="TRUE") return false;
     if(_sf.has("Competitive")&&m.playstyle!=="Competitive") return false;
@@ -219,7 +220,7 @@ function renderPlayers(){
     if(search&&!m.name.toLowerCase().includes(search)&&!(m.gamertag||"").toLowerCase().includes(search)) return false;
     return true;
   });
-  el("player-count").textContent=`${members.length} member${members.length!==1?"s":""}`;
+  el("player-count").textContent=`${members.length} guild member${members.length!==1?"s":""}`;
   if(!members.length){grid.style.display="none";emptyEl.style.display="block";return;}
   emptyEl.style.display="none"; grid.style.display="grid";
   grid.innerHTML=members.map(m=>{

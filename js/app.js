@@ -244,6 +244,7 @@ function buildNav(activePage, opts = {}) {
   const pages = [
     { href: "index.html",     label: "Team Registry",  requiresAuth: true },
     { href: "players.html",   label: "Guild Members",  requiresAuth: true },
+    { href: "guests.html",    label: "Guests",         requiresAuth: true },
     { href: "invites.html",   label: "Your Invites",   requiresAuth: true },
     { href: "messages.html",  label: "Your Messages",  requiresAuth: true },
     { href: "your-team.html", label: "Your Teams",     requiresAuth: true },
@@ -625,78 +626,4 @@ async function translateText(text, targetLang) {
   if (d.responseStatus === 429) throw new Error("Translation limit reached for today.");
   const result = d.responseData.translatedText;
   if (!result || result.toUpperCase().includes("INVALID LANGUAGE") || result.toUpperCase().includes("PLEASE SELECT")) {
-    throw new Error("Translations default to English. Translation to other languages is not currently available.");
-  }
-  if (result.trim().toLowerCase() === text.trim().toLowerCase()) return null;
-  return result;
-}
-function getLangCode(langName) {
-  const map = {
-    "English":"en","Spanish":"es","Portuguese":"pt","French":"fr","German":"de",
-    "Italian":"it","Dutch":"nl","Russian":"ru","Polish":"pl","Turkish":"tr",
-    "Arabic":"ar","Hindi":"hi","Bengali":"bn","Japanese":"ja","Korean":"ko",
-    "Chinese (Simplified)":"zh-CN","Chinese (Traditional)":"zh-TW",
-    "Vietnamese":"vi","Thai":"th","Indonesian":"id","Malay":"ms",
-    "Filipino":"tl","Swedish":"sv","Norwegian":"no","Danish":"da",
-    "Finnish":"fi","Czech":"cs","Slovak":"sk","Romanian":"ro",
-    "Hungarian":"hu","Greek":"el","Other":"en",
-  };
-  return map[langName] || "en";
-}
-
-// ── Firebase Cloud Messaging (Push Notifications) ─────────
-const FCM_VAPID_KEY = "BDti-1Md7DxmA-s6jtzWFUX7Jda7QRKjjZCDAKJUiwvPIFTE7sGUXhGiDBtmuH_QKq5nKP0OIg25snDbEhLgmT0";
-const FCM_CONFIG = {
-  apiKey: "AIzaSyAZ_kiSp1apPNv_nNRVYJClPEjYat9cnoU",
-  authDomain: "berserk-guild-13995.firebaseapp.com",
-  projectId: "berserk-guild-13995",
-  storageBucket: "berserk-guild-13995.firebasestorage.app",
-  messagingSenderId: "997019575170",
-  appId: "1:997019575170:web:d03514993128ef69b4a59b",
-};
-
-// Call once after login/register to request permission and register FCM token
-async function registerPushNotifications() {
-  try {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
-    const session = getSession();
-    if (!session) return;
-
-    // Load Firebase scripts dynamically
-    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
-    await _loadScript("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
-
-    if (!firebase.apps.length) firebase.initializeApp(FCM_CONFIG);
-    const messaging = firebase.messaging();
-
-    // Register service worker
-    const reg = await navigator.serviceWorker.register("/Registry/firebase-messaging-sw.js");
-
-    // Request permission
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return;
-
-    // Get FCM token
-    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
-    if (!token) return;
-
-    // Only save if token changed
-    const savedToken = localStorage.getItem("fcm_token");
-    if (token === savedToken) return;
-
-    await apiPost({ action: "saveFcmToken", memberId: session.id, captainKey: session.captainKey, fcmToken: token });
-    localStorage.setItem("fcm_token", token);
-  } catch(e) {
-    // Silently fail — push is non-critical
-    console.warn("FCM registration failed:", e);
-  }
-}
-
-function _loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+    throw new Error("Translations default to English. Translation t

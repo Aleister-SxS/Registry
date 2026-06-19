@@ -387,10 +387,21 @@
           </select>
         </div>
 
+        <div class="form-section-label">Guild Membership</div>
+        <div class="field">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">I am a member of the SxS Berserk Guild</div>
+              <div class="toggle-sublabel">Guild members receive the <strong style="color:var(--amber);">⚔️ Berserk</strong> badge and appear in the Guild Members list. Guests can join teams but cannot create or captain them.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="r-guild-member" checked /><span class="slider"></span></label>
+          </div>
+        </div>
+
         <div class="form-section-label">Settings</div>
         <div class="field">
           <div class="toggle-row">
-            <div><div class="toggle-label">Looking for a team</div><div class="toggle-sublabel">Appear in the Players tab for captains to find you</div></div>
+            <div><div class="toggle-label">Looking for a team</div><div class="toggle-sublabel">Appear in the Players or Guests tab for captains to find you</div></div>
             <label class="toggle"><input type="checkbox" id="r-lfg" checked /><span class="slider"></span></label>
           </div>
         </div>
@@ -738,7 +749,8 @@ async function doLogin() {
     setSession({
       id: d.member.id, gamertag: d.member.gamertag, name: d.member.name,
       captainKey: d.member.captainKey, isCaptain: d.member.isCaptain,
-      avatarUrl: d.member.avatarUrl, pvpFantomon: d.member.pvpFantomon
+      avatarUrl: d.member.avatarUrl, pvpFantomon: d.member.pvpFantomon,
+      guildMember: d.member.guildMember
     });
     regHideProcessing();
     window.location.href = "index.html";
@@ -769,8 +781,9 @@ async function doRegister() {
   var tz       = document.getElementById("r-timezone").value;
   var languages = chipGetValues("r-languages").join(",");
   var prefLang  = chipGetValues("r-preflang");
-  var lfg      = document.getElementById("r-lfg").checked;
-  var wantCap  = document.getElementById("r-want-captain").checked;
+  var lfg        = document.getElementById("r-lfg").checked;
+  var wantCap    = document.getElementById("r-want-captain").checked;
+  var guildMember = document.getElementById("r-guild-member").checked;
 
   // Validation
   if (!name)    { showAlert("reg-error", "In-Game Name is required."); return; }
@@ -803,13 +816,14 @@ async function doRegister() {
       discordId: discId, discordName: discName, timezone: tz, email: document.getElementById('r-email').value.trim(),
       languages: languages, prefLanguage: prefLang.join(","),
       lookingForTeam: lfg, lookingForCaptainRole: wantCap,
-      avatarUrl: selectedAvatarUrl
+      avatarUrl: selectedAvatarUrl, guildMember: guildMember
     });
     var m = d.member;
     setSession({
       id: m.id, gamertag: m.gamertag, name: m.name,
       captainKey: m.captainKey, isCaptain: m.isCaptain,
-      avatarUrl: m.avatarUrl, pvpFantomon: ""
+      avatarUrl: m.avatarUrl, pvpFantomon: "",
+      guildMember: m.guildMember
     });
     document.getElementById("auth-state").style.display  = "none";
     document.getElementById("hero-block").style.display  = "none";
