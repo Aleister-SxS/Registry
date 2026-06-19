@@ -29,7 +29,7 @@ const TIMEZONES = [
 ];
 const LANGUAGES = [
   "English","Spanish","Portuguese","French","German","Italian","Dutch",
-  "Russian","Polish","Turkish","Arabic","Hindi","Bengali","Japanese",
+  "Russian","Polish","Turkish","Arabic","Hebrew","Hindi","Bengali","Japanese",
   "Korean","Chinese (Simplified)","Chinese (Traditional)","Vietnamese",
   "Thai","Indonesian","Malay","Filipino","Swedish","Norwegian","Danish",
   "Finnish","Czech","Slovak","Romanian","Hungarian","Greek","Other",
@@ -77,16 +77,26 @@ async function apiPost(body) {
   if (API_URL === "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE") {
     throw new Error("API not configured. Please set your Apps Script URL in js/app.js");
   }
-  const r = await fetch(API_URL, {
-    method: "POST",
-    redirect: "follow",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const d = await r.json();
-  if (!d.ok) throw new Error(d.error || "Request failed");
-  return d;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const r = await fetch(API_URL, {
+      method: "POST",
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "Request failed");
+    return d;
+  } catch(e) {
+    clearTimeout(timeout);
+    if (e.name === "AbortError") throw new Error("Request timed out — please check your connection");
+    throw e;
+  }
 }
 // ── Power rating parser ───────────────────────────────────
 function parsePower(str) {
