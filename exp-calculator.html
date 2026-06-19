@@ -129,14 +129,15 @@ const MAX_LEVEL = 250;
 
 function expToReach(fromLevel, fromExp, toLevel) {
   // fromExp = EXP already accumulated INTO fromLevel (not cumulative)
+  // EXP_TO_NEXT[n] = EXP required to REACH level n (i.e. to go from n-1 → n)
   if (toLevel <= fromLevel) return 0;
   let total = 0;
-  // Remaining EXP in current level
-  const neededCurrent = EXP_TO_NEXT[fromLevel];
-  if (!neededCurrent) return null; // max level
+  // EXP still needed to finish current level (cost to reach fromLevel+1)
+  const neededCurrent = EXP_TO_NEXT[fromLevel + 1];
+  if (!neededCurrent) return null; // at or past max level
   total += Math.max(0, neededCurrent - fromExp);
-  // Full levels in between
-  for (let lv = fromLevel + 1; lv < toLevel; lv++) {
+  // Full levels in between: cost to reach each level from fromLevel+2 up to toLevel
+  for (let lv = fromLevel + 2; lv <= toLevel; lv++) {
     if (!EXP_TO_NEXT[lv]) return null;
     total += EXP_TO_NEXT[lv];
   }
