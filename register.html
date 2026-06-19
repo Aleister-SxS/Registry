@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Register / Log In — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061901" />
-<script src="js/app.js?v=2026061901"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061902" />
+<script src="js/app.js?v=2026061902"></script>
 <style>
   /* Local submit spinner — doesn't use the global overlay timer */
   .reg-overlay { display:none;position:fixed;inset:0;background:rgba(11,13,18,0.88);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1rem; }
@@ -814,38 +814,4 @@ async function doRegister() {
       action: "registerMember", name: name, gamertag: tag, tier: tier, class: cls,
       power: power, level: level, bio: "", description: desc, playstyle: playstyle,
       discordId: discId, discordName: discName, timezone: tz, email: document.getElementById('r-email').value.trim(),
-      languages: languages, prefLanguage: prefLang.join(","),
-      lookingForTeam: lfg, lookingForCaptainRole: wantCap,
-      avatarUrl: selectedAvatarUrl, guildMember: guildMember
-    });
-    var m = d.member;
-    setSession({
-      id: m.id, gamertag: m.gamertag, name: m.name,
-      captainKey: m.captainKey, isCaptain: m.isCaptain,
-      avatarUrl: m.avatarUrl, pvpFantomon: "",
-      guildMember: m.guildMember
-    });
-    document.getElementById("auth-state").style.display  = "none";
-    document.getElementById("hero-block").style.display  = "none";
-    document.getElementById("reg-success").classList.add("active");
-    document.getElementById("out-tag").textContent = m.gamertag;
-    document.getElementById("out-key").textContent = m.captainKey;
-    document.getElementById("goto-profile").href = "profile.html?id=" + m.id;
-    regHideProcessing();
-    startSuccessCountdown();
-  } catch(e) {
-    regHideProcessing();
-    showAlert("reg-error", e.message);
-  }
-}
-
-function copyKey() {
-  navigator.clipboard.writeText(document.getElementById("out-key").textContent)
-    .then(function() { if (typeof toast === "function") toast("Key copied!"); })
-    .catch(function() { if (typeof toast === "function") toast("Copy failed — please copy it manually.", "error"); });
-}
-</script>
-
-
-</body>
-</html>
+      languages: languages, prefLanguage: prefLang.join(

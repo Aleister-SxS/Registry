@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helpful Info — Berserk Guild</title>
+<link rel="stylesheet" href="css/style.css?v=2026061902" />
+<script src="js/app.js?v=2026061902"></script>
+</head>
+<body>
+<script>onReady(() => buildNav("helpful-info.html"));</script>
+<main>
+  <div class="section-header">
+    <span class="section-title">Helpful Info</span>
+    <div class="text-sm text-muted" style="margin-top:2px;">Tools and resources to help you progress in Sword x Staff.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:1rem;">
+
+    <a href="exp-calculator.html" style="text-decoration:none;color:inherit;">
+      <div class="card" style="cursor:pointer;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s;border:1px solid var(--border2);"
+        onmouseover="this.style.borderColor='var(--blue-mid)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'"
+        onmouseout="this.style.borderColor='var(--border2)';this.style.transform='';this.style.boxShadow=''">
+        <div style="font-size:2rem;margin-bottom:0.75rem;">⏱️</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:0.4rem;">EXP Calculator</div>
+        <div style="font-size:0.82rem;color:var(--text2);line-height:1.5;">Calculate how long it will take to reach your target level based on your current EXP and gain rate. Get an estimated completion date in your time zone.</div>
+        <div style="margin-top:1rem;">
+          <span class="btn btn-primary btn-sm">Open Calculator →</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</main>
+</body>
+</html>

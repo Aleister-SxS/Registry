@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Notification Preferences — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061901" />
-<script src="js/app.js?v=2026061901"></script>
+<link rel="stylesheet" href="css/style.css?v=2026061902" />
+<script src="js/app.js?v=2026061902"></script>
 </head>
 <body>
 <script>onReady(() => buildNav("notifications.html"));</script>
@@ -165,19 +165,4 @@ function updatePushStatus() {
     statusEl.innerHTML = '<span style="color:var(--red);">❌ Push notifications are blocked. Update your browser\'s site permissions to enable them.</span>';
     if (btn) btn.disabled = true;
   } else {
-    statusEl.textContent = "Push notifications are not yet enabled.";
-    if (btn) btn.textContent = "Enable Push Notifications";
-  }
-}
-
-async function handlePushToggle() {
-  if (Notification.permission === "granted") {
-    toast("To disable push notifications, go to your browser's site settings and block notifications for this site.", "info", 5000);
-    return;
-  }
-  await registerPushNotifications();
-  updatePushStatus();
-}
-</script>
-</body>
-</html>
+    statusEl.textContent = "Push notifications are not yet enabled

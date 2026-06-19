@@ -4,10 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061901"/>
+<link rel="stylesheet" href="css/style.css?v=2026061902"/>
 </head>
 <body>
-<script src="js/app.js?v=2026061901"></script>
+<script src="js/app.js?v=2026061902"></script>
 <script>onReady(()=>buildNav("admin.html"));</script>
 <main>
 
@@ -724,36 +724,4 @@ async function doResetKey(){
 // ── Export CSV ────────────────────────────────────────────
 function exportCSV(type){
   if(type==="members"){
-    const headers=["Name","Player ID","Class","Power","Level","Playstyle","Language","Discord","Teams","Captain","Registered"];
-    const rows=allMembers.map(m=>[
-      m.name,m.gamertag,m.class||"",m.power||"",m.level||"",
-      m.playstyle||"",m.prefLanguage||"",m.discordId||"",
-      (Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).length,
-      m.isCaptain==="TRUE"?"Yes":"No",m.joinedAt||""
-    ]);
-    downloadCSV("guild_members.csv",[headers,...rows]);
-  }else if(type==="teams"){
-    const headers=["Team Name","Captain","Status","Members","Playstyle","Language","Min Power","Min Level","Created"];
-    const rows=allTeams.map(t=>[
-      t.name,t.captainName||"",t.status||"",t.memberCount||0,
-      t.playstyle||"",t.prefLanguage||"",t.minPower||"",t.minLevel||"",t.createdAt||""
-    ]);
-    downloadCSV("guild_teams.csv",[headers,...rows]);
-  }
-}
-
-function downloadCSV(filename,rows){
-  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=filename;a.click();
-  toast("Download started!");
-}
-
-function copyAdminKey(){
-  navigator.clipboard.writeText(el("kl-result-key").textContent).then(()=>toast("Key copied!")).catch(()=>{});
-}
-</script>
-</body>
-</html>
+    const headers=["Name","Player ID","Class","Power","Level","Playstyle","Language","Discord","Teams","Captain","Reg

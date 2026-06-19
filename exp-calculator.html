@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EXP Calculator — Berserk Guild</title>
+<link rel="stylesheet" href="css/style.css?v=2026061902" />
+<script src="js/app.js?v=2026061902"></script>
+<style>
+  .calc-card { background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1rem; }
+  .calc-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem; }
+  @media(max-width:600px){ .calc-grid { grid-template-columns:1fr; } }
+  .result-block { background:var(--blue-dim);border:1px solid var(--blue-mid);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-top:1rem; }
+  .result-row { display:flex;justify-content:space-between;align-items:baseline;padding:0.5rem 0;border-bottom:1px solid rgba(79,142,247,0.15); }
+  .result-row:last-child { border-bottom:none; }
+  .result-label { font-size:0.82rem;color:var(--text2); }
+  .result-value { font-size:0.95rem;font-weight:700;color:var(--blue-bright);text-align:right; }
+  .result-value.big { font-size:1.3rem;color:var(--text); }
+  .tip-box { background:var(--amber-dim);border:1px solid var(--amber-mid);border-radius:var(--radius);padding:0.75rem 1rem;font-size:0.82rem;color:var(--amber);line-height:1.6;margin-bottom:1rem; }
+  .tip-box strong { color:var(--amber); }
+  .tz-note { font-size:0.75rem;color:var(--text3);margin-top:0.4rem;line-height:1.5; }
+  .tz-note a { color:var(--blue-bright); }
+  .error-msg { background:var(--red-dim);border:1px solid var(--red-mid);border-radius:var(--radius);padding:0.75rem 1rem;font-size:0.82rem;color:var(--red);margin-top:1rem;display:none; }
+</style>
+</head>
+<body>
+<script>onReady(() => buildNav("helpful-info.html"));</script>
+<main>
+  <div class="section-header" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="helpful-info.html" class="btn btn-ghost btn-sm">← Back</a>
+      <span class="section-title">⏱️ EXP Calculator</span>
+    </div>
+    <div class="text-sm text-muted" style="margin-top:4px;">Enter your stats below to find out how long it will take to reach your target level.</div>
+  </div>
+
+  <div class="tip-box">
+    💡 <strong>Where to find your stats in-game:</strong><br />
+    Tap your <strong>bed</strong> to see your <strong>EXP/HR</strong> gain rate.<br />
+    Tap <strong>Character Info</strong> to see your <strong>current Level</strong> and <strong>current EXP</strong>.
+  </div>
+
+  <div class="calc-card">
+    <div class="form-section-label" style="margin-bottom:0.75rem;">Your Current Stats</div>
+    <div class="calc-grid">
+      <div class="field">
+        <label>Current Level <span style="color:var(--red);">*</span></label>
+        <input type="number" id="c-level" min="1" max="249" placeholder="e.g. 55" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Current EXP <span style="color:var(--red);">*</span> <span class="optional">(into current level)</span></label>
+        <input type="number" id="c-exp" min="0" placeholder="e.g. 12500" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>EXP Gain / HR <span style="color:var(--red);">*</span></label>
+        <input type="number" id="c-rate" min="1" placeholder="e.g. 45000" oninput="calculate()" />
+      </div>
+      <div class="field">
+        <label>Target Level <span style="color:var(--red);">*</span></label>
+        <input type="number" id="c-target" min="2" max="250" placeholder="e.g. 70" oninput="calculate()" />
+      </div>
+    </div>
+  </div>
+
+  <div id="calc-error" class="error-msg"></div>
+
+  <div id="calc-result" style="display:none;">
+    <div class="result-block">
+      <div style="font-size:0.72rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--blue-bright);margin-bottom:0.75rem;">Results</div>
+      <div class="result-row">
+        <span class="result-label">Total EXP needed</span>
+        <span class="result-value" id="r-total-exp">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Time to reach Level <span id="r-target-label">—</span></span>
+        <span class="result-value big" id="r-time">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Estimated completion</span>
+        <span class="result-value" id="r-date">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Time zone used</span>
+        <span class="result-value" id="r-tz">—</span>
+      </div>
+    </div>
+    <div class="tz-note" id="tz-note" style="display:none;">
+      ⚠️ Time zone not set on your profile — showing your device's local time instead. <a href="profile.html">Update your profile →</a>
+    </div>
+  </div>
+
+</main>
+<script>
+// ── EXP table: index = level, value = EXP needed to reach NEXT level ─────────
+// Level 1 → 2 needs 80 EXP. Index 0 unused.
+const EXP_TO_NEXT = [
+  0,       // 0 (unused)
+  80,      // 1→2
+  80,      // 2→3
+  90,      // 3→4
+  90,90,90,90,90,90,  // 4→10
+  100,     // 10→11
+  350,355,360,370,375,390,400,450,500,500, // 11→21
+  1483,1844,1865,1916,2043,2067,2169,2437,2536,2860, // 21→31
+  2995,3607,3794,3876,3996,4261,4289,4510,4928,5086, // 31→41
+  17203,19189,21484,21509,23052,24627,25480,26852,29068,32008, // 41→51
+  33168,33332,34095,35628,35929,37680,38331,38878,39016,41731, // 51→61
+  43128,45042,45412,47152,47282,47340,50487,53076,54257,54405, // 61→71
+  197114,310414,330204,334735,348791,360389,360701,362826,378632,379059, // 71→81
+  408765,440713,464670,467234,477970,484690,509874,513879,527583,532378, // 81→91
+  583801,612907,643189,644274,670957,678226,706678,712891,749807,751452, // 91→101
+  2904398,3027527,3032011,3117883,3191855,3220513,3258763,3346658,3389858,3548753, // 101→111
+  3631694,3771824,3796167,3866624,3924404,4029348,4101565,4245434,4245686,4514881, // 111→121
+  4566377,4752888,4866448,5012377,5016341,5178619,5229563,5423881,5459728,6335318, // 121→131
+  22859655,23541185,23587156,24290510,24337860,25112507,25161277,25962089,26062556,26920314, // 131→141
+  27780149,28608441,28773140,29687769,29800863,30864506,30980992,32025290,32205262,33270698, // 141→151
+  34387276,35609150,35871344,37143639,37211154,38460179,38529719,39822474,40037353,43248083, // 151→161
+  384397189,395865205,396350698,409177436,409177436,422418979,422934039,437149695,438210719,453833849, // 161→171
+  468396986,484113075,485851805,502143700,503337628,519592952,520822698,538272785,540172742,557963011, // 171→181
+  576777448,595380011,596764450,617434129,620286073,641012583,642481335,663183389,665452610,744690971, // 181→191
+  4740582214,4882480181,4882480181,5028635086,5028635086,5179174639,5179174639,5334230378,5334230378,5495712789, // 191→201
+  5661102926,5830563264,5830563264,6005107412,6005107412,6184887884,6184887884,6370061770,6370061770,6562565874, // 201→211
+  6758935974,6961278053,6961278053,7169690395,7169690395,7384355106,7384355106,7605459760,7605459760,8484262813, // 211→221
+  43271203716,44567742327,44567742327,45903177097,45903177097,47278674910,47278674910,48695437657,48695437657,50163578287, // 221→231
+  51662815813,53210836537,53210836537,54805297883,54805297883,56447593070,56447593070,58139157112,58139157112,59890343075, // 231→241
+  61702968507,63551927563,63551927563,65456355390,65456355390,67417916051,67417916051,69438323533,69438323533,77468816532, // 241→251 (250 is max)
+];
+const MAX_LEVEL = 250;
+
+function expToReach(fromLevel, fromExp, toLevel) {
+  // fromExp = EXP already accumulated INTO fromLevel (not cumulative)
+  if (toLevel <= fromLevel) return 0;
+  let total = 0;
+  // Remaining EXP in current level
+  const neededCurrent = EXP_TO_NEXT[fromLevel];
+  if (!neededCurrent) return null; // max level
+  total += Math.max(0, neededCurrent - fromExp);
+  // Full levels in between
+  for (let lv = fromLevel + 1; lv < toLevel; lv++) {
+    if (!EXP_TO_NEXT[lv]) return null;
+    total += EXP_TO_NEXT[lv];
+  }
+  return total;
+}
+
+function formatDuration(hours) {
+  const totalMins = Math.round(hours * 60);
+  const d = Math.floor(totalMins / 1440);
+  const h = Math.floor((totalMins % 1440) / 60);
+  const m = totalMins % 60;
+  const parts = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m || !parts.length) parts.push(`${m}m`);
+  return parts.join(" ");
+}
+
+function formatNumber(n) {
+  return Math.round(n).toLocaleString();
+}
+
+// Parse timezone offset from strings like "UTC-05:00 (EST)" or "UTC+05:30 (IST)"
+function parseTimezoneOffset(tzString) {
+  if (!tzString) return null;
+  const match = tzString.match(/UTC([+-])(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  const sign = match[1] === "+" ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const mins  = parseInt(match[3], 10);
+  return sign * (hours * 60 + mins); // offset in minutes
+}
+
+function formatEstimatedDate(hoursFromNow, tzOffsetMinutes, tzLabel) {
+  const nowUTC = Date.now();
+  const msFromNow = hoursFromNow * 3600 * 1000;
+  const arrivalUTC = nowUTC + msFromNow;
+  // Apply offset
+  const localMs = arrivalUTC + (tzOffsetMinutes * 60 * 1000);
+  const d = new Date(localMs);
+  const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const dayName = days[d.getUTCDay()];
+  const month   = months[d.getUTCMonth()];
+  const date    = d.getUTCDate();
+  const year    = d.getUTCFullYear();
+  const hh      = String(d.getUTCHours()).padStart(2,"0");
+  const mm      = String(d.getUTCMinutes()).padStart(2,"0");
+  return `${dayName}, ${month} ${date}, ${year} at ${hh}:${mm}`;
+}
+
+function calculate() {
+  const level  = parseInt(document.getElementById("c-level").value, 10);
+  const exp    = parseInt(document.getElementById("c-exp").value, 10);
+  const rate   = parseInt(document.getElementById("c-rate").value, 10);
+  const target = parseInt(document.getElementById("c-target").value, 10);
+  const errEl  = document.getElementById("calc-error");
+  const resEl  = document.getElementById("calc-result");
+
+  // Need all four fields to proceed
+  if (isNaN(level) || isNaN(exp) || isNaN(rate) || isNaN(target)) {
+    errEl.style.display = "none";
+    resEl.style.display = "none";
+    return;
+  }
+
+  // Validation
+  if (level < 1 || level >= MAX_LEVEL) {
+    showError(`Current level must be between 1 and ${MAX_LEVEL - 1}.`); return;
+  }
+  if (exp < 0) {
+    showError("Current EXP cannot be negative."); return;
+  }
+  if (exp >= EXP_TO_NEXT[level]) {
+    showError(`Current EXP (${formatNumber(exp)}) exceeds the EXP needed for level ${level} (${formatNumber(EXP_TO_NEXT[level])}). Please double-check your values.`); return;
+  }
+  if (rate <= 0) {
+    showError("EXP/HR must be greater than 0."); return;
+  }
+  if (target <= level) {
+    showError("Target level must be higher than your current level."); return;
+  }
+  if (target > MAX_LEVEL) {
+    showError(`Target level cannot exceed ${MAX_LEVEL}.`); return;
+  }
+
+  const totalExp = expToReach(level, exp, target);
+  if (totalExp === null) {
+    showError("EXP data not available for the selected level range."); return;
+  }
+
+  errEl.style.display = "none";
+  const hoursNeeded = totalExp / rate;
+
+  // Timezone
+  const session = getSession();
+  let tzString = "";
+  let tzOffsetMins = null;
+  let usingDeviceTz = false;
+
+  if (session && session.id) {
+    // Try to get tz from the allMembers data via sessionStorage cache, else fall back
+    const cachedTz = sessionStorage.getItem("calc_tz");
+    if (cachedTz) {
+      tzString = cachedTz;
+      tzOffsetMins = parseTimezoneOffset(tzString);
+    }
+  }
+
+  // If no profile tz, use device local offset
+  if (tzOffsetMins === null) {
+    tzOffsetMins = -new Date().getTimezoneOffset(); // JS returns negative of UTC offset
+    usingDeviceTz = true;
+    tzString = "Your device's local time";
+  }
+
+  const estDate = formatEstimatedDate(hoursNeeded, tzOffsetMins, tzString);
+
+  document.getElementById("r-total-exp").textContent    = formatNumber(totalExp) + " EXP";
+  document.getElementById("r-target-label").textContent = target;
+  document.getElementById("r-time").textContent         = formatDuration(hoursNeeded);
+  document.getElementById("r-date").textContent         = estDate;
+  document.getElementById("r-tz").textContent           = tzString;
+
+  const tzNoteEl = document.getElementById("tz-note");
+  tzNoteEl.style.display = usingDeviceTz ? "block" : "none";
+
+  resEl.style.display = "block";
+}
+
+function showError(msg) {
+  const errEl = document.getElementById("calc-error");
+  errEl.textContent = msg;
+  errEl.style.display = "block";
+  document.getElementById("calc-result").style.display = "none";
+}
+
+// Load timezone from profile data so the calculator can use it
+onReady(async () => {
+  const session = getSession();
+  if (!session) return;
+  try {
+    const d = await apiGet({ action: "getAll", memberId: session.id });
+    const me = (d.members || []).find(m => m.id === session.id);
+    if (me && me.timezone) {
+      sessionStorage.setItem("calc_tz", me.timezone);
+      // Recalculate if user already filled in fields
+      calculate();
+    }
+  } catch(e) {
+    // Silently fail — calculator still works with device tz
+  }
+});
+</script>
+</body>
+</html>

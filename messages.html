@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <title>Your Messages — Berserk Guild</title>
-<link rel="stylesheet" href="css/style.css?v=2026061901" />
+<link rel="stylesheet" href="css/style.css?v=2026061902" />
 <style>
 /* ── Full-bleed layout ─────────────────────────────────────────── */
 main{max-width:100% !important;margin:0 !important;padding:0 !important;
@@ -178,7 +178,7 @@ body{overflow:hidden;display:flex;flex-direction:column;min-height:100vh;}
 </style>
 </head>
 <body>
-<script src="js/app.js?v=2026061901"></script>
+<script src="js/app.js?v=2026061902"></script>
 <script>onReady(() => buildNav("messages.html"));</script>
 <main style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
 
@@ -509,14 +509,4 @@ async function pollForUpdates() {
       const ac = convos.find(c => c.withId === activeWithId);
       if (ac) ac.unread = 0;
     }
-    renderConvoList();
-  } catch(_) {}
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) stopPolling();
-  else startPolling();
-});
-</script>
-</body>
-</html>
+    renderConvoList
