@@ -6,160 +6,50 @@
 <title>Guild Members — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061514" />
 <style>
-  /* ── Members grid ───────────────────────────────────────── */
-  .members-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0.875rem;
-    align-items: start;
-  }
-  @media(max-width:700px){ .members-grid { grid-template-columns: 1fr; } }
-
-  /* ── Member card ─────────────────────────────────────────── */
-  .mc {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: var(--radius-lg); overflow: hidden;
-    transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
-  }
-  .mc:hover {
-    border-color: var(--border3);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-  }
-
-  /* Always-visible header */
-  .mc-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 0.875rem 1rem; cursor: pointer; user-select: none;
-  }
-  .mc-header:hover { background: var(--surface2); }
-  .mc-avatar {
-    width: 42px; height: 42px; border-radius: 50%;
-    object-fit: cover; border: 2px solid var(--blue-mid); flex-shrink: 0;
-  }
-  .mc-avatar-fb {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: var(--surface2); border: 2px solid var(--blue-mid);
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 0.75rem; font-weight: 700;
-    color: var(--blue-bright); flex-shrink: 0;
-  }
-  .mc-header-info { flex: 1; min-width: 0; }
-  .mc-name {
-    font-size: 0.92rem; font-weight: 700;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .mc-id { font-size: 0.68rem; color: var(--text3); font-family: var(--mono); }
-  .mc-header-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-  .mc-chevron {
-    color: var(--text3); font-size: 0.68rem;
-    transition: transform 0.2s; flex-shrink: 0;
-  }
-  .mc.open .mc-chevron { transform: rotate(180deg); }
-
-  /* Expanded body */
-  .mc-body { display: none; padding: 0 1rem 0.875rem; }
-  .mc.open .mc-body { display: block; }
-
-  /* Info pill row — same compact style as team cards */
-  .mc-pill-row {
-    display: flex; gap: 5px; flex-wrap: wrap;
-    align-items: center; margin-bottom: 0.6rem;
-  }
-  .mc-tag {
-    font-size: 0.68rem; padding: 2px 8px; border-radius: 4px;
-    background: var(--surface2); border: 1px solid var(--border2);
-    color: var(--text2);
-  }
-  .mc-tag-power  { background: var(--blue-dim);   border-color: var(--blue-mid);   color: var(--sky); }
-  .mc-tag-level  { background: var(--green-dim);  border-color: var(--green-mid);  color: var(--green); }
-  .mc-tag-class  { background: var(--amber-dim);  border-color: var(--amber-mid);  color: var(--amber); }
-  .mc-tag-lft    { background: var(--blue-dim);   border-color: var(--blue-mid);   color: var(--blue-bright); }
-  .mc-tag-discord{ background: var(--surface2);   border-color: var(--border2);    color: var(--text2); }
-
-  /* Captaining strip */
-  .mc-captaining {
-    display: flex; flex-wrap: wrap; gap: 4px;
-    align-items: center; margin-bottom: 0.6rem;
-  }
-  .mc-cap-label {
-    font-size: 0.62rem; color: var(--amber); font-family: var(--mono);
-    letter-spacing: 0.06em; font-weight: 600; text-transform: uppercase;
-  }
-
-  /* Surface filter buttons — same as team registry */
-  .filter-surface-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .filter-surface-btn {
-    background: var(--surface); border: 1px solid var(--border2);
-    color: var(--text2); font-size: 0.78rem; padding: 6px 13px;
-    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-    font-family: inherit; font-weight: 500; white-space: nowrap;
-  }
-  .filter-surface-btn:hover { border-color: var(--border3); color: var(--text); }
-  .filter-surface-btn.active {
-    border-color: var(--blue-mid); color: var(--blue-bright); background: var(--blue-dim);
-  }
-
-  /* Advanced filter dropdown */
-  .filter-dropdown-wrap { position: relative; }
-  .filter-dropdown-btn {
-    background: var(--surface); border: 1px solid var(--border2);
-    color: var(--text2); font-size: 0.78rem; padding: 6px 13px;
-    border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;
-    transition: border-color 0.15s; font-family: inherit;
-  }
-  .filter-dropdown-btn:hover { border-color: var(--border3); color: var(--text); }
-  .filter-dropdown-menu {
-    display: none; position: absolute; top: calc(100% + 6px); left: 0;
-    background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: var(--radius); min-width: 240px; z-index: 50;
-    padding: 0.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-  .filter-dropdown-menu.open { display: block; }
-  .filter-group-label {
-    font-family: var(--mono); font-size: 0.65rem; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 8px 3px; margin-top: 4px;
-  }
-  .filter-check {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 8px; border-radius: 5px; cursor: pointer;
-    font-size: 0.82rem; color: var(--text2); transition: background 0.1s; user-select: none;
-  }
-  .filter-check:hover { background: var(--surface2); color: var(--text); }
-  .filter-check input[type="checkbox"] {
-    width: 14px; height: 14px; accent-color: var(--blue); cursor: pointer;
-  }
-  .active-filters { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
-  .active-filter-chip {
-    font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
-    background: var(--blue-dim); border: 1px solid var(--blue-mid);
-    color: var(--blue-bright); display: flex; align-items: center; gap: 4px;
-  }
-  .active-filter-chip button {
-    background: none; border: none; color: inherit; cursor: pointer;
-    font-size: 0.7rem; padding: 0; opacity: 0.7;
-  }
-  .active-filter-chip button:hover { opacity: 1; }
-
-  /* Invite / message buttons in expanded body */
-  .btn-invite {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 100%; background: rgba(52,211,153,0.13);
-    border: 1px solid rgba(52,211,153,0.4); color: var(--green);
-    border-radius: 6px; padding: 6px 12px; font-size: 0.78rem;
-    font-weight: 600; cursor: pointer; margin-top: 0.5rem;
-    transition: background 0.15s, border-color 0.15s;
-    font-family: inherit;
-  }
-  .btn-invite:hover { background: rgba(52,211,153,0.22); border-color: rgba(52,211,153,0.6); }
-
-  /* Casual badge override — light blue */
-  .badge-casual {
-    background: rgba(96,165,250,0.13);
-    color: #60a5fa;
-    border: 1px solid rgba(96,165,250,0.35);
-  }
+  .members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:0.875rem; align-items:start; }
+  @media(max-width:700px){ .members-grid { grid-template-columns:1fr; } }
+  .mc { background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s; }
+  .mc:hover { border-color:var(--border3);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+  .mc-header { display:flex;align-items:center;gap:10px;padding:0.875rem 1rem;cursor:pointer;user-select:none; }
+  .mc-header:hover { background:var(--surface2); }
+  .mc-avatar { width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--blue-mid);flex-shrink:0; }
+  .mc-avatar-fb { width:42px;height:42px;border-radius:50%;background:var(--surface2);border:2px solid var(--blue-mid);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.75rem;font-weight:700;color:var(--blue-bright);flex-shrink:0; }
+  .mc-header-info { flex:1;min-width:0; }
+  .mc-name { font-size:0.92rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .mc-id { font-size:0.68rem;color:var(--text3);font-family:var(--mono); }
+  .mc-header-badges { display:flex;gap:4px;flex-wrap:wrap;margin-top:4px; }
+  .mc-chevron { color:var(--text3);font-size:0.68rem;transition:transform 0.2s;flex-shrink:0; }
+  .mc.open .mc-chevron { transform:rotate(180deg); }
+  .mc-body { display:none;padding:0 1rem 0.875rem; }
+  .mc.open .mc-body { display:block; }
+  .mc-pill-row { display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:0.6rem; }
+  .mc-tag { font-size:0.68rem;padding:2px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2); }
+  .mc-tag-power  { background:var(--blue-dim);border-color:var(--blue-mid);color:var(--sky); }
+  .mc-tag-level  { background:var(--green-dim);border-color:var(--green-mid);color:var(--green); }
+  .mc-tag-class  { background:var(--amber-dim);border-color:var(--amber-mid);color:var(--amber); }
+  .mc-tag-discord{ background:var(--surface2);border-color:var(--border2);color:var(--text2); }
+  .mc-captaining { display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:0.6rem; }
+  .mc-cap-label { font-size:0.62rem;color:var(--amber);font-family:var(--mono);letter-spacing:0.06em;font-weight:600;text-transform:uppercase; }
+  .filter-surface-bar { display:flex;gap:6px;flex-wrap:wrap;align-items:center; }
+  .filter-surface-btn { background:var(--surface);border:1px solid var(--border2);color:var(--text2);font-size:0.78rem;padding:6px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border-color 0.15s,color 0.15s,background 0.15s;font-family:inherit;font-weight:500;white-space:nowrap; }
+  .filter-surface-btn:hover { border-color:var(--border3);color:var(--text); }
+  .filter-surface-btn.active { border-color:var(--blue-mid);color:var(--blue-bright);background:var(--blue-dim); }
+  .filter-dropdown-wrap { position:relative; }
+  .filter-dropdown-btn { background:var(--surface);border:1px solid var(--border2);color:var(--text2);font-size:0.78rem;padding:6px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s;font-family:inherit; }
+  .filter-dropdown-btn:hover { border-color:var(--border3);color:var(--text); }
+  .filter-dropdown-menu { display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);min-width:240px;z-index:50;padding:0.5rem;box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+  .filter-dropdown-menu.open { display:block; }
+  .filter-group-label { font-family:var(--mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:6px 8px 3px;margin-top:4px; }
+  .filter-check { display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;font-size:0.82rem;color:var(--text2);transition:background 0.1s;user-select:none; }
+  .filter-check:hover { background:var(--surface2);color:var(--text); }
+  .filter-check input[type="checkbox"] { width:14px;height:14px;accent-color:var(--blue);cursor:pointer; }
+  .active-filters { display:flex;gap:5px;flex-wrap:wrap;margin-top:6px; }
+  .active-filter-chip { font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--blue-dim);border:1px solid var(--blue-mid);color:var(--blue-bright);display:flex;align-items:center;gap:4px; }
+  .active-filter-chip button { background:none;border:none;color:inherit;cursor:pointer;font-size:0.7rem;padding:0;opacity:0.7; }
+  .active-filter-chip button:hover { opacity:1; }
+  .btn-invite { display:inline-flex;align-items:center;justify-content:center;width:100%;background:rgba(52,211,153,0.13);border:1px solid rgba(52,211,153,0.4);color:var(--green);border-radius:6px;padding:6px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;margin-top:0.5rem;transition:background 0.15s,border-color 0.15s;font-family:inherit; }
+  .btn-invite:hover { background:rgba(52,211,153,0.22);border-color:rgba(52,211,153,0.6); }
+  .badge-casual { background:rgba(96,165,250,0.13);color:#60a5fa;border:1px solid rgba(96,165,250,0.35); }
 </style>
 </head>
 <body>
@@ -217,7 +107,6 @@
     <p>No members match your filters.</p>
   </div>
 </main>
-
 <!-- Invite modal -->
 <div class="modal-overlay" id="invite-modal">
   <div class="modal">
@@ -230,65 +119,54 @@
     </div>
   </div>
 </div>
-
 <script>
 let allMembers=[], allTeams=[], allRequests=[], settings={};
 let inviteTargetId=null;
 const _plangSelected=[];
 
-// ── Surface filter buttons ─────────────────────────────────
 const _sf = new Set();
 function toggleSF(key) {
-  if (_sf.has(key)) _sf.delete(key);
-  else _sf.add(key);
-  // map key to button id
-  const btnId = { lft:"fsb-lft", captain:"fsb-captain", Competitive:"fsb-competitive", Casual:"fsb-casual" }[key];
-  const btn = btnId ? el(btnId) : null;
-  if (btn) btn.classList.toggle("active", _sf.has(key));
+  if (_sf.has(key)) _sf.delete(key); else _sf.add(key);
+  const btnId={lft:"fsb-lft",captain:"fsb-captain",Competitive:"fsb-competitive",Casual:"fsb-casual"}[key];
+  const btn=btnId?el(btnId):null;
+  if(btn) btn.classList.toggle("active",_sf.has(key));
   renderPlayers();
 }
-
-// ── Dropdown + outside-click ───────────────────────────────
-document.addEventListener("click", e => {
-  const fw = document.querySelector(".filter-dropdown-wrap");
-  if (fw && !fw.contains(e.target)) document.getElementById("player-filter-menu")?.classList.remove("open");
-  const lw = el("plang-filter-wrap");
-  if (lw && !lw.contains(e.target)) el("plang-filter-dropdown")?.classList.remove("open");
+document.addEventListener("click",e=>{
+  const fw=document.querySelector(".filter-dropdown-wrap");
+  if(fw&&!fw.contains(e.target)) document.getElementById("player-filter-menu")?.classList.remove("open");
+  const lw=el("plang-filter-wrap");
+  if(lw&&!lw.contains(e.target)) el("plang-filter-dropdown")?.classList.remove("open");
 });
-function togglePlayerFilters() { document.getElementById("player-filter-menu").classList.toggle("open"); }
-
-function getPlayerFilters() {
+function togglePlayerFilters(){ document.getElementById("player-filter-menu").classList.toggle("open"); }
+function getPlayerFilters(){
   const a=[];
   document.querySelectorAll("#player-filter-menu input[type=checkbox]:checked").forEach(cb=>a.push(cb.dataset.pf));
   return a;
 }
-
-function clearPlayerFilters() {
+function clearPlayerFilters(){
   document.querySelectorAll("#player-filter-menu input[type=checkbox]").forEach(cb=>cb.checked=false);
   _plangSelected.length=0;
   el("plang-filter-tags").innerHTML="";
   _sf.clear();
-  ["fsb-lft","fsb-captain","fsb-competitive","fsb-casual"].forEach(id=>{ const b=el(id); if(b)b.classList.remove("active"); });
+  ["fsb-lft","fsb-captain","fsb-competitive","fsb-casual"].forEach(id=>{const b=el(id);if(b)b.classList.remove("active");});
   renderPlayers();
 }
-
 const PF_LABELS={lft:"LFT",wantcaptain:"Wants Captain",captain:"Captains",Casual:"Casual",Competitive:"Competitive",hasDiscord:"Has Discord",noDiscord:"No Discord"};
-function updatePlayerFilterBadge(active) {
-  const total = active.length + _plangSelected.length;
-  const badge = el("player-filter-count");
-  if (badge) badge.textContent = total > 0 ? `(${total})` : "";
-  const row = el("active-player-filters"); if (!row) return;
-  row.innerHTML = [
+function updatePlayerFilterBadge(active){
+  const total=active.length+_plangSelected.length;
+  const badge=el("player-filter-count");
+  if(badge) badge.textContent=total>0?`(${total})`:"";
+  const row=el("active-player-filters");if(!row)return;
+  row.innerHTML=[
     ...active.map(f=>`<div class="active-filter-chip">${PF_LABELS[f]||f}<button onclick="removePlayerFilter('${f}')">✕</button></div>`),
     ..._plangSelected.map(l=>`<div class="active-filter-chip">${esc(l)}<button onclick="plangFilterToggle('${esc(l)}')">✕</button></div>`)
   ].join("");
 }
-function removePlayerFilter(f) {
+function removePlayerFilter(f){
   const cb=document.querySelector(`#player-filter-menu input[data-pf="${f}"]`);
   if(cb){cb.checked=false;renderPlayers();}
 }
-
-// ── Language tag input ─────────────────────────────────────
 function plangFilterOpen(){plangFilterRenderDD();el("plang-filter-dropdown").classList.add("open");}
 function plangFilterSearch(){plangFilterRenderDD();el("plang-filter-dropdown").classList.add("open");}
 function plangFilterToggle(lang){
@@ -304,76 +182,70 @@ function plangFilterRenderDD(){
   const dd=el("plang-filter-dropdown");if(!dd)return;
   dd.innerHTML=f.length?f.map(l=>`<div class="tag-dropdown-item" onclick="plangFilterToggle('${esc(l)}')">${esc(l)}</div>`).join(""):`<div class="tag-dropdown-empty">No results</div>`;
 }
-
-// ── Init ───────────────────────────────────────────────────
 onReady(async()=>{
+  const session=getSession();
   try{
-    const d=await apiGet({action:"getAll"});
-    allMembers=d.members||[]; allTeams=d.teams||[]; allRequests=d.requests||[]; settings=d.settings||{};
+    const d=await apiGet({action:"getAll",memberId:session?session.id:""});
+    allMembers=d.members||[];allTeams=d.teams||[];allRequests=d.requests||[];settings=d.settings||{};
   }catch(e){allMembers=[];}
   hide(el("loading")); renderPlayers();
 });
-
 function toggleMemberCard(id){
   const card=document.getElementById("mc-"+id);
-  if(card)card.classList.toggle("open");
+  if(card) card.classList.toggle("open");
 }
-
-// ── Render ─────────────────────────────────────────────────
 function renderPlayers(){
-  const grid=el("players-grid"), emptyEl=el("players-empty");
+  const grid=el("players-grid"),emptyEl=el("players-empty");
   const search=(el("player-search").value||"").toLowerCase();
   const active=getPlayerFilters();
   updatePlayerFilterBadge(active);
   const session=getSession();
   const maxTeams=Number(settings.maxMemberTeams)||3;
+  const maxSize=Number(settings.maxTeamSize)||4;
   const myCaptainTeams=session?allTeams.filter(t=>t.captainId===session.id):[];
-
   const members=allMembers.filter(m=>{
-    // Surface filters
-    if(_sf.has("lft")         && String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
-    if(_sf.has("captain")     && String(m.isCaptain).toUpperCase()!=="TRUE")      return false;
-    if(_sf.has("Competitive") && m.playstyle!=="Competitive")                      return false;
-    if(_sf.has("Casual")      && m.playstyle!=="Casual")                           return false;
-    // Dropdown filters
-    if(active.includes("lft")         && String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
-    if(active.includes("wantcaptain") && String(m.lookingForCaptainRole).toUpperCase()!=="TRUE") return false;
-    if(active.includes("captain")     && String(m.isCaptain).toUpperCase()!=="TRUE") return false;
-    if(active.includes("Casual")      && m.playstyle!=="Casual")   return false;
-    if(active.includes("Competitive") && m.playstyle!=="Competitive") return false;
-    if(active.includes("hasDiscord")  && !m.discordId)  return false;
-    if(active.includes("noDiscord")   && m.discordId)   return false;
-    if(_plangSelected.length){ const ml=(m.prefLanguage||"").toLowerCase(); if(!_plangSelected.some(l=>ml===l.toLowerCase())) return false; }
-    if(search && !m.name.toLowerCase().includes(search) && !(m.gamertag||"").toLowerCase().includes(search)) return false;
+    if(_sf.has("lft")&&String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
+    if(_sf.has("captain")&&String(m.isCaptain).toUpperCase()!=="TRUE") return false;
+    if(_sf.has("Competitive")&&m.playstyle!=="Competitive") return false;
+    if(_sf.has("Casual")&&m.playstyle!=="Casual") return false;
+    if(active.includes("lft")&&String(m.lookingForTeam).toUpperCase()!=="TRUE") return false;
+    if(active.includes("wantcaptain")&&String(m.lookingForCaptainRole).toUpperCase()!=="TRUE") return false;
+    if(active.includes("captain")&&String(m.isCaptain).toUpperCase()!=="TRUE") return false;
+    if(active.includes("Casual")&&m.playstyle!=="Casual") return false;
+    if(active.includes("Competitive")&&m.playstyle!=="Competitive") return false;
+    if(active.includes("hasDiscord")&&!m.discordId) return false;
+    if(active.includes("noDiscord")&&m.discordId) return false;
+    if(_plangSelected.length){const ml=(m.prefLanguage||"").toLowerCase();if(!_plangSelected.some(l=>ml===l.toLowerCase()))return false;}
+    if(search&&!m.name.toLowerCase().includes(search)&&!(m.gamertag||"").toLowerCase().includes(search)) return false;
     return true;
   });
-
   el("player-count").textContent=`${members.length} member${members.length!==1?"s":""}`;
   if(!members.length){grid.style.display="none";emptyEl.style.display="block";return;}
   emptyEl.style.display="none"; grid.style.display="grid";
-
   grid.innerHTML=members.map(m=>{
     const isMe=session&&session.id===m.id;
     const isLFT=String(m.lookingForTeam).toUpperCase()==="TRUE";
     const isWC=String(m.lookingForCaptainRole).toUpperCase()==="TRUE";
     const isCap=String(m.isCaptain).toUpperCase()==="TRUE";
-    const teamCount=(Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).length;
+    const teamIds=(Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean));
+    const teamCount=teamIds.length;
     const captainedTeams=allTeams.filter(t=>t.captainId===m.id);
-    const alreadyInvitedAll=session&&myCaptainTeams.length&&allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&myCaptainTeams.map(t=>t.id).includes(r.teamId));
-
+    // Check if there is at least one captain team we can still invite this member to
+    const canInviteToAny=myCaptainTeams.some(t=>{
+      const mc=allMembers.filter(x=>(Array.isArray(x.teamIds)?x.teamIds:(x.teamIds||"").split(",").filter(Boolean)).includes(t.id)).length;
+      const pending=allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&r.teamId===t.id);
+      return mc<maxSize && !pending && !teamIds.includes(t.id);
+    });
+    const hasPendingOnAny=!canInviteToAny&&myCaptainTeams.some(t=>allRequests.find(r=>r.type==="invite"&&r.toId===m.id&&r.status==="pending"&&r.teamId===t.id));
     const av=m.avatarUrl
       ?`<img src="${esc(m.avatarUrl)}" class="mc-avatar" onerror="this.outerHTML='<div class=mc-avatar-fb>${initials(m.name)}</div>'" />`
       :`<div class="mc-avatar-fb">${initials(m.name)}</div>`;
-
-    // Header badges — at-a-glance info
     const hdrBadges=[
       m.class?`<span class="mc-tag mc-tag-class">${esc(CLASS_ICONS[m.class]||"")} ${esc(m.class)}</span>`:"",
       isLFT?`<span class="badge badge-lfg" style="font-size:0.62rem;"><span class="badge-dot"></span>LFT</span>`:"",
       isWC?`<span class="badge badge-amber" style="font-size:0.62rem;">⚜️ WTC</span>`:"",
       isCap?`<span class="badge badge-captain" style="font-size:0.62rem;">⚜️ Captain</span>`:"",
     ].filter(Boolean).join("");
-
-    // Compact info pill row shown in expanded body
     const pills=[
       m.power?`<span class="mc-tag mc-tag-power">⚡ ${formatPower(m.power)}</span>`:"",
       m.level?`<span class="mc-tag mc-tag-level">🎯 Lv.${esc(String(m.level))}</span>`:"",
@@ -381,20 +253,21 @@ function renderPlayers(){
       m.prefLanguage?`<span class="mc-tag">🌐 ${esc(m.prefLanguage)}</span>`:"",
       m.discordId?`<span class="mc-tag mc-tag-discord">💬 Discord</span>`:"",
     ].filter(Boolean).join("");
-
-    // Captaining strip
     const captainingSection=captainedTeams.length?`
       <div class="mc-captaining">
         <span class="mc-cap-label">⚜️ Captaining</span>
         ${captainedTeams.map(t=>`<a href="team.html?id=${t.id}" onclick="event.stopPropagation();"
           style="font-size:0.68rem;padding:2px 8px;border-radius:4px;background:var(--amber-dim);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;text-decoration:none;">${esc(t.name)}</a>`).join("")}
       </div>`:"";
-
-    // Action buttons
-    const inviteBtn=myCaptainTeams.length&&!isMe&&teamCount<maxTeams&&isLFT&&!alreadyInvitedAll
-      ?`<button class="btn-invite" onclick="event.stopPropagation();openInviteModal('${m.id}','${esc(m.name)}')">Invite to Team</button>`
-      :alreadyInvitedAll?`<div class="text-xs text-muted mt-sm" style="text-align:center;">Invite pending…</div>`:"";
-
+    // FIX: use data attributes so apostrophes/quotes in names never break the onclick
+    let inviteBtn="";
+    if(myCaptainTeams.length&&!isMe&&teamCount<maxTeams&&isLFT){
+      if(canInviteToAny){
+        inviteBtn=`<button class="btn-invite" data-invite-id="${esc(m.id)}" data-invite-name="${esc(m.name)}" onclick="event.stopPropagation();openInviteModal(this.dataset.inviteId,this.dataset.inviteName)">Invite to Team</button>`;
+      } else if(hasPendingOnAny){
+        inviteBtn=`<div class="text-xs text-muted mt-sm" style="text-align:center;">Invite pending…</div>`;
+      }
+    }
     return `<div class="mc" id="mc-${m.id}">
       <div class="mc-header" onclick="toggleMemberCard('${m.id}')">
         <a href="profile.html?id=${m.id}" onclick="event.stopPropagation();">${av}</a>
@@ -406,7 +279,7 @@ function renderPlayers(){
         <span class="mc-chevron">▼</span>
       </div>
       <div class="mc-body">
-        ${pills ? `<div class="mc-pill-row">${pills}</div>` : ""}
+        ${pills?`<div class="mc-pill-row">${pills}</div>`:""}
         ${captainingSection}
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <a href="profile.html?id=${m.id}" class="btn btn-ghost btn-sm" style="flex:1;" onclick="event.stopPropagation();">View Profile</a>
@@ -417,9 +290,8 @@ function renderPlayers(){
     </div>`;
   }).join("");
 }
-
 // ── Invite modal ───────────────────────────────────────────
-function openInviteModal(memberId, memberName) {
+function openInviteModal(memberId,memberName){
   inviteTargetId=memberId;
   el("inv-target-name").textContent=memberName;
   clearAlert("inv-error");
@@ -435,14 +307,15 @@ function openInviteModal(memberId, memberName) {
   el("inv-modal-body").textContent="Choose which of your teams to invite this player to:";
   el("inv-team-list").innerHTML=myTeams.map(t=>{
     const memberCount=allMembers.filter(m=>(Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean)).includes(t.id)).length;
-    const isFull=memberCount>=maxSize||t.status==="full";
+    const isFull=memberCount>=maxSize;
     const alreadyPending=allRequests.find(r=>r.type==="invite"&&r.toId===memberId&&r.status==="pending"&&r.teamId===t.id);
     const alreadyMember=(()=>{const tm=allMembers.find(m=>m.id===memberId);return tm&&(Array.isArray(tm.teamIds)?tm.teamIds:(tm.teamIds||"").split(",").filter(Boolean)).includes(t.id);})();
     let btnHtml;
-    if(alreadyMember)     btnHtml=`<span style="font-size:0.72rem;color:var(--text3);">Already a member</span>`;
-    else if(alreadyPending)btnHtml=`<span style="font-size:0.72rem;color:var(--amber);">Invite pending</span>`;
-    else if(isFull)       btnHtml=`<span style="font-size:0.72rem;color:var(--text3);">Team full</span>`;
-    else                  btnHtml=`<button class="btn btn-primary btn-sm" onclick="doSendInvite('${t.id}','${esc(t.name)}')">Invite</button>`;
+    if(alreadyMember)       btnHtml=`<span style="font-size:0.72rem;color:var(--text3);">Already a member</span>`;
+    else if(alreadyPending) btnHtml=`<span style="font-size:0.72rem;color:var(--amber);">Invite pending</span>`;
+    else if(isFull)         btnHtml=`<span style="font-size:0.72rem;color:var(--text3);">Team full</span>`;
+    // FIX: team ID in data attribute — no string interpolation of team name into onclick
+    else                    btnHtml=`<button class="btn btn-primary btn-sm" data-team-id="${esc(t.id)}" onclick="doSendInvite(this.dataset.teamId)">Invite</button>`;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;
       background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:0.625rem 0.875rem;">
       <div>
@@ -453,15 +326,16 @@ function openInviteModal(memberId, memberName) {
   }).join("");
   el("invite-modal").classList.add("open");
 }
-
 function closeInviteModal(){ el("invite-modal").classList.remove("open"); }
-
-async function doSendInvite(teamId, teamName){
+// FIX: use memberId auth (reliable); look up team name from allTeams (no string arg needed)
+async function doSendInvite(teamId){
   const session=getSession(); if(!session)return;
+  const team=allTeams.find(t=>t.id===teamId);
+  const teamName=team?team.name:teamId;
   clearAlert("inv-error"); closeInviteModal();
   showProcessing("Sending Invite…");
   try{
-    await apiPost({action:"sendInvite",gamertag:session.gamertag,captainKey:session.captainKey,toMemberId:inviteTargetId,teamId});
+    await apiPost({action:"sendInvite",memberId:session.id,captainKey:session.captainKey,toMemberId:inviteTargetId,teamId});
     allRequests.push({type:"invite",toId:inviteTargetId,teamId,teamName,status:"pending",id:"local-"+Date.now()});
     hideProcessing("Invite sent to "+teamName+"!");
     renderPlayers();
