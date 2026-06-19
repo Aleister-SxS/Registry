@@ -509,4 +509,9 @@ async function pollForUpdates() {
       const ac = convos.find(c => c.withId === activeWithId);
       if (ac) ac.unread = 0;
     }
-    renderConvoList
+    renderConvoList();
+  } catch(_) {}
+}
+</script>
+</body>
+</html>

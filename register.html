@@ -814,4 +814,22 @@ async function doRegister() {
       action: "registerMember", name: name, gamertag: tag, tier: tier, class: cls,
       power: power, level: level, bio: "", description: desc, playstyle: playstyle,
       discordId: discId, discordName: discName, timezone: tz, email: document.getElementById('r-email').value.trim(),
-      languages: languages, prefLanguage: prefLang.join(
+      languages: languages, prefLanguage: prefLang.join(","), guildMember: guildMember ? "TRUE" : "FALSE",
+      lft: lfg, wantCaptain: wantCap
+    });
+    saveSession({
+      id: d.member.id, gamertag: d.member.gamertag, name: d.member.name,
+      captainKey: d.member.captainKey, isCaptain: d.member.isCaptain,
+      avatarUrl: d.member.avatarUrl, pvpFantomon: d.member.pvpFantomon,
+      guildMember: d.member.guildMember
+    });
+    regHideProcessing();
+    window.location.href = "index.html";
+  } catch(e) {
+    regHideProcessing();
+    showAlert("reg-error", e.message);
+  }
+}
+</script>
+</body>
+</html>

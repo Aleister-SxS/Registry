@@ -130,22 +130,20 @@ async function saveNotifPrefs() {
   };
   const btn = el("btn-save");
   const inputs = document.querySelectorAll("#notif-form input, #notif-form button");
-  // Lock UI
   inputs.forEach(i => i.disabled = true);
   if (btn) { btn.textContent = "Saving…"; }
   clearAlert("alert-area");
   try {
     await apiPost({ action: "updateNotifPrefs", memberId: session.id, captainKey: session.captainKey, email, prefs });
     if (_notifMember) { _notifMember.email = email; _notifMember.notifPrefs = JSON.stringify(prefs); }
-    showAlert("alert-area", "✅ Preferences saved.", "success");
+    showAlert("alert-area", "\u2705 Preferences saved.", "success");
     setTimeout(() => clearAlert("alert-area"), 3000);
   } catch(e) {
     showAlert("alert-area", "Failed to save: " + e.message, "error");
   } finally {
-    // Unlock UI
     inputs.forEach(i => i.disabled = false);
     if (btn) { btn.textContent = "Save Preferences"; }
-    updatePushStatus(); // re-evaluate push button state after unlock
+    updatePushStatus();
   }
 }
 
@@ -165,4 +163,19 @@ function updatePushStatus() {
     statusEl.innerHTML = '<span style="color:var(--red);">❌ Push notifications are blocked. Update your browser\'s site permissions to enable them.</span>';
     if (btn) btn.disabled = true;
   } else {
-    statusEl.textContent = "Push notifications are not yet enabled
+    statusEl.textContent = "Push notifications are not yet enabled.";
+    if (btn) btn.textContent = "Enable Push Notifications";
+  }
+}
+
+async function handlePushToggle() {
+  if (Notification.permission === "granted") {
+    toast("To disable push notifications, go to your browser's site settings and block notifications for this site.", "info", 5000);
+    return;
+  }
+  await registerPushNotifications();
+  updatePushStatus();
+}
+</script>
+</body>
+</html>

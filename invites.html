@@ -128,14 +128,7 @@
         <div class="inv-stat-icon">📨</div>
         <div>
           <div class="inv-stat-val" id="stat-inv-val">0</div>
-          <div class="inv-stat-label">Team Invites Received</div>
-        </div>
-      </div>
-      <div class="inv-stat" id="stat-outinvites">
-        <div class="inv-stat-icon">📮</div>
-        <div>
-          <div class="inv-stat-val" id="stat-outinv-val">0</div>
-          <div class="inv-stat-label">Invites You've Sent</div>
+          <div class="inv-stat-label">Team Invites</div>
         </div>
       </div>
       <div class="inv-stat" id="stat-requests">
@@ -172,16 +165,6 @@
         <span class="inv-chevron">▼</span>
       </div>
       <div class="inv-section-bd" id="bd-requests"></div>
-    </div>
-
-    <!-- Outgoing Invites (captain sent) -->
-    <div class="inv-section" id="sec-outinvites">
-      <div class="inv-section-hd" onclick="toggleSec('sec-outinvites')">
-        <span class="inv-section-title">📮 Invites You've Sent</span>
-        <span id="outinv-badge" class="inv-section-badge" style="display:none;"></span>
-        <span class="inv-chevron">▼</span>
-      </div>
-      <div class="inv-section-bd" id="bd-outinvites"></div>
     </div>
 
     <!-- Captain: Join Requests to Your Teams -->
@@ -381,35 +364,6 @@ function renderInvites(){
     el("bd-requests").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📤</div><div class="inv-empty-text">No pending join requests.</div></div>`;
   }
 
-  // ── Outgoing Invites (captain sent) ────────────────────────
-  const outInvites=allRequests.filter(r=>r.type==="invite"&&r.fromId===m.id&&r.status==="pending");
-  setStat("stat-outinvites",outInvites.length);
-  const outInvBadge=el("outinv-badge");
-  if(outInvites.length){
-    outInvBadge.textContent=outInvites.length;show(outInvBadge);
-    el("bd-outinvites").innerHTML=outInvites.map(r=>{
-      const toMember=allMembers.find(mb=>mb.id===r.toId);
-      const team=allTeams.find(t=>t.id===r.teamId);
-      return`<div class="inv-row" data-req-id="${r.id}">
-        <div class="inv-row-avatar">${memberAvatar(toMember,40)}</div>
-        <div class="inv-row-info">
-          <div class="inv-row-name">${toMember?esc(toMember.name):"Unknown Member"}</div>
-          <div class="inv-row-sub">
-            ${toMember?.gamertag?`<span style="font-family:var(--mono);font-size:0.7rem;color:var(--text3);">${esc(String(toMember.gamertag))}</span><span style="color:var(--border2);">·</span>`:""}
-            <span>Invited to <strong style="color:var(--text);">${esc(r.teamName||team?.name||"your team")}</strong></span>
-            <span class="inv-waiting">⏳ Awaiting response</span>
-          </div>
-        </div>
-        <div class="inv-row-actions">
-          <button class="btn btn-ghost btn-sm" onclick="cancelOutInvite('${r.id}')">Revoke</button>
-        </div>
-      </div>`;
-    }).join("");
-  }else{
-    hide(outInvBadge);
-    el("bd-outinvites").innerHTML=`<div class="inv-empty"><div class="inv-empty-icon">📮</div><div class="inv-empty-text">No pending outgoing invites.</div></div>`;
-  }
-
   // ── Captain: Join Requests ────────────────────────────────────
   const jrqBadge=el("jrq-badge");
   if(!capTeams.length){
@@ -468,7 +422,6 @@ function renderInvites(){
     if(dismissed.includes(r.id))return false;
     if(r.type==="join"&&r.fromId===m.id)return true;
     if(r.type==="invite"&&r.toId===m.id)return true;
-    if(r.type==="invite"&&r.fromId===m.id)return true;
     if(r.type==="join"&&capTeamIds.includes(r.teamId))return true;
     return false;
   }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
@@ -497,12 +450,6 @@ function renderInvites(){
       if(r.type==="join"&&r.fromId===m.id){
         icon="📤";
         mainText=`Your join request to <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
-      }else if(r.type==="invite"&&r.fromId===m.id){
-        icon="📮";
-        const invitee=allMembers.find(mb=>mb.id===r.toId);
-        const inviteeName=invitee?esc(invitee.name):"A member";
-        const action=r.status==="accepted"?"accepted":"declined";
-        mainText=`<strong>${inviteeName}</strong> ${action} your invite to <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
       }else if(r.type==="invite"&&r.toId===m.id){
         icon="📨";
         const action=r.status==="accepted"?"You accepted":"You declined";
@@ -586,5 +533,6 @@ async function cancelRequest(reqId){
     setTimeout(()=>renderInvites(),1200);
   }catch(e){renderInvites();toast(e.message,"error");}
 }
-
-async function cancelOutInvite(reqId){
+</script>
+</body>
+</html>

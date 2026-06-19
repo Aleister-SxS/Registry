@@ -341,4 +341,9 @@ async function doSendInvite(teamId){
     hideProcessing("Invite sent to "+teamName+"!");
     renderPlayers();
   }catch(e){
-    hid
+    hideProcessing(); toast(e.message,"error");
+  }
+}
+</script>
+</body>
+</html>

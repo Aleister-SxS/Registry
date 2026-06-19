@@ -724,4 +724,33 @@ async function doResetKey(){
 // ── Export CSV ────────────────────────────────────────────
 function exportCSV(type){
   if(type==="members"){
-    const headers=["Name","Player ID","Class","Power","Level","Playstyle","Language","Discord","Teams","Captain","Reg
+    const headers=["Name","Player ID","Class","Power","Level","Playstyle","Language","Discord","Teams","Captain","Registered"];
+    const rows=allMembers.map(m=>[
+      m.name||"",m.gamertag||"",m.class||"",m.power||"",m.level||"",
+      m.playstyle||"",m.languages||"",m.discordName||"",
+      (m.teamIds||[]).length,m.isCaptain||"",m.registeredAt||""
+    ]);
+    downloadCSV("members.csv",headers,rows);
+  } else if(type==="teams"){
+    const headers=["Team Name","Team ID","Status","Captain","Members","Created"];
+    const rows=allTeams.map(t=>[
+      t.name||"",t.id||"",t.status||"",t.captainName||"",
+      (t.memberIds||[]).length,t.createdAt||""
+    ]);
+    downloadCSV("teams.csv",headers,rows);
+  }
+}
+
+function downloadCSV(filename,headers,rows){
+  const lines=[headers,...rows].map(r=>
+    r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")
+  );
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

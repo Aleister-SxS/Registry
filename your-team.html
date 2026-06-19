@@ -9,7 +9,6 @@
 <title>Your Teams — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061902"/>
 <script src="js/app.js?v=2026061902"></script>
-<script src="js/build-maker.js?v=2026061902"></script>
 <style>
 /* ── Team Management tab layout ────────────────────────────── */
 .mgmt-header{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 18px;margin-bottom:0.75rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -246,12 +245,6 @@ onReady(async()=>{
   }catch(e){ allTeams=[];allMembers=[]; }
   if(typeof SKILLS==="undefined") window.SKILLS=[];
   hide(el("loading"));
-  const deepTeamId=new URLSearchParams(location.search).get("team");
-  if(deepTeamId&&allTeams.find(t=>t.id===deepTeamId)){
-    const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
-    const myTeamIds=Array.isArray(me.teamIds)?me.teamIds:(me.teamIds||"").split(",").filter(Boolean);
-    if(myTeamIds.includes(deepTeamId)){openMgmt(deepTeamId);return;}
-  }
   renderLanding();
 });
 
@@ -375,8 +368,6 @@ function openMgmt(teamId){
 function renderMgmt(teamId){
   const t=allTeams.find(x=>x.id===teamId);
   if(!t){ renderLanding(); return; }
-  // Clear any open suggestion panel state so they don't ghost after re-render
-  Object.keys(openSuggPanels).forEach(k=>{ delete openSuggPanels[k]; });
   const members=allMembers.filter(m=>(m.teamIds||[]).includes(teamId))
     .sort((a,b)=>{ if(a.id===t.captainId)return -1; if(b.id===t.captainId)return 1; return 0; });
   const isCaptain=t.captainId===session.id;
@@ -607,7 +598,7 @@ function renderBuildsPane(t,members,isCaptain,teamId){
         return `<div class="bs ${sk?"filled":""} mine" data-panel-key="${panelKey}"
           onclick="toggleSuggPanel('${m.id}','${slotType}',${i},'${teamId}')"
           title="${hasSugg?"Suggestions pending — click to view":(sk?esc(sk.name):"Empty slot")}">
-          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.png" alt="${esc(sk.name)}" onerror="skillImgFallback(this)" />`
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`
               :`<div class="bs-empty">+</div>`}
           ${hasSugg?`<div class="bs-notif"></div>`:""}
         </div>`;
@@ -616,7 +607,7 @@ function renderBuildsPane(t,members,isCaptain,teamId){
         return `<div class="bs ${sk?"filled":""} theirs"
           onclick="openSuggestPicker('${teamId}','${m.id}','${esc(m.name)}','${slotType}',${i},'${esc(m.class||"")}')"
           title="${sk?esc(sk.name):"Empty — suggest a skill"}">
-          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.png" alt="${esc(sk.name)}" onerror="skillImgFallback(this)" />`
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`
               :`<div class="bs-empty">—</div>`}
           <div class="bs-suggest-tip">Suggest</div>
         </div>`;
@@ -705,7 +696,7 @@ function toggleSuggPanel(memberId,slotType,slotIndex,teamId){
       const isSuggCap=s.fromId===t?.captainId;
       return `<div class="sugg-item ${isSuggCap?"is-captain":""}">
         <div class="sugg-skill-thumb">
-          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.png" alt="${sk?esc(sk.name):"?"}" onerror="skillImgFallback(this)" />`:"❓"}
+          ${sk?`<img src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />`:"❓"}
         </div>
         <div class="sugg-body">
           <div class="sugg-who">
@@ -788,7 +779,7 @@ function spRenderGrid(toId){
   grid.innerHTML=skills.length
     ?skills.map(s=>`<div class="suggest-skill-card ${s.id===spState.selectedSkillId?"selected":""}"
       onclick="spSelectSkill('${s.id}','${toId}')" title="${esc(s.name)}">
-      <img src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.png" alt="${esc(s.name)}" onerror="skillImgFallback(this)" />
+      <img src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp" onerror="this.style.display='none'" />
       <div class="suggest-skill-card-name">${esc(s.name)}</div>
     </div>`).join("")
     :`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:1.5rem;font-size:0.8rem;">No skills found</div>`;
@@ -802,7 +793,7 @@ function spSelectSkill(skillId,toId){
 function closeSuggestPicker(toId){
   const c=el(`suggest-picker-${toId}`);
   if(c){ c.style.display="none"; c.innerHTML=""; }
-  spState={teamId:null,toId:null,toName:null,slotType:null,slotIndex:null,selectedSkillId:null,memberClass:null};
+  spState={teamId:null,toId:null,toName:null,slotType:null,slotIndex:null,selectedSkillId:null};
 }
 
 async function submitSuggestion(toId){
@@ -989,7 +980,7 @@ function tbmRenderSlots(){
       const isActive=tbmState.activeSlot&&tbmState.activeSlot.type===type&&tbmState.activeSlot.index===i;
       if(sk) return `<div class="build-slot filled" style="cursor:pointer;${isActive?"border-color:var(--blue);":""}" onclick="tbmSlotClick('${type}',${i})">
         <button class="build-slot-remove" onclick="event.stopPropagation();tbmClearSlot('${type}',${i})">✕</button>
-        <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.png" alt="${esc(sk.name)}" onerror="skillImgFallback(this)" />
+        <img class="skill-icon" style="width:38px;height:38px;" src="https://lootandwaifus.com/skills/swordxstaff/skill_${sk.id}.webp" onerror="this.style.display='none'" />
         <div class="skill-name" style="font-size:0.6rem;">${esc(sk.name)}</div></div>`;
       return `<div class="build-slot" style="cursor:pointer;${isActive?"border-color:var(--blue);border-style:solid;":""}" onclick="tbmSlotClick('${type}',${i})">
         <div style="font-size:1.2rem;opacity:0.2;">+</div>
@@ -1025,7 +1016,7 @@ function tbmRenderBrowser(){
   const selArr=tbmState.activeTab==="technique"?tbmState.techniques:tbmState.charms;
   el("tbm-skill-grid").innerHTML=skills.map(s=>`
     <div class="skill-card ${selArr.includes(s.id)?"selected":""}" onclick="tbmSelectSkill('${s.id}')" title="${esc(s.name)}">
-      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.png" alt="${esc(s.name)}" loading="lazy" onerror="skillImgFallback(this)" />
+      <img class="skill-icon" src="https://lootandwaifus.com/skills/swordxstaff/skill_${s.id}.webp" loading="lazy" onerror="this.style.display='none'" />
       <div class="skill-name">${esc(s.name)}</div>
     </div>`).join("")
     ||`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:2rem;font-size:0.82rem;">No skills found</div>`;
@@ -1262,10 +1253,19 @@ async function chatTranslate(msgId,text){
     if(msgEl2){
       const existing=msgEl2.querySelector(".chat-translation"); if(existing) existing.remove();
       const div=document.createElement("div"); div.className="chat-translation";
-      div.style.cssText="margin-top:4px;padding:4px 8px;background:var(--surface3);border-radius:6px;font-size:0.78rem;color:var(--text2);border-left:2px solid var(--border2);";
-      div.innerHTML=`<span style="color:var(--text3);font-size:0.72rem;">${esc(chatTranslations[msgId].label)}:</span> ${esc(translated)}`;
-      msgEl2.appendChild(div);
+      div.innerHTML=`<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
+      const body=msgEl2.querySelector(".chat-msg-body"); if(body) body.appendChild(div);
     }
-    if(btn) btn.textContent="🌐";
-  }catch(e){
-    if(btn) btn.textContent="🌐
+    setTimeout(()=>{
+      delete chatTranslations[msgId];
+      const me=el("msg-"+msgId); if(me){ const t=me.querySelector(".chat-translation"); if(t) t.remove(); }
+    },10000);
+  }catch(e){ toast(e.message,"error"); }
+  finally{ if(btn) btn.textContent="🌐"; }
+}
+</script>
+
+<!-- build-maker.js loaded LAST so it never blocks page rendering -->
+<script src="js/build-maker.js?v=2026061902"></script>
+</body>
+</html>

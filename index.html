@@ -6,6 +6,7 @@
 <title>Team Registry — Berserk Guild</title>
 <link rel="stylesheet" href="css/style.css?v=2026061902" />
 <style>
+  /* ── Team card redesign ─────────────────────────────────── */
   .team-card {
     overflow: hidden; height: auto;
     transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s;
@@ -15,17 +16,20 @@
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
   }
+  /* Uniform card height — clamp description to 3 lines */
   .team-card-desc {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    min-height: 3.6em;
+    min-height: 3.6em; /* keeps short descriptions from collapsing */
   }
+  /* Captain label above name */
   .tc-cap-label {
     font-size: 0.6rem; color: var(--text3); font-family: var(--mono);
     text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px;
   }
+  /* Larger pips (28px) */
   .pip {
     width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -56,6 +60,7 @@
     background: var(--blue-dim); border-style: solid;
     transform: scale(1.1);
   }
+  /* Condensed requirements pill row */
   .req-pill-row {
     display: flex; gap: 5px; flex-wrap: wrap;
     align-items: center; margin-bottom: 0.65rem;
@@ -68,11 +73,13 @@
   .req-tag-open {
     background: var(--green-dim); border-color: var(--green-mid); color: var(--green);
   }
+  /* ── Casual badge: light blue (distinct from green Recruiting) */
   .badge-casual {
     background: rgba(96,165,250,0.13);
     color: #60a5fa;
     border: 1px solid rgba(96,165,250,0.35);
   }
+  /* ── Join button: green tint ─────────────────────────────── */
   .btn-join {
     display: inline-flex; align-items: center; justify-content: center; gap: 5px;
     background: rgba(52,211,153,0.13); border: 1px solid rgba(52,211,153,0.4);
@@ -86,6 +93,7 @@
     opacity: 1; text-decoration: none;
   }
   .btn-join:active { transform: scale(0.97); }
+  /* ── Full button: faded red ──────────────────────────────── */
   .btn-full-disabled {
     display: inline-flex; align-items: center; justify-content: center;
     background: rgba(248,113,113,0.10); border: 1px solid rgba(248,113,113,0.3);
@@ -93,6 +101,7 @@
     font-size: 0.78rem; font-weight: 600; opacity: 0.7;
     cursor: not-allowed; font-family: inherit; white-space: nowrap;
   }
+  /* ── Surface filter buttons ──────────────────────────────── */
   .filter-surface-bar {
     display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
   }
@@ -103,11 +112,14 @@
     transition: border-color 0.15s, color 0.15s, background 0.15s;
     font-family: inherit; font-weight: 500; white-space: nowrap;
   }
-  .filter-surface-btn:hover { border-color: var(--border3); color: var(--text); }
+  .filter-surface-btn:hover {
+    border-color: var(--border3); color: var(--text);
+  }
   .filter-surface-btn.active {
     border-color: var(--blue-mid); color: var(--blue-bright);
     background: var(--blue-dim);
   }
+  /* ── Advanced filter dropdown (unchanged behaviour) ─────── */
   .filter-dropdown-wrap { position: relative; }
   .filter-dropdown-btn {
     background: var(--surface); border: 1px solid var(--border2);
@@ -159,7 +171,7 @@
   <div class="section-header">
     <span class="section-title">Team Registry</span>
     <div class="flex gap-sm" style="align-items:center;flex-wrap:wrap;">
-      <input class="search-input" id="team-search" placeholder="Search teams&hellip;" oninput="renderTeams()" />
+      <input class="search-input" id="team-search" placeholder="Search teams…" oninput="renderTeams()" />
       <div class="filter-surface-bar">
         <button class="filter-surface-btn" id="fsb-recruiting" onclick="toggleSurfaceFilter('recruiting')">Recruiting</button>
         <button class="filter-surface-btn" id="fsb-competitive" onclick="toggleSurfaceFilter('competitive')">Competitive</button>
@@ -186,7 +198,7 @@
               <div class="tag-input-wrap" id="lang-filter-wrap" style="background:var(--bg);">
                 <div class="tag-input-tags" id="lang-filter-tags"></div>
                 <div class="tag-input-dropdown-wrap">
-                  <input class="tag-input-search" id="lang-filter-search" placeholder="Search languages&hellip;"
+                  <input class="tag-input-search" id="lang-filter-search" placeholder="Search languages…"
                     autocomplete="off" oninput="langFilterSearch()" onfocus="langFilterOpen()" />
                   <div class="tag-dropdown" id="lang-filter-dropdown"></div>
                 </div>
@@ -198,15 +210,15 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="refreshTeams()" title="Refresh teams" style="flex-shrink:0;">&circlearrowleft; Refresh</button>
-      <span class="count-badge" id="team-count">&mdash;</span>
+      <button class="btn btn-ghost btn-sm" onclick="refreshTeams()" title="Refresh teams" style="flex-shrink:0;">↻ Refresh</button>
+      <span class="count-badge" id="team-count">—</span>
     </div>
   </div>
   <div id="active-filters-row" class="active-filters mb-md"></div>
   <div id="loading" class="loading"><span class="spinner"></span></div>
   <div class="cards-grid" id="teams-grid" style="display:none;"></div>
   <div id="teams-empty" class="empty" style="display:none;">
-    <div class="empty-icon">&#127918;</div>
+    <div class="empty-icon">🎮</div>
     <p>No teams match your filters.<br>Try adjusting or clearing them.</p>
   </div>
 </main>
@@ -277,30 +289,17 @@ function langFilterToggle(lang) {
 }
 function langFilterRenderChips() {
   el("lang-filter-tags").innerHTML = _langFilterSelected.map(l =>
-    `<span class="tag-chip">${esc(l)}<button class="tag-chip-x" onclick="langFilterToggle(this.closest('.tag-chip').dataset.lang)">&#x2715;</button></span>`
+    `<span class="tag-chip">${esc(l)}<button class="tag-chip-x" onclick="langFilterToggle('${esc(l)}')">✕</button></span>`
   ).join("");
-  // Set data-lang on each chip for safe retrieval
-  el("lang-filter-tags").querySelectorAll(".tag-chip").forEach((chip, i) => {
-    chip.dataset.lang = _langFilterSelected[i];
-  });
 }
 function langFilterRenderDropdown() {
   const q = (el("lang-filter-search")?.value||"").toLowerCase();
   const filtered = LANGUAGES.filter(l => !_langFilterSelected.includes(l) && (!q||l.toLowerCase().includes(q)));
   const dd = el("lang-filter-dropdown");
   if (!dd) return;
-  if (filtered.length) {
-    dd.innerHTML = "";
-    filtered.forEach(l => {
-      const item = document.createElement("div");
-      item.className = "tag-dropdown-item";
-      item.textContent = l;
-      item.addEventListener("click", () => langFilterToggle(l));
-      dd.appendChild(item);
-    });
-  } else {
-    dd.innerHTML = `<div class="tag-dropdown-empty">No results</div>`;
-  }
+  dd.innerHTML = filtered.length
+    ? filtered.map(l=>`<div class="tag-dropdown-item" onclick="langFilterToggle('${esc(l)}')">${esc(l)}</div>`).join("")
+    : `<div class="tag-dropdown-empty">No results</div>`;
 }
 document.addEventListener("click", e => {
   const wrap = el("lang-filter-wrap");
@@ -312,6 +311,7 @@ function clearFilters() {
   document.querySelectorAll("#filter-menu input[type=checkbox]").forEach(cb => cb.checked = false);
   _langFilterSelected.length = 0;
   langFilterRenderChips();
+  // Also clear surface filters
   _surfaceFilters.clear();
   ["recruiting","competitive","casual"].forEach(k => {
     const btn = el("fsb-" + k);
@@ -333,23 +333,16 @@ function updateActiveBadge(filters) {
     openToAll:{"true":"Open to All"},
     lookingForCaptain:{"true":"Seeking Captain"},
   };
-  row.innerHTML = "";
-  Object.entries(filters).forEach(([f, vals]) => {
-    vals.forEach(v => {
+  row.innerHTML = Object.entries(filters).flatMap(([f, vals]) =>
+    vals.map(v => {
       const label = labels[f]?.[v] || v;
-      const chip = document.createElement("div");
-      chip.className = "active-filter-chip";
-      chip.innerHTML = `${esc(label)} <button>&#x2715;</button>`;
-      chip.querySelector("button").addEventListener("click", () => removeFilter(f, v));
-      row.appendChild(chip);
-    });
-  });
+      return `<div class="active-filter-chip">${label}
+        <button onclick="removeFilter('${f}','${v}')">✕</button>
+      </div>`;
+    })
+  ).join("");
   _langFilterSelected.forEach(l => {
-    const chip = document.createElement("div");
-    chip.className = "active-filter-chip";
-    chip.innerHTML = `${esc(l)} <button>&#x2715;</button>`;
-    chip.querySelector("button").addEventListener("click", () => langFilterToggle(l));
-    row.appendChild(chip);
+    row.innerHTML += `<div class="active-filter-chip">${esc(l)}<button onclick="langFilterToggle('${esc(l)}')">✕</button></div>`;
   });
 }
 function removeFilter(f, v) {
@@ -359,7 +352,7 @@ function removeFilter(f, v) {
 onReady(async () => {
   if (!getSession()) { window.location.replace('register.html'); return; }
   try {
-    const d = await apiGet({ action:"getAll", memberId: getSession().id });
+    const d = await apiGet({ action:"getAll" });
     allTeams   = d.teams   || [];
     allMembers = d.members || [];
     allRequests= d.requests|| [];
@@ -397,9 +390,11 @@ function renderTeams() {
   const memberTeams = myMember ? (Array.isArray(myMember.teamIds)?myMember.teamIds:(myMember.teamIds||"").split(",").filter(Boolean)) : [];
   let teams = allTeams.filter(t => {
     if (search && !t.name.toLowerCase().includes(search) && !(t.description||"").toLowerCase().includes(search)) return false;
+    // Surface filter buttons
     if (_surfaceFilters.has("recruiting") && t.status === "full") return false;
     if (_surfaceFilters.has("competitive") && t.playstyle !== "Competitive") return false;
     if (_surfaceFilters.has("casual") && t.playstyle !== "Casual") return false;
+    // Dropdown filters
     if (filters.status?.length && !filters.status.includes(t.status === "full" ? "full" : "open")) return false;
     if (filters.playstyle?.length && !filters.playstyle.includes(t.playstyle)) return false;
     if (filters.comp?.length && !filters.comp.every(r => (Array.isArray(t.composition)?t.composition:[]).includes(r))) return false;
@@ -418,9 +413,7 @@ function renderTeams() {
     grid.style.display="none"; emptyEl.style.display="block"; return;
   }
   emptyEl.style.display="none"; grid.style.display="grid";
-  // Build cards using DOM to avoid apostrophe injection bugs
-  grid.innerHTML = "";
-  teams.forEach(t => {
+  grid.innerHTML = teams.map(t => {
     const teamMembers = allMembers.filter(m => {
       const ids = Array.isArray(m.teamIds)?m.teamIds:(m.teamIds||"").split(",").filter(Boolean);
       return ids.includes(t.id);
@@ -434,143 +427,85 @@ function renderTeams() {
     const alreadyMember = memberTeams.includes(t.id);
     const pendingReq = session && allRequests.find(r=>r.type==="join"&&r.fromId===session.id&&r.teamId===t.id&&r.status==="pending");
     const canReq   = session && status==="open" && !alreadyMember && !pendingReq;
-
-    // Build card element
-    const card = document.createElement("div");
-    card.className = "team-card";
-
-    // Header
+    // Captain info
     const capMember = allMembers.find(m=>m.id===t.captainId);
-    let capAvHtml;
-    if (capMember?.avatarUrl) {
-      capAvHtml = `<img src="${esc(capMember.avatarUrl)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`;
-    } else {
-      capAvHtml = `<div style="width:20px;height:20px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.48rem;font-weight:700;color:var(--amber);">${esc((t.captainName||"?")[0])}</div>`;
-    }
-    const capClass = capMember?.class ? ` &middot; ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}` : "";
+    const capAv = capMember?.avatarUrl
+      ? `<img src="${esc(capMember.avatarUrl)}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--amber-mid);" onerror="this.style.display='none'" />`
+      : `<div style="width:20px;height:20px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber-mid);display:flex;align-items:center;justify-content:center;font-size:0.48rem;font-weight:700;color:var(--amber);">${(t.captainName||"?")[0]}</div>`;
+    const capClass = capMember?.class ? ` · ${esc(CLASS_ICONS[capMember.class]||"")} ${esc(capMember.class)}` : "";
+    // Playstyle badge — Casual is light blue, Competitive is purple
     const styleBadge = t.playstyle
       ? `<span class="badge badge-${t.playstyle==="Competitive"?"competitive":"casual"}">${esc(t.playstyle)}</span>`
       : "";
-
-    // Pips — use DOM element per pip to avoid string injection
-    const pipsContainer = document.createElement("div");
-    pipsContainer.style.cssText = "display:flex;gap:4px;align-items:center;";
-    for (let i = 0; i < maxSize; i++) {
+    // Member pips (28px, captain in amber)
+    const captainId = t.captainId;
+    const pips = Array.from({length:maxSize}, (_,i) => {
       const m = teamMembers[i];
       if (m) {
-        const isCap = m.id === t.captainId;
-        const link = document.createElement("a");
-        link.href = `profile.html?id=${encodeURIComponent(m.id)}`;
-        link.title = m.name + (isCap ? " (Captain)" : "");
-        link.addEventListener("click", e => e.stopPropagation());
+        const isCap = m.id === captainId;
         if (m.avatarUrl) {
-          const img = document.createElement("img");
-          img.src = m.avatarUrl;
-          img.style.cssText = `width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid ${isCap?"var(--amber-mid)":"var(--blue-mid)"};`;
-          img.onerror = function() { this.style.display="none"; };
-          link.appendChild(img);
-        } else {
-          const pip = document.createElement("div");
-          pip.className = "pip pip-filled" + (isCap ? " pip-cap" : "");
-          pip.textContent = (m.name||"?")[0].toUpperCase();
-          link.appendChild(pip);
+          return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}${isCap?" (Captain)":""}" onclick="event.stopPropagation();">
+            <img src="${esc(m.avatarUrl)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid ${isCap?"var(--amber-mid)":"var(--blue-mid)"};" />
+          </a>`;
         }
-        pipsContainer.appendChild(link);
-      } else if (canReq) {
-        const joinPip = document.createElement("div");
-        joinPip.className = "pip-join";
-        joinPip.title = "Request to join";
-        joinPip.textContent = "+";
-        joinPip.addEventListener("click", e => { e.stopPropagation(); openJoinModal(t.id, t.name); });
-        pipsContainer.appendChild(joinPip);
-      } else {
-        const emptyPip = document.createElement("div");
-        emptyPip.className = "pip pip-empty";
-        pipsContainer.appendChild(emptyPip);
+        return `<a href="profile.html?id=${m.id}" title="${esc(m.name)}${isCap?" (Captain)":""}" onclick="event.stopPropagation();">
+          <div class="pip pip-filled${isCap?" pip-cap":""}">${(m.name||"?")[0].toUpperCase()}</div>
+        </a>`;
       }
-    }
-
-    // Req pills
-    let reqPillsHtml = isOpenToAll
-      ? `<span class="req-tag req-tag-open">&#x2713; Open to All</span>`
-      : `${t.minPower?`<span class="req-tag">&#x26A1; ${esc(formatPower(t.minPower))}+</span>`:""}${t.minLevel?`<span class="req-tag">&#127919; Lv.${t.minLevel}+</span>`:""}`;
-    const discordTag = t.requiresDiscord==="TRUE" ? `<span class="req-tag">&#x1F4AC; Discord</span>` : "";
-    const langTag    = `<span class="req-tag">&#x1F310; ${esc(t.prefLanguage||"Any Language")}</span>`;
-
-    // Join button — use DOM to avoid apostrophe issues
-    const joinBtnWrap = document.createElement("div");
-    joinBtnWrap.className = "flex gap-xs";
-    const viewBtn = document.createElement("a");
-    viewBtn.href = `team.html?id=${encodeURIComponent(t.id)}`;
-    viewBtn.className = "btn btn-ghost btn-sm";
-    viewBtn.textContent = "View Team";
-    joinBtnWrap.appendChild(viewBtn);
-
-    let actionBtn;
+      if (canReq) {
+        return `<div class="pip-join" onclick="event.stopPropagation();openJoinModal('${t.id}','${esc(t.name)}')" title="Request to join">＋</div>`;
+      }
+      return `<div class="pip pip-empty"></div>`;
+    }).join("");
+    // Requirements pill row
+    const reqPills = isOpenToAll
+      ? `<span class="req-tag req-tag-open">✓ Open to All</span>`
+      : `${t.minPower?`<span class="req-tag">⚡ ${formatPower(t.minPower)}+</span>`:""}${t.minLevel?`<span class="req-tag">🎯 Lv.${t.minLevel}+</span>`:""}`;
+    const discordTag = t.requiresDiscord==="TRUE" ? `<span class="req-tag">💬 Discord</span>` : "";
+    const langTag    = `<span class="req-tag">🌐 ${esc(t.prefLanguage||"Any Language")}</span>`;
+    // Join / status button
+    let joinBtn = "";
     if (alreadyMember) {
-      actionBtn = document.createElement("a");
-      actionBtn.href = "your-team.html";
-      actionBtn.className = "btn-join";
-      actionBtn.style.cssText = "background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue-bright);";
-      actionBtn.textContent = "✓ Your Team";
+      joinBtn = `<a href="your-team.html" class="btn-join" style="background:var(--blue-dim);border-color:var(--blue-mid);color:var(--blue-bright);">✓ Your Team</a>`;
     } else if (pendingReq) {
-      actionBtn = document.createElement("button");
-      actionBtn.className = "btn btn-ghost btn-sm";
-      actionBtn.disabled = true;
-      actionBtn.textContent = "Request Pending…";
+      joinBtn = `<button class="btn btn-ghost btn-sm" disabled>Request Pending…</button>`;
     } else if (canReq) {
-      actionBtn = document.createElement("button");
-      actionBtn.className = "btn-join";
-      actionBtn.textContent = "+ Request to Join";
-      actionBtn.addEventListener("click", () => openJoinModal(t.id, t.name));
+      joinBtn = `<button class="btn-join" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
     } else if (!session) {
-      actionBtn = document.createElement("button");
-      actionBtn.className = "btn-join";
-      actionBtn.textContent = "+ Request to Join";
-      actionBtn.addEventListener("click", () => openJoinModal(t.id, t.name));
+      joinBtn = `<button class="btn-join" onclick="openJoinModal('${t.id}','${esc(t.name)}')">+ Request to Join</button>`;
     } else if (status === "full") {
-      actionBtn = document.createElement("button");
-      actionBtn.className = "btn-full-disabled";
-      actionBtn.disabled = true;
-      actionBtn.textContent = "Full";
+      joinBtn = `<button class="btn-full-disabled" disabled>Full</button>`;
     } else {
-      actionBtn = document.createElement("button");
-      actionBtn.className = "btn-full-disabled";
-      actionBtn.disabled = true;
-      actionBtn.textContent = "Not Recruiting";
+      joinBtn = `<button class="btn-full-disabled" disabled>Not Recruiting</button>`;
     }
-    if (actionBtn) joinBtnWrap.appendChild(actionBtn);
-
-    card.innerHTML = `
+    return `<div class="team-card">
       <div class="team-card-header">
         <div style="min-width:0;">
           <div class="team-card-name">${esc(t.name)}</div>
-          <div class="tc-cap-label">&#x269C;&#xFE0F; Team Captain</div>
+          <div class="tc-cap-label">⚜️ Team Captain</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-            ${capAvHtml}
-            <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"&mdash;")}${capClass}</span>
+            ${capAv}
+            <span style="font-size:0.8rem;color:var(--amber);font-weight:600;">${esc(t.captainName||"—")}${capClass}</span>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
           <span class="badge badge-${status}"><span class="badge-dot"></span>${label}</span>
           ${styleBadge}
-          ${t.lookingForCaptain==="TRUE"?`<span class="badge badge-amber"><span class="badge-dot"></span>&#x269C;&#xFE0F; Seeking Captain</span>`:""}
+          ${t.lookingForCaptain==="TRUE"?`<span class="badge badge-amber"><span class="badge-dot"></span>⚜️ Seeking Captain</span>`:""}
         </div>
       </div>
       ${comp ? `<div class="comp-row">${comp}</div>` : ""}
       <div class="team-card-desc">${t.description ? esc(t.description) : `<span style="color:var(--text3);font-style:italic;">No description.</span>`}</div>
-      <div class="req-pill-row">${reqPillsHtml}${discordTag}${langTag}</div>
-      <div class="team-card-footer" id="footer-${esc(t.id)}"></div>
-    `;
-
-    const footer = card.querySelector(`#footer-${CSS.escape(t.id)}`);
-    if (footer) {
-      footer.appendChild(pipsContainer);
-      footer.appendChild(joinBtnWrap);
-    }
-
-    grid.appendChild(card);
-  });
+      <div class="req-pill-row">${reqPills}${discordTag}${langTag}</div>
+      <div class="team-card-footer">
+        <div style="display:flex;gap:4px;align-items:center;">${pips}</div>
+        <div class="flex gap-xs">
+          <a href="team.html?id=${t.id}" class="btn btn-ghost btn-sm">View Team</a>
+          ${joinBtn}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
 }
 function openJoinModal(teamId, teamName) {
   joinTargetTeamId = teamId;
@@ -585,8 +520,7 @@ async function refreshTeams() {
   if (loadEl) { loadEl.style.display = "block"; }
   if (grid) grid.style.display = "none";
   try {
-    const session = getSession();
-    const d = await apiGet({ action:"getAll", memberId: session ? session.id : "" });
+    const d = await apiGet({ action:"getAll" });
     allTeams   = d.teams   || [];
     allMembers = d.members || [];
     allRequests= d.requests|| [];
