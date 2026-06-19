@@ -10,27 +10,103 @@
 <body>
 <script>onReady(() => buildNav("helpful-info.html"));</script>
 <main>
-  <div class="section-header">
-    <span class="section-title">Helpful Info</span>
-    <div class="text-sm text-muted" style="margin-top:2px;">Tools and resources to help you progress in Sword x Staff.</div>
+
+  <div class="section-header" style="margin-bottom:1.25rem;">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span style="font-size:2.5rem;line-height:1;" aria-hidden="true">&#x2694;&#xFE0F;</span>
+      <div>
+        <div class="section-title" style="font-size:1rem;color:var(--text);">Helpful Info</div>
+        <div class="text-sm text-muted" style="margin-top:3px;">Tools, guides, and resources to help you progress in Sword x Staff.</div>
+      </div>
+    </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:1rem;">
+  <!-- Calculators -->
+  <div style="font-size:0.7rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>
+    Calculators
+  </div>
 
-    <a href="exp-calculator.html" style="text-decoration:none;color:inherit;">
-      <div class="card" style="cursor:pointer;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s;border:1px solid var(--border2);"
-        onmouseover="this.style.borderColor='var(--blue-mid)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'"
-        onmouseout="this.style.borderColor='var(--border2)';this.style.transform='';this.style.boxShadow=''">
-        <div style="font-size:2rem;margin-bottom:0.75rem;">⏱️</div>
-        <div style="font-size:1rem;font-weight:700;margin-bottom:0.4rem;">EXP Calculator</div>
-        <div style="font-size:0.82rem;color:var(--text2);line-height:1.5;">Calculate how long it will take to reach your target level based on your current EXP and gain rate. Get an estimated completion date in your time zone.</div>
-        <div style="margin-top:1rem;">
-          <span class="btn btn-primary btn-sm">Open Calculator →</span>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;margin-bottom:1.75rem;">
+
+    <!-- EXP Calculator — featured full-width -->
+    <a href="exp-calculator.html" style="text-decoration:none;color:inherit;grid-column:1/-1;">
+      <div class="card card-accent" style="display:flex;align-items:center;gap:1.5rem;padding:1.5rem;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s;"
+        onmouseover="this.style.borderColor='var(--blue-bright)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'"
+        onmouseout="this.style.borderColor='var(--blue-mid)';this.style.transform='';this.style.boxShadow=''">
+        <div style="font-size:2.75rem;line-height:1;flex-shrink:0;" aria-hidden="true">&#x23F1;&#xFE0F;</div>
+        <div style="flex:1;">
+          <span style="display:inline-block;font-size:0.68rem;font-family:var(--mono);background:var(--blue-dim);color:var(--blue-bright);border:1px solid var(--blue-mid);border-radius:4px;padding:2px 8px;margin-bottom:0.4rem;">Featured</span>
+          <div style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">EXP Calculator</div>
+          <div style="font-size:0.82rem;color:var(--text2);line-height:1.5;">Calculate how long it takes to reach your target level. Get an estimated completion date in your time zone.</div>
         </div>
+        <span class="btn btn-primary btn-sm" style="flex-shrink:0;white-space:nowrap;">Open &#x2192;</span>
       </div>
     </a>
 
+    <!-- More tools coming soon -->
+    <div style="background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:0.75rem;color:var(--text3);font-size:0.82rem;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      More tools coming soon
+    </div>
+
   </div>
+
+  <!-- Guides -->
+  <div style="font-size:0.7rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.08em;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:0.75rem;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Guides
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem;">
+
+    <!-- EOG.GG -->
+    <a href="https://eog.gg/games/sword-x-staff/#guides" target="_blank" rel="noopener noreferrer"
+      style="text-decoration:none;display:block;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border2);height:120px;position:relative;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;"
+      onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='var(--border3)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.35)'"
+      onmouseout="this.style.transform='';this.style.borderColor='var(--border2)';this.style.boxShadow=''">
+      <div style="position:absolute;inset:0;background:#151922;display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:var(--mono);font-size:2.5rem;font-weight:700;color:rgba(255,255,255,0.08);letter-spacing:2px;">EOG</span>
+      </div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 40%,rgba(0,0,0,0.1) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:0.6rem 0.75rem;gap:2px;">
+        <div style="font-size:0.82rem;font-weight:700;color:#fff;">EOG.GG</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.55);">eog.gg</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:8px;right:8px;" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
+
+    <!-- Prydwen.GG -->
+    <a href="https://www.prydwen.gg/sword-x-staff" target="_blank" rel="noopener noreferrer"
+      style="text-decoration:none;display:block;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border2);height:120px;position:relative;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;"
+      onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='var(--border3)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.35)'"
+      onmouseout="this.style.transform='';this.style.borderColor='var(--border2)';this.style.boxShadow=''">
+      <div style="position:absolute;inset:0;background:#0d1520;display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:var(--mono);font-size:2rem;font-weight:700;color:rgba(255,255,255,0.08);letter-spacing:2px;">PRY</span>
+      </div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 40%,rgba(0,0,0,0.1) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:0.6rem 0.75rem;gap:2px;">
+        <div style="font-size:0.82rem;font-weight:700;color:#fff;">Prydwen.GG</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.55);">prydwen.gg</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:8px;right:8px;" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
+
+    <!-- Loot and Waifus -->
+    <a href="https://lootandwaifus.com/sword-x-staff/" target="_blank" rel="noopener noreferrer"
+      style="text-decoration:none;display:block;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border2);height:120px;position:relative;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s;"
+      onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='var(--border3)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.35)'"
+      onmouseout="this.style.transform='';this.style.borderColor='var(--border2)';this.style.boxShadow=''">
+      <div style="position:absolute;inset:0;background:#1a100a;display:flex;align-items:center;justify-content:center;">
+        <span style="font-family:var(--mono);font-size:1.6rem;font-weight:700;color:rgba(255,255,255,0.08);letter-spacing:1px;">L&amp;W</span>
+      </div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 40%,rgba(0,0,0,0.1) 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:0.6rem 0.75rem;gap:2px;">
+        <div style="font-size:0.82rem;font-weight:700;color:#fff;">Loot and Waifus</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.55);">lootandwaifus.com</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:8px;right:8px;" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
+
+  </div>
+
 </main>
 </body>
 </html>
