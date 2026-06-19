@@ -1261,19 +1261,17 @@ async function chatTranslate(msgId,text){
     if(msgEl2){
       const existing=msgEl2.querySelector(".chat-translation"); if(existing) existing.remove();
       const div=document.createElement("div"); div.className="chat-translation";
-      div.innerHTML=`<div class="chat-translation-label">🌐 ${esc(prefLang)}</div>${esc(translated)}`;
-      const body=msgEl2.querySelector(".chat-msg-body"); if(body) body.appendChild(div);
+      div.style.cssText="margin-top:4px;padding:4px 8px;background:var(--surface3);border-radius:6px;font-size:0.78rem;color:var(--text2);border-left:2px solid var(--border2);";
+      div.innerHTML=`<span style="color:var(--text3);font-size:0.72rem;">${esc(chatTranslations[msgId].label)}:</span> ${esc(translated)}`;
+      msgEl2.appendChild(div);
     }
-    setTimeout(()=>{
-      delete chatTranslations[msgId];
-      const me=el("msg-"+msgId); if(me){ const t=me.querySelector(".chat-translation"); if(t) t.remove(); }
-    },10000);
-  }catch(e){ toast(e.message,"error"); }
-  finally{ if(btn) btn.textContent="🌐"; }
+    if(btn) btn.textContent="🌐";
+  }catch(e){
+    if(btn) btn.textContent="🌐";
+    toast("Translation failed — please try again.","error");
+  }
 }
-</script>
 
-<!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061901"></script>
+</script>
 </body>
 </html>
