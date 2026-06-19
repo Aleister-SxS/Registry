@@ -75,6 +75,11 @@
       <div class="field"><label>Discord ID</label><input id="ep-discord-id" /></div>
       <div class="field"><label>Discord Display Name</label><input id="ep-discord-name" /></div>
     </div>
+    <div class="field">
+      <label>Email Address <span class="optional">(optional)</span></label>
+      <input id="ep-email" type="email" placeholder="you@example.com" autocomplete="email" />
+      <p style="margin:4px 0 0;font-size:0.78rem;color:var(--text3);line-height:1.4;">Used only for notifications you enable. Never shared publicly or with third parties.</p>
+    </div>
     <div class="field"><label>Time Zone <span style="color:var(--red);">*</span></label><select id="ep-timezone"></select></div>
     <div class="field">
       <label>Languages Spoken <span style="color:var(--red);">*</span> <span class="optional">(up to 3)</span></label>
@@ -410,6 +415,34 @@ ${isOwn ? `
               </div>
             </div>`).join("") : `<p class="text-sm text-muted">No teams captained yet. <a href="create-team.html">Create one →</a></p>`}
         </div>` : ""}
+
+        ${isOwn ? `
+        <div class="card" id="notif-prefs-card">
+          <div class="section-title mb-sm">🔔 Notification Preferences</div>
+          <div class="field mb-sm">
+            <label style="font-size:0.8rem;">Email Address <span class="optional">(optional)</span></label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input id="np-email" type="email" placeholder="you@example.com" autocomplete="email"
+                style="flex:1;background:var(--surface2);border:1px solid var(--border3);border-radius:var(--radius);padding:7px 10px;font-size:0.85rem;color:var(--text);" />
+              <button class="btn btn-ghost btn-sm" onclick="saveNotifPrefs()">Save</button>
+            </div>
+            <p style="margin:4px 0 0;font-size:0.75rem;color:var(--text3);line-height:1.4;">Used only for the channels you enable below. Never shared publicly.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
+              <input type="checkbox" id="np-invites" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
+              <span>Team invites <span style="font-size:0.75rem;color:var(--text3);">— notify me when I receive a team invite or someone responds to mine</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
+              <input type="checkbox" id="np-join" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
+              <span>Join requests <span style="font-size:0.75rem;color:var(--text3);">— notify me when someone requests to join my team or my request is answered</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;">
+              <input type="checkbox" id="np-dms" style="accent-color:var(--blue);" onchange="saveNotifPrefs()" />
+              <span>Direct messages <span style="font-size:0.75rem;color:var(--text3);">— notify me when I receive a new direct message</span></span>
+            </label>
+          </div>
+        </div>` : ""}
       </div>
 
       <!-- Right column: PVP Build + Fantomon -->
@@ -451,6 +484,43 @@ ${isOwn ? `
   `;
 
   renderBuildDisplay();
+  if (isOwn) loadNotifPrefs();
+}
+
+
+// ── Notification Preferences ──────────────────────────────
+function loadNotifPrefs() {
+  const m = profileMember;
+  if (!m) return;
+  let prefs = {};
+  try { prefs = JSON.parse(m.notifPrefs || "{}"); } catch(e) {}
+  const emailEl = document.getElementById("np-email");
+  if (emailEl) emailEl.value = m.email || "";
+  const invEl = document.getElementById("np-invites");
+  if (invEl) invEl.checked = prefs.invites !== false;
+  const joinEl = document.getElementById("np-join");
+  if (joinEl) joinEl.checked = prefs.joinRequests !== false;
+  const dmEl = document.getElementById("np-dms");
+  if (dmEl) dmEl.checked = prefs.dms !== false;
+}
+
+async function saveNotifPrefs() {
+  const session = getSession();
+  if (!session) return;
+  const email = (document.getElementById("np-email")?.value || "").trim();
+  const prefs = {
+    invites:      document.getElementById("np-invites")?.checked ?? true,
+    joinRequests: document.getElementById("np-join")?.checked    ?? true,
+    dms:          document.getElementById("np-dms")?.checked     ?? true,
+  };
+  try {
+    await apiPost({ action:"updateNotifPrefs", memberId:session.id, captainKey:session.captainKey, email, prefs });
+    profileMember.email = email;
+    profileMember.notifPrefs = JSON.stringify(prefs);
+    toast("Notification preferences saved!");
+  } catch(e) {
+    toast("Failed to save preferences: " + e.message, "error");
+  }
 }
 
 // ── Build display (read-only slots) ──────────────────────
@@ -763,6 +833,7 @@ function openEditModal() {
   el("ep-playstyle").value    = m.playstyle || "";
   el("ep-discord-id").value   = m.discordId || "";
   el("ep-discord-name").value = m.discordName || "";
+  el("ep-email").value        = m.email || "";
   el("ep-timezone").value     = m.timezone || "";
     // ep-pref-lang now populated via epChipSet above
   epChipSet("ep-languages", (m.languages||"").split(",").filter(Boolean));
@@ -796,6 +867,7 @@ async function doSaveProfile() {
   const playstyle = el("ep-playstyle").value;
   const discId    = el("ep-discord-id").value.trim();
   const discName  = el("ep-discord-name").value.trim();
+  const email     = el("ep-email").value.trim();
   const tz        = el("ep-timezone").value;
   // prefLang now read via epChipGet above
   const lfg = profileMember.lookingForTeam === "TRUE"; // controlled by toggle on profile
@@ -818,10 +890,10 @@ async function doSaveProfile() {
   try {
     await apiPost({ action:"updateProfile", memberId:session.id, captainKey:session.captainKey,
       name, gamertag:tag, tier, class:cls, power, level, bio:"", description:desc,
-      playstyle, discordId:discId, discordName:discName, timezone:tz,
+      playstyle, discordId:discId, discordName:discName, email, timezone:tz,
       languages, prefLanguage:prefLangVal, lookingForTeam:lfg, isCaptain });
     Object.assign(profileMember, { name,gamertag:tag,tier,class:cls,power,level,
-      description:desc||"I'm a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,timezone:tz,
+      description:desc||"I'm a pretty cool person - ready to join in!",playstyle,discordId:discId,discordName:discName,email,timezone:tz,
       languages,prefLanguage:prefLangVal,
       lookingForTeam:lfg?"TRUE":"FALSE",isCaptain:isCaptain?"TRUE":"FALSE" });
     const s = getSession();
@@ -907,20 +979,4 @@ function validateEpTag(input) {
     hint.style.color = "var(--amber)";
     hint.textContent = `${len} / 12 digits — needs ${12 - len} more.`;
   } else {
-    hint.style.color = "var(--green)";
-    hint.textContent = "✓ Valid Player ID format.";
-  }
-}
-
-function renderError(msg) {
-  hide(el("loading"));
-  show(el("profile-content"));
-  el("profile-content").innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><p>${esc(msg)}</p></div>`;
-}
-
-</script>
-
-<!-- build-maker.js loaded LAST so it never blocks page rendering -->
-<script src="js/build-maker.js?v=2026061514"></script>
-</body>
-</html>
+    hint.style.color = 

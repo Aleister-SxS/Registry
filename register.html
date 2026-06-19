@@ -284,6 +284,12 @@
         </div>
 
         <div class="field">
+          <label>Email Address <span class="optional">(optional)</span></label>
+          <input id="r-email" type="email" placeholder="you@example.com" autocomplete="email" />
+          <p style="margin:4px 0 0;font-size:0.78rem;color:var(--text3);line-height:1.4;">Used only for notifications you enable. Never shared publicly or with third parties.</p>
+        </div>
+
+        <div class="field">
             <label>Languages Spoken <span style="color:var(--red);">*</span> <span class="optional">(up to 3)</span></label>
             <select id="r-languages-select" onchange="chipAdd('r-languages',this,3)" style="margin-bottom:6px;">
               <option value="" selected>+ Add a language…</option>
@@ -788,7 +794,7 @@ async function doRegister() {
     var d = await apiPost({
       action: "registerMember", name: name, gamertag: tag, tier: tier, class: cls,
       power: power, level: level, bio: "", description: desc, playstyle: playstyle,
-      discordId: discId, discordName: discName, timezone: tz,
+      discordId: discId, discordName: discName, timezone: tz, email: document.getElementById('r-email').value.trim(),
       languages: languages, prefLanguage: prefLang.join(","),
       lookingForTeam: lfg, lookingForCaptainRole: wantCap,
       avatarUrl: selectedAvatarUrl
