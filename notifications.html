@@ -11,32 +11,28 @@
 <nav id="nav-root"></nav>
 <script>onReady(() => buildNav("notifications.html"));</script>
 
-<div class="page-shell">
-  <div class="page-header">
-    <div class="page-header-inner">
-      <h1 class="page-title">🔔 Notification Preferences</h1>
-      <p class="page-subtitle">Choose how and when Berserk Guild contacts you.</p>
+<main>
+<div class="form-wrap">
+
+  <div class="form-card">
+    <div class="form-title">🔔 Notification Preferences</div>
+    <div class="form-subtitle">Choose how and when Berserk Guild contacts you.</div>
+
+    <div id="alert-area" class="alert alert-hidden mt-sm"></div>
+
+    <div class="form-section-label">Email Notifications</div>
+
+    <div class="field">
+      <label>Email Address <span class="optional">(optional)</span></label>
+      <input id="np-email" type="email" placeholder="you@example.com" autocomplete="email"
+        style="background:var(--surface2);border-color:var(--border3);" />
+      <p style="margin:5px 0 0;font-size:0.75rem;color:var(--text3);line-height:1.5;">
+        Used only for the channels you enable below. Never shared publicly or with third parties.
+      </p>
     </div>
-  </div>
 
-  <div class="content-wrap" style="max-width:560px;">
-    <div id="alert-area"></div>
-
-    <div class="card" style="padding:28px;">
-      <div class="section-title mb-md">Email Notifications</div>
-
-      <div class="field mb-md">
-        <label class="form-label">Email Address <span class="optional">(optional)</span></label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="np-email" type="email" placeholder="you@example.com" autocomplete="email"
-            style="flex:1;background:var(--surface2);border:1px solid var(--border3);border-radius:var(--radius);padding:9px 12px;font-size:0.88rem;color:var(--text);width:100%;box-sizing:border-box;" />
-        </div>
-        <p style="margin:6px 0 0;font-size:0.75rem;color:var(--text3);line-height:1.5;">
-          Used only for the channels you enable below. Never shared publicly or with third parties.
-        </p>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;">
+    <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
+      <div class="field">
         <div class="toggle-row">
           <div>
             <div class="toggle-label">Team Invites</div>
@@ -44,6 +40,8 @@
           </div>
           <label class="toggle"><input type="checkbox" id="np-invites" /><span class="slider"></span></label>
         </div>
+      </div>
+      <div class="field">
         <div class="toggle-row">
           <div>
             <div class="toggle-label">Join Requests</div>
@@ -51,6 +49,8 @@
           </div>
           <label class="toggle"><input type="checkbox" id="np-join" /><span class="slider"></span></label>
         </div>
+      </div>
+      <div class="field">
         <div class="toggle-row">
           <div>
             <div class="toggle-label">Direct Messages</div>
@@ -59,22 +59,25 @@
           <label class="toggle"><input type="checkbox" id="np-dms" /><span class="slider"></span></label>
         </div>
       </div>
+    </div>
 
-      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border2);">
-        <div class="section-title mb-md">Browser Push Notifications</div>
-        <p style="font-size:0.85rem;color:var(--text2);margin:0 0 14px;">
-          Get instant notifications in your browser — even when the tab is in the background.
-        </p>
-        <div id="push-status" style="font-size:0.82rem;color:var(--text3);margin-bottom:12px;"></div>
-        <button class="btn btn-ghost btn-sm" id="btn-push" onclick="handlePushToggle()">Enable Push Notifications</button>
-      </div>
+    <div class="form-section-label" style="margin-top:1.5rem;">Browser Push Notifications</div>
 
-      <div style="margin-top:28px;display:flex;justify-content:flex-end;">
-        <button class="btn btn-primary" onclick="saveNotifPrefs()">Save Preferences</button>
-      </div>
+    <div class="field">
+      <p style="margin:0 0 10px;font-size:0.85rem;color:var(--text2);line-height:1.5;">
+        Get instant notifications in your browser — even when the tab is in the background.
+      </p>
+      <div id="push-status" style="font-size:0.82rem;color:var(--text3);margin-bottom:10px;min-height:1.2em;"></div>
+      <button class="btn btn-ghost btn-sm" id="btn-push" onclick="handlePushToggle()">Enable Push Notifications</button>
+    </div>
+
+    <div style="margin-top:1.5rem;">
+      <button class="btn btn-primary btn-full" onclick="saveNotifPrefs()">Save Preferences</button>
     </div>
   </div>
+
 </div>
+</main>
 
 <script>
 let _notifMember = null;
@@ -82,7 +85,6 @@ let _notifMember = null;
 onReady(async () => {
   const session = getSession();
   if (!session) { location.replace("register.html"); return; }
-
   try {
     const d = await apiGet({ action: "getAll", memberId: session.id });
     _notifMember = (d.members || []).find(m => m.id === session.id) || {};
@@ -136,25 +138,24 @@ function updatePushStatus() {
   const btn = document.getElementById("btn-push");
   if (!("Notification" in window)) {
     statusEl.textContent = "Push notifications are not supported in this browser.";
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     return;
   }
   const perm = Notification.permission;
   if (perm === "granted") {
-    statusEl.textContent = "✅ Push notifications are enabled.";
-    btn.textContent = "Disable Push Notifications";
+    statusEl.innerHTML = '<span style="color:var(--green);">✅ Push notifications are enabled.</span>';
+    if (btn) btn.textContent = "Disable Push Notifications";
   } else if (perm === "denied") {
-    statusEl.textContent = "❌ Push notifications are blocked. To enable, update your browser's site permissions for this page.";
-    btn.disabled = true;
+    statusEl.innerHTML = '<span style="color:var(--red);">❌ Push notifications are blocked. Update your browser\'s site permissions to enable them.</span>';
+    if (btn) btn.disabled = true;
   } else {
     statusEl.textContent = "Push notifications are not yet enabled.";
-    btn.textContent = "Enable Push Notifications";
+    if (btn) btn.textContent = "Enable Push Notifications";
   }
 }
 
 async function handlePushToggle() {
   if (Notification.permission === "granted") {
-    // Can't programmatically revoke — direct user to browser settings
     toast("To disable push notifications, go to your browser's site settings and block notifications for this site.", "info", 5000);
     return;
   }
