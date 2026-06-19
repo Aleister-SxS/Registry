@@ -245,6 +245,12 @@ onReady(async()=>{
   }catch(e){ allTeams=[];allMembers=[]; }
   if(typeof SKILLS==="undefined") window.SKILLS=[];
   hide(el("loading"));
+  const deepTeamId=new URLSearchParams(location.search).get("team");
+  if(deepTeamId&&allTeams.find(t=>t.id===deepTeamId)){
+    const me=allMembers.find(m=>m.id===session.id)||{teamIds:[]};
+    const myTeamIds=Array.isArray(me.teamIds)?me.teamIds:(me.teamIds||"").split(",").filter(Boolean);
+    if(myTeamIds.includes(deepTeamId)){openMgmt(deepTeamId);return;}
+  }
   renderLanding();
 });
 
