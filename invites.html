@@ -468,6 +468,7 @@ function renderInvites(){
     if(dismissed.includes(r.id))return false;
     if(r.type==="join"&&r.fromId===m.id)return true;
     if(r.type==="invite"&&r.toId===m.id)return true;
+    if(r.type==="invite"&&r.fromId===m.id)return true;
     if(r.type==="join"&&capTeamIds.includes(r.teamId))return true;
     return false;
   }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
@@ -496,6 +497,12 @@ function renderInvites(){
       if(r.type==="join"&&r.fromId===m.id){
         icon="📤";
         mainText=`Your join request to <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
+      }else if(r.type==="invite"&&r.fromId===m.id){
+        icon="📮";
+        const invitee=allMembers.find(mb=>mb.id===r.toId);
+        const inviteeName=invitee?esc(invitee.name):"A member";
+        const action=r.status==="accepted"?"accepted":"declined";
+        mainText=`<strong>${inviteeName}</strong> ${action} your invite to <strong>${esc(r.teamName)}</strong>${statusPill}${newPill}`;
       }else if(r.type==="invite"&&r.toId===m.id){
         icon="📨";
         const action=r.status==="accepted"?"You accepted":"You declined";
