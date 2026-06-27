@@ -119,7 +119,6 @@ onReady(async () => {
     }
     loadNotifPrefs();
     updatePushStatus();
-    const session = getSession();
     if (session) {
       const profileUrl = "profile.html?id=" + session.id;
       const l1 = document.getElementById("edit-profile-link");
