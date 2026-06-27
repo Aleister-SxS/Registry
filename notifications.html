@@ -76,7 +76,7 @@
 
     <div class="field">
       <p style="margin:0 0 10px;font-size:0.85rem;color:var(--text2);line-height:1.5;">
-        Receive direct messages from the registry bot on Discord. Requires your Discord User ID set in <a href="profile.html" style="color:var(--blue);">Edit Profile</a>.
+        Receive direct messages from the registry bot on Discord. Requires your Discord User ID set in <a id="edit-profile-link" href="#" style="color:var(--blue);">Edit Profile</a>.
       </p>
       <div id="discord-id-warning" style="display:none;font-size:0.8rem;color:var(--amber);margin-bottom:8px;">⚠️ Set your Discord User ID in Edit Profile to enable Discord DM alerts.</div>
       <div class="toggle-row">
@@ -86,6 +86,14 @@
         </div>
         <label class="toggle"><input type="checkbox" id="np-discord-dm" /><span class="slider"></span></label>
       </div>
+      <p style="margin:10px 0 0;font-size:0.78rem;color:var(--text3);line-height:1.6;">
+        <strong style="color:var(--text2);">How to find your Discord User ID:</strong><br>
+        1. Open Discord → Settings → Advanced<br>
+        2. Enable <em>Developer Mode</em><br>
+        3. Close Settings, then right-click your username anywhere<br>
+        4. Click <em>Copy User ID</em> — it's a 17–19 digit number<br>
+        5. Paste it into <a id="edit-profile-link-2" href="#" style="color:var(--blue);">Edit Profile</a> under Discord User ID and save
+      </p>
     </div>
 
     <div style="margin-top:1.5rem;">
@@ -111,6 +119,14 @@ onReady(async () => {
     }
     loadNotifPrefs();
     updatePushStatus();
+    const session = getSession();
+    if (session) {
+      const profileUrl = "profile.html?id=" + session.id;
+      const l1 = document.getElementById("edit-profile-link");
+      const l2 = document.getElementById("edit-profile-link-2");
+      if (l1) l1.href = profileUrl;
+      if (l2) l2.href = profileUrl;
+    }
     hide(el("notif-loading"));
     show(el("notif-form"));
   } catch(e) {
