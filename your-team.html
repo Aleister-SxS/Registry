@@ -417,6 +417,8 @@ function renderMgmt(teamId){
       <div class="mgmt-header-actions">
         <a href="team.html?id=${teamId}" class="btn btn-ghost btn-sm">Team Profile</a>
         ${isCaptain?`
+          <button class="btn btn-ghost btn-sm" style="color:var(--text2);border-color:var(--border2);" onclick="discordPostLFM('${teamId}','${esc(t.name)}')" title="Post recruiting announcement to Discord">📢 Post LFM</button>
+          ${t.lookingForCaptain==="TRUE"?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:var(--amber-mid);" onclick="discordPostLFC('${teamId}','${esc(t.name)}')" title="Post looking-for-captain announcement to Discord">⚜️ Post LFC</button>`:""}
           <button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDisband('${teamId}','${esc(t.name)}')">Disband Team</button>
         `:`<button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>`}
@@ -1081,6 +1083,25 @@ function openTransfer(teamId){
       const t=allTeams.find(x=>x.id===teamId); if(t){ t.captainId=target.id; t.captainName=target.name; }
       toast("Captaincy transferred!"); renderMgmt(teamId);
     }catch(e){ toast(e.message,"error"); }
+  });
+}
+
+
+async function discordPostLFM(teamId, teamName) {
+  confirm_(`Post to Discord`, `Post a "Looking for Members" announcement for ${teamName} to the Discord server?`, async () => {
+    try {
+      await apiPost({ action: "discordPostLFM", memberId: session.id, captainKey: session.captainKey, teamId });
+      toast("Posted to Discord! 📢", "success");
+    } catch(e) { toast(e.message, "error"); }
+  });
+}
+
+async function discordPostLFC(teamId, teamName) {
+  confirm_(`Post to Discord`, `Post a "Looking for Captain" announcement for ${teamName} to the Discord server?`, async () => {
+    try {
+      await apiPost({ action: "discordPostLFC", memberId: session.id, captainKey: session.captainKey, teamId });
+      toast("Posted to Discord! ⚜️", "success");
+    } catch(e) { toast(e.message, "error"); }
   });
 }
 
