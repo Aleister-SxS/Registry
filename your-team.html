@@ -420,7 +420,7 @@ function renderMgmt(teamId){
         <a href="team.html?id=${teamId}" class="btn btn-ghost btn-sm">Team Profile</a>
         ${isCaptain?`
           <button class="btn btn-ghost btn-sm" style="color:var(--text2);border-color:var(--border2);" onclick="discordPostLFM('${teamId}','${esc(t.name)}')" title="Post recruiting announcement to Discord">📢 Post LFM</button>
-          ${t.lookingForCaptain==="TRUE"?`<button class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:var(--amber-mid);" onclick="discordPostLFC('${teamId}','${esc(t.name)}')" title="Post looking-for-captain announcement to Discord">⚜️ Post LFC</button>`:""}
+          <button id="lfc-discord-btn-${teamId}" class="btn btn-ghost btn-sm" style="color:var(--amber);border-color:var(--amber-mid);display:${t.lookingForCaptain==="TRUE"?"":"none"};" onclick="discordPostLFC('${teamId}','${esc(t.name)}')" title="Post looking-for-captain announcement to Discord">⚜️ Post LFC</button>
           <button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>
           <button class="btn btn-danger btn-sm" onclick="confirmDisband('${teamId}','${esc(t.name)}')">Disband Team</button>
         `:`<button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>`}
@@ -1156,6 +1156,9 @@ async function toggleTeamLFC(teamId,checked){
       badge.innerHTML=checked?`<span class="badge-dot"></span>⚜️ Seeking Captain`:"Not Seeking Captain";
       badge.className="badge "+(checked?"badge-amber":"badge-ghost");
     }
+    // Show/hide the Post LFC header button to match toggle state
+    const lfcBtn=el("lfc-discord-btn-"+teamId);
+    if(lfcBtn) lfcBtn.style.display=checked?"":"none";
     toast(checked?"Team marked as seeking a captain.":"Captain preference removed.");
   }catch(e){ toast(e.message,"error"); }
   finally{ hideProcessing(); }
