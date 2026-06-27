@@ -73,8 +73,12 @@
       </select>
     </div>
     <div class="field-row">
-      <div class="field"><label>Discord ID</label><input id="ep-discord-id" /></div>
-      <div class="field"><label>Discord Display Name</label><input id="ep-discord-name" /></div>
+      <div class="field">
+        <label>Discord User ID <span class="optional">(numeric)</span></label>
+        <input id="ep-discord-id" placeholder="e.g. 1440950160212492309" />
+        <p style="margin:4px 0 0;font-size:0.78rem;color:var(--text3);line-height:1.4;">Your Discord User ID (17–19 digits). To find it: Discord → Settings → Advanced → enable Developer Mode, then right-click your username → Copy User ID.</p>
+      </div>
+      <div class="field"><label>Discord Display Name <span class="optional">(optional)</span></label><input id="ep-discord-name" placeholder="e.g. Aleister" /></div>
     </div>
     <div class="field">
       <label>Email Address <span class="optional">(optional)</span></label>
@@ -561,6 +565,7 @@ async function toggleLFC(checked) {
     hideProcessing(checked ? "Marked as open to captaining!" : "Captain preference removed.");
   } catch(e) { hideProcessing(); toast(e.message,"error"); }
 }
+
 
 // ── Avatar ────────────────────────────────────────────────
 async function onAvatarSelected(url) {

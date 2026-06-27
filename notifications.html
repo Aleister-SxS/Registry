@@ -72,6 +72,22 @@
       <button class="btn btn-ghost btn-sm" id="btn-push" onclick="handlePushToggle()">Enable Push Notifications</button>
     </div>
 
+    <div class="form-section-label" style="margin-top:1.5rem;">Discord Notifications</div>
+
+    <div class="field">
+      <p style="margin:0 0 10px;font-size:0.85rem;color:var(--text2);line-height:1.5;">
+        Receive direct messages from the registry bot on Discord. Requires your Discord User ID set in <a href="profile.html" style="color:var(--blue);">Edit Profile</a>.
+      </p>
+      <div id="discord-id-warning" style="display:none;font-size:0.8rem;color:var(--amber);margin-bottom:8px;">⚠️ Set your Discord User ID in Edit Profile to enable Discord DM alerts.</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Discord DM Alerts</div>
+          <div class="toggle-sublabel">Join requests, invite responses, kicks, and new direct messages</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="np-discord-dm" /><span class="slider"></span></label>
+      </div>
+    </div>
+
     <div style="margin-top:1.5rem;">
       <button class="btn btn-primary btn-full" id="btn-save" onclick="saveNotifPrefs()">Save Preferences</button>
     </div>
@@ -117,6 +133,14 @@ function loadNotifPrefs() {
   if (joinEl) joinEl.checked = prefs.joinRequests !== false;
   const dmEl = document.getElementById("np-dms");
   if (dmEl) dmEl.checked = prefs.dms !== false;
+  const discordDmEl = document.getElementById("np-discord-dm");
+  if (discordDmEl) {
+    discordDmEl.checked = prefs.discordDM === true;
+    const hasDiscordId = !!(m.discordId);
+    discordDmEl.disabled = !hasDiscordId;
+    const warn = document.getElementById("discord-id-warning");
+    if (warn) warn.style.display = hasDiscordId ? "none" : "";
+  }
 }
 
 async function saveNotifPrefs() {
@@ -124,9 +148,10 @@ async function saveNotifPrefs() {
   if (!session) return;
   const email = (document.getElementById("np-email")?.value || "").trim();
   const prefs = {
-    invites:      document.getElementById("np-invites")?.checked ?? true,
-    joinRequests: document.getElementById("np-join")?.checked    ?? true,
-    dms:          document.getElementById("np-dms")?.checked     ?? true,
+    invites:      document.getElementById("np-invites")?.checked    ?? true,
+    joinRequests: document.getElementById("np-join")?.checked       ?? true,
+    dms:          document.getElementById("np-dms")?.checked        ?? true,
+    discordDM:    document.getElementById("np-discord-dm")?.checked ?? false,
   };
   const btn = el("btn-save");
   const inputs = document.querySelectorAll("#notif-form input, #notif-form button");
