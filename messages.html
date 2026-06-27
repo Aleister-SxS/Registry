@@ -406,7 +406,7 @@ function renderThread(){
       :`<div class="dm-msg-av-fb">${esc(((sender?.name||"?")[0]).toUpperCase())}</div>`;
     html+=`<div class="dm-msg-row${isMe?" mine":""}">
       ${av}
-      <div style="display:flex;flex-direction:column;${isMe?"align-items:flex-end":""}">
+      <div style="display:flex;flex-direction:column;${isMe?"align-items:flex-end":"align-items:flex-start"}">
         <div class="dm-bubble ${isMe?"mine":"theirs"}${isEmojiOnly(msg.text)?" emoji-only":""}">${esc(msg.text).replace(/\n/g,"<br>")}</div>
         <div class="dm-bubble-time" style="${isMe?"text-align:right":""}">${esc(timeStr)}${isMe&&!msg.readAt?" · Delivered":""}</div>
       </div>
