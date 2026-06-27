@@ -416,8 +416,10 @@ function renderMgmt(teamId){
       </div>
       <div class="mgmt-header-actions">
         <a href="team.html?id=${teamId}" class="btn btn-ghost btn-sm">Team Profile</a>
-        ${isCaptain?`<button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>`:""}
-        <button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>
+        ${isCaptain?`
+          <button class="btn btn-amber btn-sm" onclick="openTransfer('${teamId}')">Transfer Captaincy</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDisband('${teamId}','${esc(t.name)}')">Disband Team</button>
+        `:`<button class="btn btn-danger btn-sm" onclick="confirmLeave('${teamId}','${esc(t.name)}')">Leave Team</button>`}
       </div>
     </div>
 
@@ -1083,13 +1085,42 @@ function openTransfer(teamId){
 }
 
 function confirmLeave(teamId,teamName){
-  confirm_(`Leave ${teamName}`,"Are you sure? Transfer captaincy first if other members remain.",async()=>{
+  confirm_(`Leave ${teamName}`,"Are you sure you want to leave this team?",async()=>{
     try{
       await apiPost({action:"leaveTeam",memberId:session.id,captainKey:session.captainKey,teamId});
       const me=allMembers.find(m=>m.id===session.id); if(me) me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
       toast("Left team."); renderLanding();
     }catch(e){ toast(e.message,"error"); }
   });
+}
+
+function confirmDisband(teamId,teamName){
+  const team=allTeams.find(t=>t.id===teamId);
+  const memberCount=parseInt(team?.memberCount||"1");
+  if(memberCount>1){
+    // Has other members — must transfer or disband, offer both options clearly
+    confirm_(`Disband ${teamName}`,
+      `This team has ${memberCount} members. Disbanding will remove all members from the team permanently. To step down instead, use Transfer Captaincy first.
+
+Are you sure you want to disband?`,
+      async()=>{
+        try{
+          await apiPost({action:"disbandTeam",memberId:session.id,captainKey:session.captainKey,teamId});
+          const me=allMembers.find(m=>m.id===session.id); if(me) me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
+          allTeams.splice(allTeams.findIndex(t=>t.id===teamId),1);
+          toast("Team disbanded."); renderLanding();
+        }catch(e){ toast(e.message,"error"); }
+      });
+  } else {
+    confirm_(`Disband ${teamName}`,"You are the only member. This will permanently delete the team.",async()=>{
+      try{
+        await apiPost({action:"disbandTeam",memberId:session.id,captainKey:session.captainKey,teamId});
+        const me=allMembers.find(m=>m.id===session.id); if(me) me.teamIds=(me.teamIds||[]).filter(id=>id!==teamId);
+        allTeams.splice(allTeams.findIndex(t=>t.id===teamId),1);
+        toast("Team disbanded."); renderLanding();
+      }catch(e){ toast(e.message,"error"); }
+    });
+  }
 }
 
 async function toggleTeamLFC(teamId,checked){
