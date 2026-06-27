@@ -257,6 +257,8 @@ onReady(async()=>{
     settings=d.settings||{};
     pendingSuggestions=d.pendingSuggestions||[];
     teamAnnouncements=d.teamAnnouncements||[];
+    syncSessionFromMembers(allMembers);
+    session=getSession();
   }catch(e){ allTeams=[];allMembers=[]; }
   if(typeof SKILLS==="undefined") window.SKILLS=[];
   hide(el("loading"));

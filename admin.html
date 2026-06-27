@@ -442,7 +442,7 @@ async function loadAdminChat(){
   el("admin-chat-container").style.display="block";
   el("admin-chat-messages").innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const d=await apiGet({action:"getMessages",teamId,adminPassword:_adminPw});
+    const d=await apiPost({action:"adminGetMessages",teamId,adminPassword:_adminPw});
     const msgs=d.messages||[];
     if(!msgs.length){el("admin-chat-messages").innerHTML='<div class="empty" style="padding:2rem;"><p>No messages.</p></div>';return;}
     el("admin-chat-messages").innerHTML=msgs.map(msg=>{
@@ -612,7 +612,7 @@ let broadcasts = []; // local cache of broadcast history
 async function loadBroadcasts(){
   el("broadcast-history").innerHTML='<div class="loading"><span class="spinner"></span></div>';
   try{
-    const d = await apiGet({action:"adminGetBroadcasts",adminPassword:_adminPw});
+    const d = await apiPost({action:"adminGetBroadcasts",adminPassword:_adminPw});
     broadcasts = d.broadcasts || [];
     renderBroadcastHistory();
   }catch(e){

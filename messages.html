@@ -285,6 +285,8 @@ onReady(async ()=>{
   try{
     const d=await apiGet({action:"getAll",memberId:session.id});
     allMembers=d.members||[];
+    syncSessionFromMembers(allMembers);
+    session=getSession();
   }catch(e){toast("Failed to load members","error");return;}
 
   const params=new URLSearchParams(window.location.search);

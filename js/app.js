@@ -43,6 +43,24 @@ function getSession() {
 function setSession(data) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
+// Sync mutable profile fields from a fresh getAll members list back into the
+// stored session so admin changes (e.g. guildMember promotion) take effect
+// without requiring a re-login.
+function syncSessionFromMembers(members) {
+  const session = getSession();
+  if (!session || !Array.isArray(members)) return;
+  const me = members.find(m => m.id === session.id);
+  if (!me) return;
+  let changed = false;
+  const syncFields = ["guildMember", "isCaptain", "name", "gamertag", "avatarUrl", "pvpFantomon"];
+  syncFields.forEach(f => {
+    if (me[f] !== undefined && me[f] !== session[f]) {
+      session[f] = me[f];
+      changed = true;
+    }
+  });
+  if (changed) setSession(session);
+}
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
   Object.keys(sessionStorage).filter(k => k.startsWith("broadcast_collapsed_")).forEach(k => sessionStorage.removeItem(k));
@@ -392,6 +410,8 @@ function buildNav(activePage, opts = {}) {
   }
   if (session && activePage !== "messages.html") {
     apiGet({ action: "getAll", memberId: session.id }).then(d => {
+      // Keep session in sync with any admin-side changes (e.g. guildMember status)
+      syncSessionFromMembers(d.members || []);
       if (d.unreadDMs > 0) {
         const badge    = document.getElementById("nav-dm-badge");
         const badgeMob = document.getElementById("nav-dm-badge-mobile");
